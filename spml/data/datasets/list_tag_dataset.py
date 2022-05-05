@@ -85,8 +85,8 @@ class ListTagDataset(ListDataset):
     dim = (width, height)
 
     image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
-    semantic_label = cv2.resize(semantic_label, dim, interpolation=cv2.INTER_AREA)
-    instance_label = cv2.resize(instance_label, dim, interpolation=cv2.INTER_AREA)
+    semantic_label = cv2.resize(semantic_label, dim, interpolation=cv2.INTER_NEAREST)
+    instance_label = cv2.resize(instance_label, dim, interpolation=cv2.INTER_NEAREST)
 
     return image, semantic_label, instance_label, semantic_tags
 
