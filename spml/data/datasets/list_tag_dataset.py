@@ -79,6 +79,15 @@ class ListTagDataset(ListDataset):
     else:
       semantic_tags = None
 
+    scale_percent = 50
+    width = int(image.shape[1] * scale_percent / 100)
+    height = int(image.shape[0] * scale_percent / 100)
+    dim = (width, height)
+
+    image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
+    semantic_label = cv2.resize(semantic_label, dim, interpolation=cv2.INTER_AREA)
+    instance_label = cv2.resize(instance_label, dim, interpolation=cv2.INTER_AREA)
+
     return image, semantic_label, instance_label, semantic_tags
 
   def _training_preprocess(self, idx):

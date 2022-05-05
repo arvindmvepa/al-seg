@@ -8,7 +8,7 @@ config = edict()
 config.embedding_model = ''
 config.prediction_model = ''
 config.gpus = ''
-config.num_threads = 4
+config.num_threads = 16
 
 ## Parameters for network.
 config.network = edict()
@@ -78,6 +78,9 @@ config.test.scales = [0]
 config.test.image_size = 0
 config.test.crop_size = [0, 0]
 config.test.stride = [0, 0]
+
+config.train.image_size = 256
+config.test.image_size = 256
 
 
 def update_config(config_file):
