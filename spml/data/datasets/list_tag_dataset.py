@@ -16,6 +16,7 @@ class ListTagDataset(ListDataset):
   def __init__(self,
                data_dir,
                data_list,
+               img_scale,
                img_mean=(0, 0, 0),
                img_std=(1, 1, 1),
                size=None,
@@ -45,6 +46,7 @@ class ListTagDataset(ListDataset):
     super(ListTagDataset, self).__init__(
         data_dir,
         data_list,
+        img_scale,
         img_mean,
         img_std,
         size,
@@ -79,14 +81,14 @@ class ListTagDataset(ListDataset):
     else:
       semantic_tags = None
 
-    scale_percent = 50
-    width = int(image.shape[1] * scale_percent / 100)
-    height = int(image.shape[0] * scale_percent / 100)
-    dim = (width, height)
+    if self.img_scale != 1:
+        width = int(image.shape[1] * self.img_scale)
+        height = int(image.shape[0] * self.img_scale)
+        dim = (width, height)
 
-    image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
-    semantic_label = cv2.resize(semantic_label, dim, interpolation=cv2.INTER_NEAREST)
-    instance_label = cv2.resize(instance_label, dim, interpolation=cv2.INTER_NEAREST)
+        image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
+        semantic_label = cv2.resize(semantic_label, dim, interpolation=cv2.INTER_NEAREST)
+        instance_label = cv2.resize(instance_label, dim, interpolation=cv2.INTER_NEAREST)
 
     return image, semantic_label, instance_label, semantic_tags
 
@@ -139,6 +141,7 @@ class ListTagClassifierDataset(ListTagDataset):
   def __init__(self,
                data_dir,
                data_list,
+               img_scale,
                img_mean=(0, 0, 0),
                img_std=(1, 1, 1),
                size=None,
@@ -175,6 +178,7 @@ class ListTagClassifierDataset(ListTagDataset):
     super(ListTagClassifierDataset, self).__init__(
         data_dir,
         data_list,
+        img_scale,
         img_mean,
         img_std,
         size,

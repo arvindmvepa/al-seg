@@ -19,6 +19,8 @@ def parse_args():
                       help='number of segmentation classes')
   parser.add_argument('--string_replace', type=str, default=',',
                       help='replace the first string with the second one')
+  parser.add_argument('--img_scale', type=float, default=1.0,
+                      help='scaling factor for image')
 
   return parser.parse_args()
 
@@ -80,12 +82,12 @@ def main():
           dtype=np.uint8)
 
       # Resize GT to match downsampling
-      scale_percent = 50
-      width = int(gt.shape[1] * scale_percent / 100)
-      height = int(gt.shape[0] * scale_percent / 100)
-      dim = (width, height)
+      if args.img_scale != 1.0:
+          width = int(gt.shape[1] * args.img_scale)
+          height = int(gt.shape[0] * args.img_scale)
+          dim = (width, height)
 
-      gt = cv2.resize(gt, dim, interpolation=cv2.INTER_NEAREST)
+          gt = cv2.resize(gt, dim, interpolation=cv2.INTER_NEAREST)
 
       _tp_fn, _tp_fp, _tp = iou_stats(
           pred,

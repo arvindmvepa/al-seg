@@ -21,6 +21,7 @@ network:
     - KMEANS_NUM_CLUSTERS
   backbone_types: BACKBONE_TYPES
   prediction_types: PREDICTION_TYPES
+  img_scale: IMAGE_SCALE
 
 train:
   resume: false

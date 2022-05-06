@@ -20,6 +20,7 @@ class ListDataset(torch.utils.data.Dataset):
   def __init__(self,
                data_dir,
                data_list,
+               img_scale,
                img_mean=(0, 0, 0),
                img_std=(1, 1, 1),
                size=None,
@@ -56,6 +57,7 @@ class ListDataset(torch.utils.data.Dataset):
     self.random_crop = random_crop
     self.random_scale = random_scale
     self.random_mirror = random_mirror
+    self.img_scale = img_scale
 
   def eval(self):
     """Set the dataset to evaluation mode.
@@ -130,14 +132,15 @@ class ListDataset(torch.utils.data.Dataset):
     else:
       instance_label = None
 
-    scale_percent = 50
-    width = int(image.shape[1] * scale_percent / 100)
-    height = int(image.shape[0] * scale_percent / 100)
-    dim = (width, height)
+    if self.img_scale != 1:
+        scale_percent = 50
+        width = int(image.shape[1] * self.img_scale)
+        height = int(image.shape[0] * self.img_scale)
+        dim = (width, height)
 
-    image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
-    semantic_label = cv2.resize(semantic_label, dim, interpolation=cv2.INTER_NEAREST)
-    instance_label = cv2.resize(instance_label, dim, interpolation=cv2.INTER_NEAREST)
+        image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
+        semantic_label = cv2.resize(semantic_label, dim, interpolation=cv2.INTER_NEAREST)
+        instance_label = cv2.resize(instance_label, dim, interpolation=cv2.INTER_NEAREST)
 
     return image, semantic_label, instance_label
 

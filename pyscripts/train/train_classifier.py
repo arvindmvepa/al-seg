@@ -54,6 +54,7 @@ def main():
   train_dataset = ListTagClassifierDataset(
       data_dir=args.data_dir,
       data_list=args.data_list,
+      img_scale=config.network.img_scale,
       img_mean=config.network.pixel_means,
       img_std=config.network.pixel_stds,
       size=config.train.crop_size,

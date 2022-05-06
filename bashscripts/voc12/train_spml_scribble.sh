@@ -17,7 +17,7 @@ EMBEDDING_DIM=64
 # Set up parameters for training.
 PREDICTION_TYPES=segsort
 TRAIN_SPLIT=train+
-GPUS=0,1,2,3
+GPUS=0
 LR_POLICY=poly
 USE_SYNCBN=true
 SNAPSHOT_STEP=30000
@@ -25,10 +25,9 @@ MAX_ITERATION=30000
 WARMUP_ITERATION=100
 LR=3e-3
 WD=5e-4
-BATCH_SIZE=4
-CROP_SIZE=256
-#BATCH_SIZE=2
-#CROP_SIZE=512
+BATCH_SIZE=8
+CROP_SIZE=192
+IMAGE_SCALE=0.375
 MEMORY_BANK_SIZE=2
 KMEANS_ITERATIONS=10
 KMEANS_NUM_CLUSTERS=6
@@ -47,24 +46,20 @@ FEAT_AFF_LOSS_WEIGHT=0.0
 
 # Set up parameters for inference.
 INFERENCE_SPLIT=val
-INFERENCE_IMAGE_SIZE=256
-INFERENCE_CROP_SIZE_H=256
-INFERENCE_CROP_SIZE_W=256
-INFERENCE_STRIDE=256
-#INFERENCE_IMAGE_SIZE=512
-#INFERENCE_CROP_SIZE_H=512
-#INFERENCE_CROP_SIZE_W=512
-#INFERENCE_STRIDE=512
+INFERENCE_IMAGE_SIZE=${CROP_SIZE}
+INFERENCE_CROP_SIZE_H=${CROP_SIZE}
+INFERENCE_CROP_SIZE_W=${CROP_SIZE}
+INFERENCE_STRIDE=${CROP_SIZE}
 
 # Set up path for saving models.
 SNAPSHOT_DIR=snapshots/voc12_scribble/${BACKBONE_TYPES}_${PREDICTION_TYPES}/p${CROP_SIZE}_dim${EMBEDDING_DIM}_nc${KMEANS_NUM_CLUSTERS}_ki${KMEANS_ITERATIONS}_lr${LR}_syncbn_${USE_SYNCBN}_bs${BATCH_SIZE}_gpu${GPUS}_it${MAX_ITERATION}_wd${WD}_memsize${MEMORY_BANK_SIZE}_losstype${SEM_ANN_LOSS_TYPES}_${SEM_OCC_LOSS_TYPES}_${IMG_SIM_LOSS_TYPES}_${FEAT_AFF_LOSS_TYPES}_lossconc${SEM_ANN_CONCENTRATION}_${SEM_OCC_CONCENTRATION}_${IMG_SIM_CONCENTRATION}_${FEAT_AFF_CONCENTRATION}_lossw${SEM_ANN_LOSS_WEIGHT}_${SEM_OCC_LOSS_WEIGHT}_${IMG_SIM_LOSS_WEIGHT}_${FEAT_AFF_LOSS_WEIGHT}
 echo ${SNAPSHOT_DIR}
 
 # Set up the procedure pipeline.
-IS_CONFIG_EMB=0
-IS_TRAIN_EMB=0
-IS_CONFIG_CLASSIFIER=1
-IS_ANNOTATION_1=1
+IS_CONFIG_EMB=1
+IS_TRAIN_EMB=1
+IS_CONFIG_CLASSIFIER=0
+IS_ANNOTATION_1=0
 IS_TRAIN_CLASSIFIER_1=0
 IS_INFERENCE_CLASSIFIER_1=0
 IS_BENCHMARK_CLASSIFIER_1=0
@@ -73,7 +68,6 @@ IS_BENCHMARK_CLASSIFIER_1=0
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
 # Set up the data directory and file list.
-# DATAROOT=/home/twke/data/VOCdevkit
 DATAROOT=/home/asjchoi/SPML/PASCAL
 PRETRAINED=./snapshots/imagenet/trained/resnet-101-cuhk.pth
 TRAIN_DATA_LIST=datasets/voc12/scribble_${TRAIN_SPLIT}_d3_hed.txt
@@ -125,6 +119,7 @@ if [ ${IS_CONFIG_EMB} -eq 1 ]; then
     -e "s/SEM_OCC_LOSS_WEIGHT/${SEM_OCC_LOSS_WEIGHT}/g"\
     -e "s/IMG_SIM_LOSS_WEIGHT/${IMG_SIM_LOSS_WEIGHT}/g"\
     -e "s/FEAT_AFF_LOSS_WEIGHT/${FEAT_AFF_LOSS_WEIGHT}/g"\
+    -e "s/IMAGE_SCALE/${IMAGE_SCALE}/g"\
     configs/voc12_template.yaml > ${SNAPSHOT_DIR}/config_emb.yaml
 
   cat ${SNAPSHOT_DIR}/config_emb.yaml
@@ -133,49 +128,49 @@ fi
 
 # Train for the embedding.
 if [ ${IS_TRAIN_EMB} -eq 1 ]; then
-#   python3 pyscripts/train/train.py\
-#    --data_dir ${DATAROOT}\
-#    --data_list ${TRAIN_DATA_LIST}\
-#    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
-#    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
+   python3 pyscripts/train/train.py\
+    --data_dir ${DATAROOT}\
+    --data_list ${TRAIN_DATA_LIST}\
+    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
+    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
 
-#  python3 pyscripts/inference/prototype.py\
-#    --data_dir ${DATAROOT}\
-#    --data_list ${MEMORY_DATA_LIST}\
-#    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
-#    --save_dir ${SNAPSHOT_DIR}/stage1/results/${TRAIN_SPLIT}\
-#    --kmeans_num_clusters 12,12\
-#    --label_divisor 2048\
-#    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
-#
-#  python3 pyscripts/inference/inference.py\
-#    --data_dir ${DATAROOT}\
-#    --data_list ${TEST_DATA_LIST}\
-#    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
-#    --save_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}\
-#    --semantic_memory_dir ${SNAPSHOT_DIR}/stage1/results/${TRAIN_SPLIT}/semantic_prototype\
-#    --kmeans_num_clusters 12,12\
-#    --label_divisor 2048\
-#    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
-#
-#  python3 pyscripts/benchmark/benchmark_by_mIoU.py\
-#    --pred_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}/semantic_gray\
-#    --gt_dir ${DATAROOT}/VOC2012/segcls\
-#    --num_classes 21
-#
-#  python3 pyscripts/inference/inference_softmax.py\
-#    --data_dir ${DATAROOT}\
-#    --data_list ${TEST_DATA_LIST}\
-#    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
-#    --save_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}_softmax\
-#    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
-#
-#  python3 pyscripts/benchmark/benchmark_by_mIoU.py\
-#    --pred_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}_softmax/semantic_gray\
-#    --gt_dir ${DATAROOT}/VOC2012/segcls\
-#    --num_classes 21
-#
-  echo "pass"
+  python3 pyscripts/inference/prototype.py\
+    --data_dir ${DATAROOT}\
+    --data_list ${MEMORY_DATA_LIST}\
+    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
+    --save_dir ${SNAPSHOT_DIR}/stage1/results/${TRAIN_SPLIT}\
+    --kmeans_num_clusters 12,12\
+    --label_divisor 2048\
+    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
+
+  python3 pyscripts/inference/inference.py\
+    --data_dir ${DATAROOT}\
+    --data_list ${TEST_DATA_LIST}\
+    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
+    --save_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}\
+    --semantic_memory_dir ${SNAPSHOT_DIR}/stage1/results/${TRAIN_SPLIT}/semantic_prototype\
+    --kmeans_num_clusters 12,12\
+    --label_divisor 2048\
+    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
+
+  python3 pyscripts/benchmark/benchmark_by_mIoU.py\
+    --pred_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}/semantic_gray\
+    --gt_dir ${DATAROOT}/VOC2012/segcls\
+    --num_classes 21\
+    --img_scale ${IMAGE_SCALE}
+
+  python3 pyscripts/inference/inference_softmax.py\
+    --data_dir ${DATAROOT}\
+    --data_list ${TEST_DATA_LIST}\
+    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
+    --save_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}_softmax\
+    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
+
+  python3 pyscripts/benchmark/benchmark_by_mIoU.py\
+    --pred_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}_softmax/semantic_gray\
+    --gt_dir ${DATAROOT}/VOC2012/segcls\
+    --num_classes 21\
+    --img_scale ${IMAGE_SCALE}
 fi
 #
 #
@@ -205,6 +200,7 @@ if [ ${IS_CONFIG_CLASSIFIER} -eq 1 ]; then
     -e "s/TEST_CROP_SIZE_H/${INFERENCE_CROP_SIZE_H}/g"\
     -e "s/TEST_CROP_SIZE_W/${INFERENCE_CROP_SIZE_W}/g"\
     -e "s/TEST_STRIDE/${INFERENCE_STRIDE}/g"\
+    -e "s/IMAGE_SCALE/${IMAGE_SCALE}/g"\
     -e "s#PRETRAINED#${SNAPSHOT_DIR}\/stage1\/model-$(($MAX_ITERATION-1)).pth#g"\
     configs/voc12_template.yaml > ${SNAPSHOT_DIR}/config_classifier.yaml
 
@@ -233,46 +229,47 @@ if [ ${IS_ANNOTATION_1} -eq 1 ]; then
   python3 pyscripts/benchmark/benchmark_by_mIoU.py\
     --pred_dir ${SNAPSHOT_DIR}/stage1/pseudo_labels/${TRAIN_SPLIT}_cam_rw/semantic_gray\
     --gt_dir ${DATAROOT}/VOC2012/segcls\
-    --num_classes 21
+    --num_classes 21\
+    --img_scale ${IMAGE_SCALE}
 
   sed -e "s#scribble_annotation\/VOC2012\/dilate_3\/segcls#`pwd`\/${SNAPSHOT_DIR}\/stage1\/pseudo_labels\/${TRAIN_SPLIT}_cam_rw\/semantic_gray#g"\
     -e "s#VOC2012#${DATAROOT}\/VOC2012#g"\
     ${TRAIN_DATA_LIST} > ${SNAPSHOT_DIR}/stage1/pseudo_labels/${TRAIN_SPLIT}_cam_rw/list.txt
-
 fi
-#
-#
-## Train softmax classifier while fix embedding network.
-#if [ ${IS_TRAIN_CLASSIFIER_1} -eq 1 ]; then
-#  python3 pyscripts/train/train_classifier.py\
-#    --data_dir ${HOME}\
-#    --data_list ${SNAPSHOT_DIR}/stage1/pseudo_labels/${TRAIN_SPLIT}_cam_rw/list.txt\
-#    --snapshot_dir ${SNAPSHOT_DIR}/softmax_classifier_stage1\
-#    --cfg_path ${SNAPSHOT_DIR}/config_classifier.yaml
-#fi
-#
-#
-## Inference.
-#if [ ${IS_INFERENCE_CLASSIFIER_1} -eq 1 ]; then
-#  python3 pyscripts/inference/inference_softmax.py\
-#    --data_dir ${DATAROOT}\
-#    --data_list ${TEST_DATA_LIST}\
-#    --snapshot_dir ${SNAPSHOT_DIR}/softmax_classifier_stage1\
-#    --save_dir ${SNAPSHOT_DIR}/softmax_classifier_stage1/results/${INFERENCE_SPLIT}\
-#    --crf_iter_max 10\
-#    --crf_pos_w 3\
-#    --crf_pos_xy_std 1\
-#    --crf_bi_w 4\
-#    --crf_bi_xy_std 67\
-#    --crf_bi_rgb_std 3\
-#    --cfg_path ${SNAPSHOT_DIR}/config_classifier.yaml
-#fi
 
 
-## Benchmark.
-#if [ ${IS_BENCHMARK_CLASSIFIER_1} -eq 1 ]; then
-#  python3 pyscripts/benchmark/benchmark_by_mIoU.py\
-#    --pred_dir ${SNAPSHOT_DIR}/softmax_classifier_stage1/results/${INFERENCE_SPLIT}/semantic_gray\
-#    --gt_dir /home/asjchoi/SPML/PASCAL/VOC2012/segcls\
-#    --num_classes 21
-#fi
+# Train softmax classifier while fix embedding network.
+if [ ${IS_TRAIN_CLASSIFIER_1} -eq 1 ]; then
+  python3 pyscripts/train/train_classifier.py\
+    --data_dir ${HOME}\
+    --data_list ${SNAPSHOT_DIR}/stage1/pseudo_labels/${TRAIN_SPLIT}_cam_rw/list.txt\
+    --snapshot_dir ${SNAPSHOT_DIR}/softmax_classifier_stage1\
+    --cfg_path ${SNAPSHOT_DIR}/config_classifier.yaml
+fi
+
+
+# Inference.
+if [ ${IS_INFERENCE_CLASSIFIER_1} -eq 1 ]; then
+  python3 pyscripts/inference/inference_softmax.py\
+    --data_dir ${DATAROOT}\
+    --data_list ${TEST_DATA_LIST}\
+    --snapshot_dir ${SNAPSHOT_DIR}/softmax_classifier_stage1\
+    --save_dir ${SNAPSHOT_DIR}/softmax_classifier_stage1/results/${INFERENCE_SPLIT}\
+    --crf_iter_max 10\
+    --crf_pos_w 3\
+    --crf_pos_xy_std 1\
+    --crf_bi_w 4\
+    --crf_bi_xy_std 67\
+    --crf_bi_rgb_std 3\
+    --cfg_path ${SNAPSHOT_DIR}/config_classifier.yaml
+fi
+
+
+# Benchmark.
+if [ ${IS_BENCHMARK_CLASSIFIER_1} -eq 1 ]; then
+  python3 pyscripts/benchmark/benchmark_by_mIoU.py\
+    --pred_dir ${SNAPSHOT_DIR}/softmax_classifier_stage1/results/${INFERENCE_SPLIT}/semantic_gray\
+    --gt_dir ${DATAROOT}/VOC2012/segcls\
+    --num_classes 21\
+    --img_scale ${IMAGE_SCALE}
+fi
