@@ -1,5 +1,6 @@
 import os
 import argparse
+import cv2
 
 from PIL import Image
 import numpy as np
@@ -77,6 +78,15 @@ def main():
       gt = np.asarray(
           Image.open(gtname).convert(mode='L'),
           dtype=np.uint8)
+
+      # Resize GT to match downsampling
+      scale_percent = 50
+      width = int(gt.shape[1] * scale_percent / 100)
+      height = int(gt.shape[0] * scale_percent / 100)
+      dim = (width, height)
+
+      gt = cv2.resize(gt, dim, interpolation=cv2.INTER_NEAREST)
+
       _tp_fn, _tp_fp, _tp = iou_stats(
           pred,
           gt,

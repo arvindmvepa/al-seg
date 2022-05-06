@@ -61,10 +61,10 @@ SNAPSHOT_DIR=snapshots/voc12_scribble/${BACKBONE_TYPES}_${PREDICTION_TYPES}/p${C
 echo ${SNAPSHOT_DIR}
 
 # Set up the procedure pipeline.
-IS_CONFIG_EMB=1
-IS_TRAIN_EMB=1
-IS_CONFIG_CLASSIFIER=0
-IS_ANNOTATION_1=0
+IS_CONFIG_EMB=0
+IS_TRAIN_EMB=0
+IS_CONFIG_CLASSIFIER=1
+IS_ANNOTATION_1=1
 IS_TRAIN_CLASSIFIER_1=0
 IS_INFERENCE_CLASSIFIER_1=0
 IS_BENCHMARK_CLASSIFIER_1=0
@@ -133,11 +133,11 @@ fi
 
 # Train for the embedding.
 if [ ${IS_TRAIN_EMB} -eq 1 ]; then
-   python3 pyscripts/train/train.py\
-    --data_dir ${DATAROOT}\
-    --data_list ${TRAIN_DATA_LIST}\
-    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
-    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
+#   python3 pyscripts/train/train.py\
+#    --data_dir ${DATAROOT}\
+#    --data_list ${TRAIN_DATA_LIST}\
+#    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
+#    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
 
 #  python3 pyscripts/inference/prototype.py\
 #    --data_dir ${DATAROOT}\
@@ -175,6 +175,7 @@ if [ ${IS_TRAIN_EMB} -eq 1 ]; then
 #    --gt_dir ${DATAROOT}/VOC2012/segcls\
 #    --num_classes 21
 #
+  echo "pass"
 fi
 #
 #
