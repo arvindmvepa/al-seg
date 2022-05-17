@@ -3,9 +3,121 @@
 
 import cv2
 import numpy as np
+import torch
 
 from spml.data.datasets.base_dataset import ListDataset
 import spml.data.transforms as transforms
+
+
+class ListDatasetSimCLR(ListDataset):
+    """Base class of dataset which takes a file of paired list of
+    images, semantic labels and instance labels.
+    """
+
+    def __init__(self,
+                 data_dir,
+                 data_list,
+                 img_scale,
+                 transform,
+                 img_mean=(0, 0, 0),
+                 img_std=(1, 1, 1),
+                 size=None,
+                 random_crop=False,
+                 random_scale=False,
+                 random_mirror=False,
+                 training=False
+                 ):
+        """Base class for Dataset.
+
+        Args:
+          data_dir: A string indicates root directory of images and labels.
+          data_list: A list of strings which indicate path of paired images
+            and labels. 'image_path semantic_label_path instance_label_path'.
+          img_mean: A list of scalars indicate the mean image value per channel.
+          img_std: A list of scalars indicate the std image value per channel.
+          size: A tuple of scalars indicate size of output image and labels.
+            The output resolution remain the same if `size` is None.
+          random_crop: enable/disable random_crop for data augmentation.
+            If True, adopt randomly cropping as augmentation.
+          random_scale: enable/disable random_scale for data augmentation.
+            If True, adopt adopt randomly scaling as augmentation.
+          random_mirror: enable/disable random_mirror for data augmentation.
+            If True, adopt adopt randomly mirroring as augmentation.
+          training: enable/disable training to set dataset for training and
+            testing. If True, set to training mode.
+        """
+        super(ListDatasetSimCLR, self).__init__(
+            data_dir,
+            data_list,
+            img_scale,
+            img_mean,
+            img_std,
+            size,
+            random_crop,
+            random_scale,
+            random_mirror,
+            training)
+        self.transform = transform
+
+
+    def _get_datas_by_index(self, idx):
+        """Return image_path, semantic_label_path, instance_label_path
+        by the given index.
+        """
+        image_path = self.image_paths[idx]
+        image = self._read_image(image_path)
+
+        if self.img_scale != 1:
+            width = int(image.shape[1] * self.img_scale)
+            height = int(image.shape[0] * self.img_scale)
+            dim = (width, height)
+
+            image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
+
+        return image
+
+    def _training_preprocess(self, idx):
+        """Data preprocessing for training.
+        """
+        assert(self.size is not None)
+        image = self._get_datas_by_index(idx)
+
+        if self.random_mirror:
+            is_flip = np.random.uniform(0, 1.0) >= 0.5
+            if is_flip:
+                image = image[:, ::-1, ...]
+
+        if self.random_scale:
+            image, _ = transforms.random_resize(image, image, 0.5, 1.5)
+
+        if self.random_crop:
+            image, _ = transforms.random_crop_with_pad(
+                image, image, self.size, self.img_mean, 255)
+
+        return image
+
+    def __getitem__(self, idx):
+        """Retrive image and label by index.
+        """
+        if self.training:
+            image = self._training_preprocess(idx)
+        else:
+            raise NotImplementedError()
+
+        image = image - np.array(self.img_mean, dtype=image.dtype)
+        image = image / np.array(self.img_std, dtype=image.dtype)
+
+        # image = torch.from_numpy(image.transpose(2, 0, 1))
+        # image = image.transpose(2, 0, 1)
+        image *= 255
+        image = image.astype(np.uint8)
+
+        img1, img2 = self.transform(image)
+
+        return [img1, img2]
+
+
+
 
 
 class ListTagDataset(ListDataset):

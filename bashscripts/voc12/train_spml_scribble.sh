@@ -70,6 +70,7 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 # Set up the data directory and file list.
 DATAROOT=/home/asjchoi/SPML/PASCAL
 PRETRAINED=./snapshots/imagenet/trained/resnet-101-cuhk.pth
+#PRETRAINED=./snapshots/imagenet/trained/simclr_resnet101_pretrained1.pth
 TRAIN_DATA_LIST=datasets/voc12/scribble_${TRAIN_SPLIT}_d3_hed.txt
 TEST_DATA_LIST=datasets/voc12/panoptic_${INFERENCE_SPLIT}.txt
 MEMORY_DATA_LIST=datasets/voc12/panoptic_${TRAIN_SPLIT}_hed.txt
