@@ -44,14 +44,17 @@ train:
   memory_bank_size: MEMORY_BANK_SIZE
   sem_ann_concentration: SEM_ANN_CONCENTRATION
   sem_occ_concentration: SEM_OCC_CONCENTRATION
+  word_sim_concentration: WORD_SIM_CONCENTRATION
   img_sim_concentration: IMG_SIM_CONCENTRATION
   feat_aff_concentration: FEAT_AFF_CONCENTRATION
   sem_ann_loss_types: SEM_ANN_LOSS_TYPES
   sem_occ_loss_types: SEM_OCC_LOSS_TYPES
+  word_sim_loss_types: WORD_SIM_LOSS_TYPES
   img_sim_loss_types: IMG_SIM_LOSS_TYPES
   feat_aff_loss_types: FEAT_AFF_LOSS_TYPES
   sem_ann_loss_weight: SEM_ANN_LOSS_WEIGHT
   sem_occ_loss_weight: SEM_OCC_LOSS_WEIGHT
+  word_sim_loss_weight: WORD_SIM_LOSS_WEIGHT
   img_sim_loss_weight: IMG_SIM_LOSS_WEIGHT
   feat_aff_loss_weight: FEAT_AFF_LOSS_WEIGHT
 

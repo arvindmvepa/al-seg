@@ -212,7 +212,7 @@ def main():
     outputs = prediction_model(*zip(embeddings, label_batch))
     outputs = scatter_gather.gather(outputs, gpu_ids[0])
     losses = []
-    for k in ['sem_ann_loss', 'sem_occ_loss', 'img_sim_loss', 'feat_aff_loss']:
+    for k in ['sem_ann_loss', 'sem_occ_loss', 'word_sim_loss', 'img_sim_loss', 'feat_aff_loss']:
       loss = outputs.get(k, None)
       if loss is not None:
         outputs[k] = loss.mean()

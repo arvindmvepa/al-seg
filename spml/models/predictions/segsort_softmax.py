@@ -1,6 +1,6 @@
 """Define SegSort with Softmax Classifier for semantic segmentation.
 """
-
+from collections import defaultdict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,7 +10,33 @@ import spml.utils.general.common as common_utils
 import spml.utils.segsort.loss as segsort_loss
 import spml.utils.segsort.eval as segsort_eval
 import spml.utils.segsort.common as segsort_common
+from transformers import AutoTokenizer
+from transformers import AutoModelForSequenceClassification, TrainingArguments, Trainer, DataCollatorWithPadding
 
+
+label_class_name_map = {
+    0: "background",
+    1: "airplane",
+    2: "bicycle",
+    3: "bird",
+    4: "boat",
+    5: "bottle",
+    6: "bus",
+    7: "car",
+    8: "cat",
+    9: "chair",
+    10: "cow",
+    11: "dining table",
+    12: "dog",
+    13: "horse",
+    14: "motorbike",
+    15: "person",
+    16: "potted plant",
+    17: "sheep",
+    18: "sofa",
+    19: "train",
+    20: "tv monitor"
+}
 
 class SegsortSoftmax(nn.Module):
 
@@ -66,6 +92,18 @@ class SegsortSoftmax(nn.Module):
         concentration=config.train.feat_aff_concentration)
     self.feat_aff_loss_weight = config.train.feat_aff_loss_weight
 
+    # Define regularization by word embedding similarity.
+    if config.train.word_sim_loss_weight > 0:
+        model_checkpoint = 'distilbert-base-uncased'
+        self.tokenizer = AutoTokenizer.from_pretrained(model_checkpoint, use_fast=False)
+        self.bert = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=2).to("cuda:0")
+        self.word_sim_loss = self._construct_loss(
+            config.train.word_sim_loss_types,
+            concentration=config.train.word_sim_concentration)
+        self.word_sim_loss_weight = config.train.word_sim_loss_weight
+    else:
+        self.word_sim_loss_weight = 0
+
     self.semantic_ignore_index = config.dataset.semantic_ignore_index
     self.num_classes = config.dataset.num_classes
     self.label_divisor = config.network.label_divisor
@@ -106,6 +144,7 @@ class SegsortSoftmax(nn.Module):
     sem_ann_loss = None
     sem_occ_loss = None
     img_sim_loss = None
+    word_sim_loss = None
     sem_ann_acc = None
 
     # Compute softmax loss.
@@ -216,6 +255,77 @@ class SegsortSoftmax(nn.Module):
           prototype_semantic_labels,
           5)
 
+      # calculate word distance loss
+      if self.word_sim_loss_weight:
+          # considering all prototype semantic tags
+          # can also consider just the tags found in images and let the other classes be unique? not sure
+          unique_semantic_labels = torch.unique(prototype_semantic_labels)
+          label_word_embeddings = {}
+          for semantic_label in unique_semantic_labels:
+              semantic_label = semantic_label.item()
+              # ignore unknown class
+              if semantic_label == 21:
+                  continue
+              label_name = label_class_name_map[semantic_label]
+              preprocessed_class_name = self.tokenizer(label_name)
+              # conver to tensor
+              for key in preprocessed_class_name.keys():
+                  preprocessed_class_name[key] = torch.as_tensor(preprocessed_class_name[key], device="cuda:0").unsqueeze(0)
+              bert_outputs = self.bert(output_hidden_states=True, **preprocessed_class_name)
+              hs_bert_outputs = bert_outputs.hidden_states[-1][:, 0, :]
+              label_word_embeddings[semantic_label] = hs_bert_outputs.flatten()
+
+          most_sim_semantic_labels = {}
+          cos = nn.CosineSimilarity(dim=0)
+          for semantic_label in label_word_embeddings.keys():
+              current_word_class_embedding = label_word_embeddings[semantic_label]
+              max_sim = torch.tensor(-1)
+              max_sim_label = None
+              for other_label in label_word_embeddings.keys():
+                  if semantic_label != other_label:
+                      sim = cos(current_word_class_embedding, label_word_embeddings[other_label])
+                      if sim > max_sim:
+                          max_sim = sim
+                          max_sim_label = other_label
+              if max_sim_label is not None:
+                  most_sim_semantic_labels[semantic_label] = max_sim_label
+              else:
+                  most_sim_semantic_labels[semantic_label] = None
+
+          new_class_values = defaultdict(lambda: len(new_class_values))
+          new_class_mapping = dict()
+          for (label1,label2) in most_sim_semantic_labels.items():
+              if label1 not in new_class_mapping:
+                  new_class_mapping[label1] = new_class_values[label1]
+              if label2 not in new_class_mapping:
+                  if most_sim_semantic_labels[label2] == label1:
+                      new_class_mapping[label2] = new_class_values[label1]
+                  else:
+                      new_class_mapping[label2] = new_class_values[label2]
+          # unknown class (21) should have a unique value
+          new_class_mapping[21] = new_class_values[21]
+
+          embeddings_by_inds = torch.index_select(embeddings, 0, pixel_inds)
+          semantic_labels_by_inds = torch.index_select(semantic_labels, 0, pixel_inds)
+          new_cluster_indices_by_inds = torch.index_select(new_cluster_indices, 0, pixel_inds)
+          prototypes_by_proto_inds = torch.index_select(prototypes, 0, proto_inds)
+          prototype_semantic_labels_by_inds = torch.index_select(prototype_semantic_labels, 0, proto_inds)
+
+          new_semantic_labels_by_inds = [new_class_mapping[label.item()] for label in semantic_labels_by_inds]
+          new_semantic_labels_by_inds = torch.as_tensor(new_semantic_labels_by_inds,
+                                                        device=semantic_labels.device)
+          new_prototype_semantic_labels_by_inds = [new_class_mapping[label.item()] for label in prototype_semantic_labels_by_inds]
+          new_prototype_semantic_labels_by_inds = torch.as_tensor(new_prototype_semantic_labels_by_inds,
+                                                                  device=prototype_semantic_labels.device)
+
+          word_sim_loss = self.word_sim_loss(
+              embeddings_by_inds,
+              new_semantic_labels_by_inds,
+              new_cluster_indices_by_inds,
+              prototypes_by_proto_inds,
+              new_prototype_semantic_labels_by_inds)
+          word_sim_loss *= self.word_sim_loss_weight
+
     # Compute low-level image similarity loss.
     if self.img_sim_loss is not None:
       cluster_indices = datas['cluster_index']
@@ -239,7 +349,7 @@ class SegsortSoftmax(nn.Module):
       img_sim_loss = sum(img_sim_loss) / len(img_sim_loss)
       img_sim_loss *= self.img_sim_loss_weight
 
-    return sem_ann_loss, sem_occ_loss, img_sim_loss, sem_ann_acc
+    return sem_ann_loss, sem_occ_loss, word_sim_loss, img_sim_loss, sem_ann_acc
 
   def forward(self, datas, targets=None,
               with_loss=True, with_prediction=False):
@@ -256,12 +366,13 @@ class SegsortSoftmax(nn.Module):
                       'semantic_logit': semantic_logits,})
 
     if with_loss:
-      sem_ann_loss, sem_occ_loss, img_sim_loss, sem_ann_acc = (
+      sem_ann_loss, sem_occ_loss, word_sim_loss, img_sim_loss, sem_ann_acc = (
           self.losses(datas, targets))
 
       outputs.update(
           {'sem_ann_loss': sem_ann_loss,
            'sem_occ_loss': sem_occ_loss,
+           'word_sim_loss': word_sim_loss,
            'img_sim_loss': img_sim_loss,
            'accuracy': sem_ann_acc})
 

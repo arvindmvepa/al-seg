@@ -62,14 +62,17 @@ config.train.sem_ann_loss_types = 'none'
 config.train.sem_occ_loss_types = 'none'
 config.train.img_sim_loss_types = 'none'
 config.train.feat_aff_loss_types = 'none'
+config.train.word_sim_loss_types = 'none'
 config.train.sem_ann_concentration = 0
 config.train.sem_occ_concentration = 0
 config.train.img_sim_concentration = 0
 config.train.feat_aff_concentration = 0
+config.train.word_sim_loss_concentration = 0
 config.train.sem_ann_loss_weight= 0.0
 config.train.sem_occ_loss_weight= 0.0
 config.train.img_sim_loss_weight= 0.0
 config.train.feat_aff_loss_weight= 0.0
+config.train.word_sim_loss_weight= 0.0
 
 ## Parameters for testing.
 config.test = edict()
@@ -87,7 +90,7 @@ def update_config(config_file):
 
   exp_config = None
   with open(config_file) as f:
-    exp_config = edict(yaml.load(f))
+    exp_config = edict(yaml.safe_load(f))
     for k, v in exp_config.items():
       # update default config.
       if k in config:
