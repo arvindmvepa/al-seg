@@ -52,7 +52,8 @@ INFERENCE_CROP_SIZE_W=${CROP_SIZE}
 INFERENCE_STRIDE=${CROP_SIZE}
 
 # Set up path for saving models.
-SNAPSHOT_DIR=snapshots/voc12_scribble/${BACKBONE_TYPES}_${PREDICTION_TYPES}/p${CROP_SIZE}_dim${EMBEDDING_DIM}_nc${KMEANS_NUM_CLUSTERS}_ki${KMEANS_ITERATIONS}_lr${LR}_syncbn_${USE_SYNCBN}_bs${BATCH_SIZE}_gpu${GPUS}_it${MAX_ITERATION}_wd${WD}_memsize${MEMORY_BANK_SIZE}_losstype${SEM_ANN_LOSS_TYPES}_${SEM_OCC_LOSS_TYPES}_${IMG_SIM_LOSS_TYPES}_${FEAT_AFF_LOSS_TYPES}_lossconc${SEM_ANN_CONCENTRATION}_${SEM_OCC_CONCENTRATION}_${IMG_SIM_CONCENTRATION}_${FEAT_AFF_CONCENTRATION}_lossw${SEM_ANN_LOSS_WEIGHT}_${SEM_OCC_LOSS_WEIGHT}_${IMG_SIM_LOSS_WEIGHT}_${FEAT_AFF_LOSS_WEIGHT}_$(date +%F-%T)
+#SNAPSHOT_DIR=snapshots/voc12_scribble/${BACKBONE_TYPES}_${PREDICTION_TYPES}/p${CROP_SIZE}_dim${EMBEDDING_DIM}_nc${KMEANS_NUM_CLUSTERS}_ki${KMEANS_ITERATIONS}_lr${LR}_syncbn_${USE_SYNCBN}_bs${BATCH_SIZE}_gpu${GPUS}_it${MAX_ITERATION}_wd${WD}_memsize${MEMORY_BANK_SIZE}_losstype${SEM_ANN_LOSS_TYPES}_${SEM_OCC_LOSS_TYPES}_${IMG_SIM_LOSS_TYPES}_${FEAT_AFF_LOSS_TYPES}_lossconc${SEM_ANN_CONCENTRATION}_${SEM_OCC_CONCENTRATION}_${IMG_SIM_CONCENTRATION}_${FEAT_AFF_CONCENTRATION}_lossw${SEM_ANN_LOSS_WEIGHT}_${SEM_OCC_LOSS_WEIGHT}_${IMG_SIM_LOSS_WEIGHT}_${FEAT_AFF_LOSS_WEIGHT}_$(date +%F-%T)
+SNAPSHOT_DIR=snapshots/voc12_scribble/${BACKBONE_TYPES}_${PREDICTION_TYPES}/p${CROP_SIZE}_dim${EMBEDDING_DIM}_nc${KMEANS_NUM_CLUSTERS}_ki${KMEANS_ITERATIONS}_lr${LR}_syncbn_${USE_SYNCBN}_bs${BATCH_SIZE}_gpu${GPUS}_it${MAX_ITERATION}_wd${WD}_memsize${MEMORY_BANK_SIZE}_losstype${SEM_ANN_LOSS_TYPES}_${SEM_OCC_LOSS_TYPES}_${IMG_SIM_LOSS_TYPES}_${FEAT_AFF_LOSS_TYPES}_lossconc${SEM_ANN_CONCENTRATION}_${SEM_OCC_CONCENTRATION}_${IMG_SIM_CONCENTRATION}_${FEAT_AFF_CONCENTRATION}_lossw${SEM_ANN_LOSS_WEIGHT}_${SEM_OCC_LOSS_WEIGHT}_${IMG_SIM_LOSS_WEIGHT}_${FEAT_AFF_LOSS_WEIGHT}_curr
 echo ${SNAPSHOT_DIR}
 
 # Set up the procedure pipeline.
@@ -71,6 +72,7 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 DATAROOT=/home/asjchoi/SPML/PASCAL
 PRETRAINED=./snapshots/imagenet/trained/resnet-101-cuhk.pth
 #PRETRAINED=./snapshots/imagenet/trained/simclr_resnet101_pretrained1.pth
+#PRETRAINED=./snapshots/imagenet/trained/simclr_resnet101_pretrained0.pth
 TRAIN_DATA_LIST=datasets/voc12/scribble_${TRAIN_SPLIT}_d3_hed.txt
 TEST_DATA_LIST=datasets/voc12/panoptic_${INFERENCE_SPLIT}.txt
 MEMORY_DATA_LIST=datasets/voc12/panoptic_${TRAIN_SPLIT}_hed.txt
@@ -129,20 +131,20 @@ fi
 
 # Train for the embedding.
 if [ ${IS_TRAIN_EMB} -eq 1 ]; then
-   python3 pyscripts/train/train.py\
-    --data_dir ${DATAROOT}\
-    --data_list ${TRAIN_DATA_LIST}\
-    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
-    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
+#   python3 pyscripts/train/train.py\
+#    --data_dir ${DATAROOT}\
+#    --data_list ${TRAIN_DATA_LIST}\
+#    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
+#    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
 
-  python3 pyscripts/inference/prototype.py\
-    --data_dir ${DATAROOT}\
-    --data_list ${MEMORY_DATA_LIST}\
-    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
-    --save_dir ${SNAPSHOT_DIR}/stage1/results/${TRAIN_SPLIT}\
-    --kmeans_num_clusters 12,12\
-    --label_divisor 2048\
-    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
+#  python3 pyscripts/inference/prototype.py\
+#    --data_dir ${DATAROOT}\
+#    --data_list ${MEMORY_DATA_LIST}\
+#    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
+#    --save_dir ${SNAPSHOT_DIR}/stage1/results/${TRAIN_SPLIT}\
+#    --kmeans_num_clusters 12,12\
+#    --label_divisor 2048\
+#    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
 
   python3 pyscripts/inference/inference.py\
     --data_dir ${DATAROOT}\
@@ -154,24 +156,40 @@ if [ ${IS_TRAIN_EMB} -eq 1 ]; then
     --label_divisor 2048\
     --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
 
+  python3 pyscripts/inference/inference_clip_postprocess.py\
+    --data_dir ${DATAROOT}\
+    --data_list ${TEST_DATA_LIST}\
+    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
+    --save_dir ${SNAPSHOT_DIR}/stage1/clip_results/${INFERENCE_SPLIT}\
+    --semantic_memory_dir ${SNAPSHOT_DIR}/stage1/results/${TRAIN_SPLIT}/semantic_prototype\
+    --kmeans_num_clusters 12,12\
+    --label_divisor 2048\
+    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
+
   python3 pyscripts/benchmark/benchmark_by_mIoU.py\
     --pred_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}/semantic_gray\
     --gt_dir ${DATAROOT}/VOC2012/segcls\
     --num_classes 21\
     --img_scale ${IMAGE_SCALE}
 
-  python3 pyscripts/inference/inference_softmax.py\
-    --data_dir ${DATAROOT}\
-    --data_list ${TEST_DATA_LIST}\
-    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
-    --save_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}_softmax\
-    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
-
   python3 pyscripts/benchmark/benchmark_by_mIoU.py\
-    --pred_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}_softmax/semantic_gray\
+    --pred_dir ${SNAPSHOT_DIR}/stage1/clip_results/${INFERENCE_SPLIT}/semantic_gray\
     --gt_dir ${DATAROOT}/VOC2012/segcls\
     --num_classes 21\
     --img_scale ${IMAGE_SCALE}
+#
+#  python3 pyscripts/inference/inference_softmax.py\
+#    --data_dir ${DATAROOT}\
+#    --data_list ${TEST_DATA_LIST}\
+#    --snapshot_dir ${SNAPSHOT_DIR}/stage1\
+#    --save_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}_softmax\
+#    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
+#
+#  python3 pyscripts/benchmark/benchmark_by_mIoU.py\
+#    --pred_dir ${SNAPSHOT_DIR}/stage1/results/${INFERENCE_SPLIT}_softmax/semantic_gray\
+#    --gt_dir ${DATAROOT}/VOC2012/segcls\
+#    --num_classes 21\
+#    --img_scale ${IMAGE_SCALE}
 fi
 #
 #

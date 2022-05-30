@@ -9,6 +9,7 @@ import numpy as np
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
+import clip
 from tqdm import tqdm
 
 import spml.data.transforms as transforms
@@ -47,6 +48,13 @@ def main():
     # Create color map.
     color_map = vis_utils.load_color_map(config.dataset.color_map_path)
     color_map = color_map.numpy()
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    clip_model, preprocess = clip.load("ViT-B/32", device=device)
+    classes = ["person", "bird", "cat", "cow", "dog", "horse", "sheep", "aeroplane", "bicycle",
+               "boat", "bus", "car", "motorbike", "train", "bottle", "chair", "dining table",
+               "potted plant", "sofa", "tv/monitor"]
+    classes.sort()
 
     # Create data loaders.
     test_dataset = ListDataset(
@@ -120,6 +128,26 @@ def main():
         # Image resolution.
         image_batch, label_batch, _ = test_dataset[data_index]
         image_h, image_w = image_batch['image'].shape[-2:]
+
+        # curr_image = np.moveaxis(image_batch['image'], 0, -1)
+        curr_image, _, _ = test_dataset._get_datas_by_index(data_index)
+        curr_image *= 255
+        curr_image = curr_image.astype(np.uint8)
+        curr_image = Image.fromarray(curr_image, mode='RGB')
+        clip_image_input = preprocess(curr_image).unsqueeze(0).to(device)
+        clip_text_input = torch.cat([clip.tokenize(f"a photo of a {c}") for c in classes]).to(device)
+
+        with torch.no_grad():
+            text_features = clip_model.encode_text(clip_text_input)
+            image_features = clip_model.encode_image(clip_image_input)
+
+        image_features /= image_features.norm(dim=-1, keepdim=True)
+        text_features /= text_features.norm(dim=-1, keepdim=True)
+        clip_similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)[0]
+        # values, indices = clip_similarity.topk(5)
+        # print("\nTop predictions:\n")
+        # for value, index in zip(values, indices):
+        #     print(f"{classes[index]:>16s}: {100 * value.item():.2f}%")
 
         # Resize the input image.
         if config.test.image_size > 0:
@@ -225,7 +253,7 @@ def main():
             embeddings,
             {'semantic_memory_prototype': semantic_memory_prototypes,
              'semantic_memory_prototype_label': semantic_memory_prototype_labels},
-            with_loss=False, with_prediction=True)
+            with_loss=False, with_prediction=True, clip_similarity=clip_similarity)
 
         # Save semantic predictions.
         semantic_pred = outputs.get('semantic_prediction', None)

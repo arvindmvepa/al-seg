@@ -65,6 +65,7 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 # Set up the data directory and file list.
 DATAROOT=/home/asjchoi/SPML/PASCAL
 PRETRAINED=./snapshots/imagenet/trained/resnet-101-cuhk.pth
+#PRETRAINED=./snapshots/imagenet/trained/simclr_resnet101_pretrained1.pth
 #PRETRAINED=0
 TRAIN_DATA_LIST=datasets/voc12/scribble_${TRAIN_SPLIT}_d3_hed.txt
 TEST_DATA_LIST=datasets/voc12/panoptic_${INFERENCE_SPLIT}.txt
@@ -128,6 +129,11 @@ if [ ${IS_TRAIN_EMB} -eq 1 ]; then
     --data_dir ${DATAROOT}\
     --data_list ${TRAIN_DATA_LIST}\
     --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
+
+#   python3 pyscripts/inference/contrastive_learning_tsne.py\
+#    --data_dir ${DATAROOT}\
+#    --data_list ${TRAIN_DATA_LIST}\
+#    --cfg_path ${SNAPSHOT_DIR}/config_emb.yaml
 
 #  python3 pyscripts/inference/prototype.py\
 #    --data_dir ${DATAROOT}\

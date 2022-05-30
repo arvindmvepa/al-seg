@@ -43,6 +43,8 @@ from SupContrast.util import set_optimizer, save_model
 from SupContrast.networks.resnet_big import SupConResNet
 from SupContrast.losses import SupConLoss
 
+from spml.models.simclr import SimCLRResNet
+
 torch.cuda.manual_seed_all(235)
 torch.manual_seed(235)
 
@@ -50,31 +52,6 @@ cudnn.enabled = True
 cudnn.benchmark = True
 
 
-class SimCLRResNet(nn.Module):
-    """backbone + projection head"""
-
-    def __init__(self, encoder, img_dim, feat_dim=128):
-        super(SimCLRResNet, self).__init__()
-        self.encoder = encoder
-
-        example = torch.zeros((1, 3, img_dim, img_dim)).cuda()
-        encoder_out_shape = self.encoder({'image': example})['embedding'].shape
-        dim_in = encoder_out_shape[1] * encoder_out_shape[2] * encoder_out_shape[3]
-
-
-        self.head = nn.Sequential(
-            nn.Linear(dim_in, feat_dim),
-            nn.ReLU(inplace=True),
-            nn.Linear(feat_dim, feat_dim)
-            # nn.Linear(dim_in, feat_dim)
-        )
-
-    def forward(self, x):
-        data = {'image': x}
-        feat = self.encoder(data)[0]['embedding']
-        feat = torch.flatten(feat, start_dim=1)
-        feat = F.normalize(self.head(feat), dim=1)
-        return feat
 
 
 def train(train_loader, model, criterion, optimizer, epoch, opt):
@@ -144,15 +121,18 @@ def main():
 
     normalize = transforms.Normalize(mean=config.network.pixel_means, std=config.network.pixel_stds)
 
+    img_size = int(512*config.network.img_scale)
+
     train_transform = transforms.Compose([
-        transforms.ToPILImage(),
-        # transforms.RandomResizedCrop(size=opt.size, scale=(0.2, 1.)),
+        # transforms.ToPILImage(),
+        transforms.ToTensor(),
+        transforms.RandomResizedCrop(size=img_size, scale=(0.2, 1.)),
         transforms.RandomHorizontalFlip(),
         transforms.RandomApply([
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
         ], p=0.8),
         transforms.RandomGrayscale(p=0.2),
-        transforms.ToTensor(),
+        # transforms.ToTensor(),
         normalize,
     ])
 
@@ -192,7 +172,7 @@ def main():
         pretrained = 1
 
     # Add feature head for ResNet backbone
-    embedding_model = SimCLRResNet(embedding_model, img_dim=int(512*config.network.img_scale))
+    embedding_model = SimCLRResNet(embedding_model, img_dim=img_size)
 
     # Use synchronize batchnorm.
     if config.network.use_syncbn:
@@ -221,12 +201,12 @@ def main():
     criterion = SupConLoss(temperature=opt.temp).cuda()
 
     # Distribute model weights to multi-gpus.
-    embedding_model.encoder = DataParallel(embedding_model.encoder,
-                                           device_ids=device_ids,
-                                           gather_output=False)
-
-    if config.network.use_syncbn:
-        patch_replication_callback(embedding_model.encoder)
+    # embedding_model.encoder = DataParallel(embedding_model.encoder,
+    #                                        device_ids=device_ids,
+    #                                        gather_output=False)
+    #
+    # if config.network.use_syncbn:
+    #     patch_replication_callback(embedding_model.encoder)
 
     # curr_iter = 0
 
@@ -241,8 +221,14 @@ def main():
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
 
-    torch.save(embedding_model.encoder.module.state_dict(),
-               "/home/asjchoi/SPML/snapshots/imagenet/trained/simclr_resnet101_pretrained{}.pth".format(pretrained))
+    filename = "/home/asjchoi/SPML/snapshots/imagenet/trained/simclr_resnet101_pretrained{}.pth".format(pretrained)
+    print("Saved encoder: {}".format(filename))
+    torch.save(embedding_model.encoder.module.state_dict(), filename)
+
+    filename_head = "/home/asjchoi/SPML/snapshots/imagenet/trained/simclr_resnet101_pretrained{}_head.pth".format(pretrained)
+    print("Saved head: {}".format(filename_head))
+    torch.save(embedding_model.head.state_dict(), filename_head)
+
 
     #
     # # save the last model

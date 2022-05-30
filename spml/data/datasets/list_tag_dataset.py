@@ -104,15 +104,25 @@ class ListDatasetSimCLR(ListDataset):
         else:
             raise NotImplementedError()
 
-        image = image - np.array(self.img_mean, dtype=image.dtype)
-        image = image / np.array(self.img_std, dtype=image.dtype)
+        # image = image - np.array(self.img_mean, dtype=image.dtype)
+        # image = image / np.array(self.img_std, dtype=image.dtype)
 
         # image = torch.from_numpy(image.transpose(2, 0, 1))
         # image = image.transpose(2, 0, 1)
-        image *= 255
-        image = image.astype(np.uint8)
 
         img1, img2 = self.transform(image)
+        # image *= 255
+        # image = image.astype(np.uint8)
+        # cv2.imwrite("/home/asjchoi/SPML/img_debug/orig_img.png", image)
+        # img1 = np.moveaxis(img1.cpu().detach().numpy(), 0, -1)
+        # img1 *= 255
+        # img1 = img1.astype(np.uint8)
+        # img2 = np.moveaxis(img2.cpu().detach().numpy(), 0, -1)
+        # img2 *= 255
+        # img2 = img2.astype(np.uint8)
+        # cv2.imwrite("/home/asjchoi/SPML/img_debug/tf_img1.png", img1)
+        # cv2.imwrite("/home/asjchoi/SPML/img_debug/tf_img2.png", img2)
+        # exit(0)
 
         return [img1, img2]
 
