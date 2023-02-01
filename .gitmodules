@@ -1,0 +1,4 @@
+[submodule "spml"]
+	path = spml
+	url = https://github.com/QuantuMope/cs269-project-code.git
+	branch = spml_al_branch
