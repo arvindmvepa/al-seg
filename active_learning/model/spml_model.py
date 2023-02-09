@@ -12,7 +12,7 @@ from tqdm import tqdm
 class SPMLModel(BaseModel):
     """SPML Model class"""
 
-    def __init__(self, ann_type="box", data_root=".", ensemble_size=1, epoch_len=10578, num_epochs=3,
+    def __init__(self, ann_type="box", data_root="./spml", ensemble_size=1, epoch_len=10578, num_epochs=3,
                  seed=0, tag="", virtualenv='/home/asjchoi/SPML_Arvind/spml-env'):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, epoch_len=epoch_len,
                          num_epochs=num_epochs, seed=seed, tag=tag, virtualenv=virtualenv)
