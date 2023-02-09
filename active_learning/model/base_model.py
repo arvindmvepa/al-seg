@@ -41,7 +41,7 @@ class BaseModel(ABC):
     """
 
     def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  epoch_len = 10578, num_epochs = 3,
-                 seed=0, tag="", virtualenv='/home/asjchoi/SPML_Arvind/spml-env'):
+                 seed=0, gpus="0", tag="", virtualenv='/home/asjchoi/SPML_Arvind/spml-env'):
         self.model_params = model_params[self.model_string][ann_type]
         self.ann_type = ann_type
         self.data_root = data_root
@@ -49,19 +49,20 @@ class BaseModel(ABC):
         self.epoch_len = epoch_len
         self.num_epochs = num_epochs
         self.seed = seed
+        self.gpus = gpus
         self.tag = tag
         self.virtualenv = virtualenv
         if len(self.file_keys) == 0:
             raise ValueError(f"file_keys needs at least one key")
         self._init_train_file_info()
+        self._init_val_file_info()
 
     @abstractmethod
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0,
-                    cuda_devices="0", save_params=None):
+                    inf_train=False, save_params=None):
         raise NotImplementedError()
 
-    def train_ensemble(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0, cuda_devices="0",
-                       skip=False, save_params=None):
+    def train_ensemble(self, round_dir, skip=False, **kwargs):
         if skip:
             print("Skip Training Ensemble")
             return
@@ -70,10 +71,7 @@ class BaseModel(ABC):
             snapshot_dir = os.path.join(round_dir, str(model_no))
             if not os.path.exists(snapshot_dir):
                 os.makedirs(snapshot_dir)
-            self.train_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
-                             cur_total_oracle_split=cur_total_oracle_split,
-                             cur_total_pseudo_split=cur_total_pseudo_split, cuda_devices=cuda_devices,
-                             save_params=save_params)
+            self.train_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, **kwargs)
         print("Finished Training Ensemble")
 
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict):
@@ -81,6 +79,10 @@ class BaseModel(ABC):
 
     @abstractmethod
     def _init_train_file_info(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _init_val_file_info(self):
         raise NotImplementedError()
 
     @abstractmethod

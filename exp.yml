@@ -2,6 +2,7 @@ model:
   model_type: "spml"
   ann_type: "box"
   ensemble_size: 3
+  gpus: "0"
 model_uncertainty:
   model_uncertainty_type: "ensemble"
 policy:
@@ -9,7 +10,6 @@ policy:
   exp_dir: "OO_full_refactor_ranked_v2"
   seed: 0
   ensemble_kwargs:
-    cuda_devices: "2"
     skip: False
   uncertainty_kwargs:
     skip: False
