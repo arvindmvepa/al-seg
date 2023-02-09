@@ -11,6 +11,7 @@ model_params = {
                           "right_base_im_list": "a6_th0.5_hed.txt",
                           "left_base_pim_list": "panoptic_train+",
                           "right_base_pim_list": "hed.txt",
+                          "val_pim_list": "panoptic_val.txt",
                           "exec_script": "spml/bashscripts/voc12/train_spml_box_al.sh",
                           "train_results_dir": os.path.join("stage1", "results", "train+", "semantic_gray")
                       },
@@ -21,6 +22,7 @@ model_params = {
                           "right_base_im_list": "d3_hed.txt",
                           "left_base_pim_list": "panoptic_train+",
                           "right_base_pim_list": "hed.txt",
+                          "val_pim_list": "panoptic_val.txt",
                           "exec_script": "spml/bashscripts/voc12/train_spml_scribble_al.sh",
                           "train_results_dir": os.path.join("stage1", "results", "train+", "semantic_gray")
                       },

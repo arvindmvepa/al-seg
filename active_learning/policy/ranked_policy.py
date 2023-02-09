@@ -42,10 +42,12 @@ class RankedPolicy(BaseActiveLearningPolicy):
     def _run_round(self):
         if self._round_num < (self.num_rounds - 1):
             save_im_score_file = os.path.join(self.round_dir, self.save_im_score_file)
+            ensemble_kwargs = {"inf_train": True}
             model_uncertainty_kwargs = {"im_score_file": save_im_score_file,
                                         "ignore_ims_dict": self.cur_oracle_ims,
                                         "round_dir": self.round_dir}
-            self._run_round_models(calculate_model_uncertainty=True, uncertainty_kwargs=model_uncertainty_kwargs)
+            self._run_round_models(ensemble_kwargs=ensemble_kwargs, calculate_model_uncertainty=True,
+                                   uncertainty_kwargs=model_uncertainty_kwargs)
             self.prev_round_im_score_file = save_im_score_file
         else:
             self._run_round_models()
