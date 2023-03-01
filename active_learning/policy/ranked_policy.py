@@ -1,8 +1,5 @@
-from active_learning.model.model_params import model_params
 from active_learning.policy.base_policy import BaseActiveLearningPolicy
-import random
 import os
-import time
 
 
 class RankedPolicy(BaseActiveLearningPolicy):
@@ -29,12 +26,12 @@ class RankedPolicy(BaseActiveLearningPolicy):
 
     """
 
-    def __init__(self, model, exp_params_file, model_uncertainty=None, ensemble_kwargs=None, uncertainty_kwargs=None,
+    def __init__(self, model, model_uncertainty=None, ensemble_kwargs=None, uncertainty_kwargs=None,
                  save_im_score_file="scores.txt", rank_type="desc", rounds=(), exp_dir="test", pseudolabels=False,
                  tag="", seed=0):
-        super().__init__(model=model, exp_params_file=exp_params_file, model_uncertainty=model_uncertainty,
-                         ensemble_kwargs=ensemble_kwargs, uncertainty_kwargs=uncertainty_kwargs, rounds=rounds,
-                         pseudolabels=pseudolabels, exp_dir=exp_dir, tag=tag, seed=seed)
+        super().__init__(model=model, model_uncertainty=model_uncertainty, ensemble_kwargs=ensemble_kwargs,
+                         uncertainty_kwargs=uncertainty_kwargs, rounds=rounds, pseudolabels=pseudolabels,
+                         exp_dir=exp_dir, tag=tag, seed=seed)
         self.save_im_score_file = save_im_score_file
         self.prev_round_im_score_file = None
         self.rank_type = rank_type
@@ -64,15 +61,16 @@ class RankedPolicy(BaseActiveLearningPolicy):
 
     def _ranked_sample_unann_indices(self):
         unann_im_dict, num_samples = self._get_unann_train_file_paths(), self._get_unann_num_samples()
-        # get the scores per image from the score file
+        # get the scores per image from the score file in this format: img_name, score
         im_scores_list = open(self.prev_round_im_score_file).readlines()
         im_scores_list = [im_score.strip().split(",") for im_score in im_scores_list]
+        im_scores_list = [(im_score[0], float(im_score[1])) for im_score in im_scores_list]
         if self.rank_type == "desc":
             sorted_im_scores_list = sorted(im_scores_list, key=lambda x: x[1], reverse=True)
         elif self.rank_type == "inc":
             sorted_im_scores_list = sorted(im_scores_list, key=lambda x: x[1])
         else:
-            raise ValueError(f"Behavior for rank_type {rank_type} is undefined")
+            raise ValueError(f"Behavior for rank_type {self.rank_type} is undefined")
         print(f"Top scores: {sorted_im_scores_list[:5]}")
         sorted_im_list = [im_score[0] for im_score in sorted_im_scores_list]
 

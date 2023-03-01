@@ -3,11 +3,27 @@ import multiprocessing
 import numpy as np
 
 
+def entropy_w_label_probs(im_labels):
+    im_labels = np.concatenate(im_labels)
+    # take the average probability for each class and calculate entropy from that
+    im_labels = np.mean(im_labels, axis=0)
+    # flatten image dimensions
+    im_labels = im_labels.reshape((im_labels.shape[0], -1))
+
+    entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 0, im_labels)
+    mean_entropy = np.mean(entropy_arr)
+    return mean_entropy
+
+
 def entropy_w_label_counts(im_labels):
+    im_labels = im_labels.reshape((im_labels.shape[0], -1))
     entropy_arr = parallel_apply_along_axis(pixel_entropy_w_label_counts, 0, im_labels)
     mean_entropy = np.mean(entropy_arr)
     return mean_entropy
 
+
+def pixel_entropy_w_probs(pixel_probs):
+    return entropy_func(pixel_probs)
 
 def pixel_entropy_w_label_counts(pixel_labels):
     """https://stackoverflow.com/questions/15450192/fastest-way-to-compute-entropy-in-python"""
@@ -31,6 +47,9 @@ def parallel_apply_along_axis(func1d, axis, arr, *args, **kwargs):
     chunks = [(func1d, effective_axis, sub_arr, args, kwargs)
               for sub_arr in np.array_split(arr, multiprocessing.cpu_count())]
 
+    # filter chunks if len(sub_arr) = 0
+    chunks = [chunk for chunk in chunks if len(chunk[2]) > 0]
+
     pool = multiprocessing.Pool()
     individual_results = pool.map(unpacking_apply_along_axis, chunks)
     # Freeing the workers:
@@ -53,4 +72,5 @@ def unpacking_apply_along_axis(all_args):
     return np.apply_along_axis(func1d, axis, arr, *args, **kwargs)
 
 
-scoring_functions = {"entropy_w_label_counts": entropy_w_label_counts}
+scoring_functions = {"entropy_w_label_counts": entropy_w_label_counts,
+                     "entropy_w_label_probs": entropy_w_label_probs}
