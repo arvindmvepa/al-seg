@@ -9,10 +9,10 @@ class ModelUncertaintyFactory:
 
     @staticmethod
     def create_model_uncertainty(model_uncertainty_type, **model_uncertainty_kwargs):
-        if model_uncertainty_type == "no":
+        if model_uncertainty_type == "pass":
             model_uncertainty = NoModelUncertainty(**model_uncertainty_kwargs)
         elif model_uncertainty_type == "ensemble":
             model_uncertainty = EnsembleUncertainty(**model_uncertainty_kwargs)
         else:
-            raise ValueError(f"There is no model_uncertainty_type {model_uncertainty}")
+            raise ValueError(f"There is no model_uncertainty_type {model_uncertainty_type}")
         return model_uncertainty
