@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 from active_learning.model.model_params import model_params
-import json
 import os
-import time
+from random import Random
 
 
 class BaseModel(ABC):
@@ -40,15 +39,14 @@ class BaseModel(ABC):
 
     """
 
-    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  epoch_len = 10578, num_epochs = 3,
-                 seed=0, gpus="0", tag="", virtualenv='/home/asjchoi/SPML_Arvind/spml-env'):
+    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, gpus="0", tag="",
+                 virtualenv='/home/asjchoi/SPML_Arvind/spml-env'):
         self.model_params = model_params[self.model_string][ann_type]
         self.ann_type = ann_type
         self.data_root = data_root
         self.ensemble_size = ensemble_size
-        self.epoch_len = epoch_len
-        self.num_epochs = num_epochs
         self.seed = seed
+        self.random_gen = Random(seed)
         self.gpus = gpus
         self.tag = tag
         self.virtualenv = virtualenv
@@ -77,30 +75,8 @@ class BaseModel(ABC):
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict):
         raise NotImplementedError()
 
-    @abstractmethod
-    def _init_train_file_info(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _init_val_file_info(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
-        raise NotImplementedError()
-
     def train_split(self, cur_total_oracle_split, cur_total_pseudo_split):
         return f"{self.model_params['train_split']}_o{cur_total_oracle_split}_p{cur_total_pseudo_split}_seed{self.seed}"
-
-    @property
-    @abstractmethod
-    def file_keys(self):
-        raise NotImplementedError()
-
-    @property
-    @abstractmethod
-    def im_key(self):
-        raise NotImplementedError()
 
     @property
     @abstractmethod

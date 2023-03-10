@@ -2,7 +2,6 @@ from active_learning.model.base_model import BaseModel
 import json
 import os
 import subprocess
-import time
 from glob import glob
 import numpy as np
 from PIL import Image
@@ -23,8 +22,8 @@ class SPMLModel(BaseModel):
                  feat_aff_concentration=None, sem_ann_loss_weight=None, sem_occ_loss_weight=None,
                  word_sim_loss_weight=None, img_sim_loss_weight=None, feat_aff_loss_weight=None,
                  pretrained="snapshots/imagenet/trained/resnet-101-cuhk.pth", inference_split='val'):
-        super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, epoch_len=epoch_len,
-                         num_epochs=num_epochs, seed=seed, gpus=gpus, tag=tag, virtualenv=virtualenv)
+        super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
+                         tag=tag, virtualenv=virtualenv)
         self._set_loss_weights(sem_ann_concentration, sem_occ_concentration, img_sim_concentration,
                                feat_aff_concentration, sem_ann_loss_weight, sem_occ_loss_weight, word_sim_loss_weight,
                                img_sim_loss_weight, feat_aff_loss_weight)
@@ -33,6 +32,8 @@ class SPMLModel(BaseModel):
         self.prediction_types = prediction_types
         self.lr_policy = lr_policy
         self.use_syncbn = use_syncbn
+        self.epoch_len = epoch_len
+        self.num_epochs = num_epochs
         self.warmup_iteration = warmup_iteration
         self.lr = lr
         self.wd = wd

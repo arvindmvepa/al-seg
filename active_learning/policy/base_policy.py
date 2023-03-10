@@ -1,11 +1,7 @@
-from active_learning.model.model_params import model_params
 from active_learning.model_uncertainty.base_model_uncertainty import NoModelUncertainty
-import random
+from random import Random
 import os
-import json
-import subprocess
 import shutil
-import itertools
 
 
 
@@ -81,7 +77,7 @@ class BaseActiveLearningPolicy:
         self.pseudolabels = pseudolabels
         self.tag = tag
         self.seed = seed
-        random.seed(self.seed)
+        self.random_gen = Random(self.seed)
 
         self.all_train_files_dict = self.model.all_train_files_dict
         self.file_keys = self.model.file_keys
@@ -145,7 +141,7 @@ class BaseActiveLearningPolicy:
     def _random_sample_unann_files(self):
         num_samples = self._get_unann_num_samples()
         indices = list(range(num_samples))
-        return random.sample(indices, num_samples)
+        return self.random_gen.sample(indices, num_samples)
 
     def _get_unann_train_file_paths(self):
         unann_im_dict = {key: [] for key in self.file_keys}
