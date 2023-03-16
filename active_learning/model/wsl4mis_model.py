@@ -175,76 +175,40 @@ class DMPLSModel(BaseModel):
         writer.close()
         return "Training Finished!"
 
-    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False):
-        print("Starting to Ensemble Predictions")
-        f = open(im_score_file, "w")
-        train_results_dir = os.path.join(round_dir, "*", self.model_params['train_results_dir'])
-        filt_models_result_files = self._filter_unann_ims(train_results_dir, ignore_ims_dict)
-        for models_result_file in tqdm(zip(*filt_models_result_files)):
-            results_arr, base_name = self._convert_ensemble_results_to_arr(models_result_file)
-            # calculate the score_func over the ensemble of predictions
-            score = score_func(results_arr)
-            f.write(f"{base_name},{np.round(score, 7)}\n")
-            f.flush()
-        f.close()
+    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
+        new_train_im_list_file = os.path.join(round_dir,
+                                              "train_al" + str(cur_total_oracle_split) + "_" + self.tag + \
+                                              "_seed" + str(self.seed) \
+                                              if self.tag else \
+                                              "train_al" + str(cur_total_oracle_split) + "_" + self.tag + \
+                                              "_seed" + str(self.seed))
+
+        return {self.file_keys[0]: new_train_im_list_file}
+
+    def _init_train_file_info(self):
+        self.orig_train_im_list_file = os.path.join("wsl4mis",
+                                                    "datasets",
+                                                    "acdc",
+                                                    self.model_params['train_file'])
+        self.all_train_files_dict = dict()
+        self.all_train_files_dict[self.file_keys[0]] = open(self.orig_train_im_list_file).readlines()
 
     def _init_val_file_info(self):
-        self.val_pim_list_file = os.path.join("spml",
-                                              "datasets",
-                                              "voc12",
-                                              self.model_params["val_pim_list"])
+        self.orig_train_im_list_file = os.path.join("wsl4mis",
+                                                    "datasets",
+                                                    "acdc",
+                                                    self.model_params['val_file'])
 
     def max_iter(self, cur_total_oracle_split, cur_total_pseudo_split):
-        return int(self.num_epochs * self.epoch_len * (cur_total_oracle_split + cur_total_pseudo_split))
+        return int(self.max_iterations * (cur_total_oracle_split + cur_total_pseudo_split))
 
-    def _set_loss_weights(self, sem_ann_concentration, sem_occ_concentration, img_sim_concentration,
-                          feat_aff_concentration, sem_ann_loss_weight, sem_occ_loss_weight, word_sim_loss_weight,
-                          img_sim_loss_weight, feat_aff_loss_weight):
-        if sem_ann_concentration is None:
-            self.sem_ann_concentration = 6
-        else:
-            self.sem_ann_concentration = sem_ann_concentration
-        if img_sim_concentration is None:
-            self.img_sim_concentration = 16
-        else:
-            self.img_sim_concentration = img_sim_concentration
-        if feat_aff_concentration is None:
-            self.feat_aff_concentration = 0
-        else:
-            self.feat_aff_concentration = feat_aff_concentration
-        if word_sim_loss_weight is None:
-            self.word_sim_loss_weight = 0
-        else:
-            self.word_sim_loss_weight = word_sim_loss_weight
-        if img_sim_loss_weight is None:
-            self.img_sim_loss_weight = 0.1
-        else:
-            self.img_sim_loss_weight = img_sim_loss_weight
-        if feat_aff_loss_weight is None:
-            self.feat_aff_loss_weight = 0
-        else:
-            self.feat_aff_loss_weight = feat_aff_loss_weight
-        if sem_occ_concentration is None:
-            if self.ann_type == "box":
-                self.sem_occ_concentration = 8
-            if self.ann_type == "scribble":
-                self.sem_occ_concentration = 12
-        else:
-            self.sem_occ_concentration = sem_occ_concentration
-        if sem_ann_loss_weight is None:
-            if self.ann_type == "box":
-                self.sem_ann_loss_weight = 0.3
-            if self.ann_type == "scribble":
-                self.sem_ann_loss_weight = 1.0
-        else:
-            self.sem_ann_loss_weight = sem_ann_loss_weight
-        if sem_occ_loss_weight is None:
-            if self.ann_type == "box":
-                self.sem_occ_loss_weight = 0.3
-            if self.ann_type == "scribble":
-                self.sem_occ_loss_weight = 0.5
-        else:
-            self.sem_occ_loss_weight = sem_occ_loss_weight
+    @property
+    def file_keys(self):
+        return ['im']
+
+    @property
+    def im_key(self):
+        return self.file_keys[0]
 
     @property
     def model_string(self):

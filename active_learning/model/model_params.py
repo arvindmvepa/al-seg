@@ -27,5 +27,13 @@ model_params = {
                           "train_results_dir": os.path.join("stage1", "results", "train+", "semantic_gray")
                       },
                   },
+    "dpmls":                  {
+                  "scribble":
+                      {
+                          "train_file": "train.txt",
+                          "val_file": "val.txt",
+                          "train_results_dir": ""
+                      },
+                  },
     "a2gnn": {}
 }
