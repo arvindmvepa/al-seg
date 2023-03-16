@@ -13,6 +13,7 @@ class ModelFactory:
             model = SPMLModel(**model_kwargs)
         elif model_type == "dmpls":
             sys.path.append("./wsl4mis/code")
+            print(sys.path)
             model = DMPLSModel(**model_kwargs)
         else:
             raise ValueError(f"There is no model_type {model_type}")
