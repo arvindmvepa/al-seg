@@ -1,13 +1,11 @@
 model:
-  model_type: "spml"
-  ann_type: "box"
+  model_type: "dmpls"
+  ann_type: "scribble"
   ensemble_size: 3
   gpus: "0"
-model_uncertainty:
-  model_uncertainty_type: "ensemble"
 policy:
-  policy_type: ranked
-  exp_dir: "OO_full_refactor_ranked_v2"
+  policy_type: random
+  exp_dir: "DMPLS_test_run"
   seed: 0
   ensemble_kwargs:
     skip: False
