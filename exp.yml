@@ -12,3 +12,5 @@ policy:
   uncertainty_kwargs:
     skip: False
   rounds: [[.05, 0], [.05, 0], [.05, 0]]
+model_uncertainty:
+  model_uncertainty_type: no
