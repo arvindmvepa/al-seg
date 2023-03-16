@@ -1,3 +1,5 @@
+import sys
+sys.path.append("./wsl4mis/code")
 from active_learning.model.base_model import BaseModel
 import json
 import os
@@ -14,7 +16,6 @@ import torch.optim as optim
 from torch.nn.modules.loss import CrossEntropyLoss
 from tensorboardX import SummaryWriter
 import torch
-import sys
 
 
 class DMPLSModel(BaseModel):
