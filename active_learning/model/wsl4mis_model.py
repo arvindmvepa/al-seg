@@ -40,9 +40,15 @@ class DMPLSModel(BaseModel):
                     inf_train=False, save_params=None):
         if save_params is None:
             save_params = dict()
-        # set force to true to close any existing loggers
+
+        # remove previous logger, if exists
+        logger = logging.getLogger()
+        if len(logger.handlers) != 0:
+            logger.handlers[0].stream.close()
+            logger.removeHandler(logger.handlers[0])
+
         logging.basicConfig(filename=os.path.join(snapshot_dir, "log.txt"), level=logging.INFO,
-                            format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S', force=True)
+                            format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
         logging.info(str(self.__dict__))
 
