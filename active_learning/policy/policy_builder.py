@@ -14,7 +14,7 @@ class PolicyBuilder:
         exp_params = load_yaml(exp_params_file)
         model_params = exp_params['model']
         model = ModelFactory.create_model(**model_params)
-        model_uncertainty_params = exp_params['model_uncertainty']
+        model_uncertainty_params = exp_params.get('model_uncertainty', {})
         model_uncertainty = ModelUncertaintyFactory.create_model_uncertainty(model=model, **model_uncertainty_params)
         policy_params = exp_params['policy']
         policy = PolicyFactory.create_policy(model=model, model_uncertainty=model_uncertainty,
