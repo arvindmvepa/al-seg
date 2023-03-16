@@ -14,5 +14,5 @@ class ModelUncertaintyFactory:
         elif model_uncertainty_type == "ensemble":
             model_uncertainty = EnsembleUncertainty(**model_uncertainty_kwargs)
         else:
-            raise ValueError(f"There is no model_uncertainty_type {model_uncertainty}")
+            raise ValueError(f"There is no model_uncertainty_type {model_uncertainty_type}")
         return model_uncertainty
