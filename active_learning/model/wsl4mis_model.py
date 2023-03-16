@@ -188,16 +188,16 @@ class DMPLSModel(BaseModel):
 
     def _init_train_file_info(self):
         self.orig_train_im_list_file = os.path.join("wsl4mis",
-                                                    "datasets",
-                                                    "acdc",
+                                                    "data",
+                                                    "ACDC",
                                                     self.model_params['train_file'])
         self.all_train_files_dict = dict()
         self.all_train_files_dict[self.file_keys[0]] = open(self.orig_train_im_list_file).readlines()
 
     def _init_val_file_info(self):
         self.orig_train_im_list_file = os.path.join("wsl4mis",
-                                                    "datasets",
-                                                    "acdc",
+                                                    "data",
+                                                    "ACDC",
                                                     self.model_params['val_file'])
 
     def max_iter(self, cur_total_oracle_split, cur_total_pseudo_split):
