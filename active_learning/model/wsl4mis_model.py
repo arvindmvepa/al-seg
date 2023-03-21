@@ -41,11 +41,12 @@ class DMPLSModel(BaseModel):
         if save_params is None:
             save_params = dict()
 
-        # remove previous logger, if exists
+        # remove previous logger, if exists.
+        # close and remove first handler, but just remove (but don't close) second handler (which is standard output)
         logger = logging.getLogger()
         if len(logger.handlers) != 0:
             logger.handlers[0].stream.close()
-            logger.removeHandler(logger.handlers[0])
+            logger.handlers.clear()
 
         logging.basicConfig(filename=os.path.join(snapshot_dir, "log.txt"), level=logging.INFO,
                             format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
@@ -197,7 +198,8 @@ class DMPLSModel(BaseModel):
                                                     "ACDC",
                                                     self.model_params['train_file'])
         self.all_train_files_dict = dict()
-        self.all_train_files_dict[self.file_keys[0]] = open(self.orig_train_im_list_file).readlines()
+        with open(self.orig_train_im_list_file, "r") as f:
+            self.all_train_files_dict[self.file_keys[0]] = f.read().splitlines()
 
     def _init_val_file_info(self):
         self.orig_train_im_list_file = os.path.join("wsl4mis",

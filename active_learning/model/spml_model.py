@@ -230,8 +230,10 @@ class SPMLModel(BaseModel):
                                                      "voc12",
                                                      self.left_base_pim_list + "_" + self.right_base_pim_list)
         self.all_train_files_dict = dict()
-        self.all_train_files_dict[self.file_keys[0]] = open(self.orig_train_im_list_file).readlines()
-        self.all_train_files_dict[self.file_keys[1]] = open(self.orig_train_pim_list_file).readlines()
+        with open(self.orig_train_im_list_file, "r") as f:
+            self.all_train_files_dict[self.file_keys[0]] = f.read().splitlines()
+        with open(self.orig_train_pim_list_file, "r") as f:
+            self.all_train_files_dict[self.file_keys[1]] = f.read().splitlines()
 
     def _init_val_file_info(self):
         self.val_pim_list_file = os.path.join("spml",
@@ -244,7 +246,7 @@ class SPMLModel(BaseModel):
 
     def _write_config_file(self, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split):
         with open("spml/configs/voc12_template.yaml", "r") as source:
-            lines = source.readlines()
+            lines = source.read().splitlines()
         with open(os.path.join(snapshot_dir, "config_emb.yaml"), "w") as source:
             for line in lines:
                 line = re.sub(r'TRAIN_SPLIT', self.train_split(cur_total_oracle_split, cur_total_pseudo_split), line)
