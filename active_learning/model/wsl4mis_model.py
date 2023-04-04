@@ -54,10 +54,15 @@ class DMPLSModel(BaseModel):
         logging.info(str(self.__dict__))
 
         model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
-        db_train = BaseDataSets(base_dir=self.data_root, split="train", transform=transforms.Compose([
+
+        train_file = self.get_round_train_file_paths(round_dir=round_dir,
+                                                     cur_total_oracle_split=cur_total_oracle_split,
+                                                     cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[0]]
+
+        db_train = BaseDataSets(split="train", transform=transforms.Compose([
             RandomGenerator(self.patch_size)
-        ]), fold=self.fold, sup_type=self.ann_type)
-        db_val = BaseDataSets(base_dir=self.data_root, fold=self.fold, split="val")
+        ]), fold=self.fold, sup_type=self.ann_type, train_file=train_file)
+        db_val = BaseDataSets(base_dir=self.data_root, fold=self.fold, split="val", val_file=self.orig_val_im_list_file)
 
         trainloader = DataLoader(db_train, batch_size=self.batch_size, shuffle=True, num_workers=8, pin_memory=True)
         valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
@@ -193,19 +198,13 @@ class DMPLSModel(BaseModel):
         return {self.file_keys[0]: new_train_im_list_file}
 
     def _init_train_file_info(self):
-        self.orig_train_im_list_file = os.path.join("wsl4mis",
-                                                    "data",
-                                                    "ACDC",
-                                                    self.model_params['train_file'])
+        self.orig_train_im_list_file = self.model_params['train_file']
         self.all_train_files_dict = dict()
         with open(self.orig_train_im_list_file, "r") as f:
             self.all_train_files_dict[self.file_keys[0]] = f.read().splitlines()
 
     def _init_val_file_info(self):
-        self.orig_train_im_list_file = os.path.join("wsl4mis",
-                                                    "data",
-                                                    "ACDC",
-                                                    self.model_params['val_file'])
+        self.orig_val_im_list_file = self.model_params["val_file"]
 
     def max_iter(self, cur_total_oracle_split, cur_total_pseudo_split):
         return int(self.max_iterations * (cur_total_oracle_split + cur_total_pseudo_split))

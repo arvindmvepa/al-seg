@@ -62,9 +62,9 @@ class SPMLModel(BaseModel):
         # seems like a bug b/c it's a different file type than train_data_list but seems to work fine
         val_data_list = self.val_pim_list_file
         orig_train_data_list = self.orig_train_im_list_file
-        memory_data_list = self.get_round_train_file_paths(round_dir,
-                                                                  cur_total_oracle_split=cur_total_oracle_split,
-                                                                  cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[1]]
+        memory_data_list = self.get_round_train_file_paths(round_dir=round_dir,
+                                                           cur_total_oracle_split=cur_total_oracle_split,
+                                                           cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[1]]
         train_split = self.train_split(cur_total_oracle_split, cur_total_pseudo_split)
         orig_train_split = self.model_params['train_split']
 
@@ -221,14 +221,8 @@ class SPMLModel(BaseModel):
         self.right_base_im_list = self.model_params['right_base_im_list']
         self.left_base_pim_list = self.model_params['left_base_pim_list']
         self.right_base_pim_list = self.model_params['right_base_pim_list']
-        self.orig_train_im_list_file = os.path.join("spml",
-                                                    "datasets",
-                                                    "voc12",
-                                                    self.left_base_im_list + "_" + self.right_base_im_list)
-        self.orig_train_pim_list_file = os.path.join("spml",
-                                                     "datasets",
-                                                     "voc12",
-                                                     self.left_base_pim_list + "_" + self.right_base_pim_list)
+        self.orig_train_im_list_file = self.model_params["orig_train_im_list_file"]
+        self.orig_train_pim_list_file = self.model_params["orig_train_pim_list_file"]
         self.all_train_files_dict = dict()
         with open(self.orig_train_im_list_file, "r") as f:
             self.all_train_files_dict[self.file_keys[0]] = f.read().splitlines()
@@ -236,10 +230,7 @@ class SPMLModel(BaseModel):
             self.all_train_files_dict[self.file_keys[1]] = f.read().splitlines()
 
     def _init_val_file_info(self):
-        self.val_pim_list_file = os.path.join("spml",
-                                              "datasets",
-                                              "voc12",
-                                              self.model_params["val_pim_list"])
+        self.val_pim_list_file = self.model_params["val_pim_list"]
 
     def max_iter(self, cur_total_oracle_split, cur_total_pseudo_split):
         return int(self.num_epochs * self.epoch_len * (cur_total_oracle_split + cur_total_pseudo_split))

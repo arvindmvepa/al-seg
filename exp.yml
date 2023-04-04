@@ -5,7 +5,7 @@ model:
   gpus: "0"
 policy:
   policy_type: random
-  exp_dir: "DMPLS_test_run"
+  exp_dir: "DMPLS_test_run1"
   seed: 0
   ensemble_kwargs:
     skip: False
