@@ -191,7 +191,7 @@ class DMPLSModel(BaseModel):
                                               "train_al" + str(cur_total_oracle_split) + "_" + self.tag + \
                                               "_seed" + str(self.seed) \
                                               if self.tag else \
-                                              "train_al" + str(cur_total_oracle_split) + "_" + "_seed" + str(self.seed))
+                                              "train_al" + str(cur_total_oracle_split) + "_seed" + str(self.seed))
 
         return {self.file_keys[0]: new_train_im_list_file}
 
