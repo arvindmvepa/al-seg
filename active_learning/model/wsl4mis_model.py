@@ -60,7 +60,7 @@ class DMPLSModel(BaseModel):
 
         db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
                                 sup_type=self.ann_type, train_file=train_file)
-        db_val = BaseDataSets(base_dir=self.data_root, split="val", val_file=self.orig_val_im_list_file)
+        db_val = BaseDataSets(split="val", val_file=self.orig_val_im_list_file)
 
         trainloader = DataLoader(db_train, batch_size=self.batch_size, shuffle=True, num_workers=8, pin_memory=True)
         valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
