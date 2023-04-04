@@ -134,6 +134,7 @@ class BaseActiveLearningPolicy:
             sampled_unann_ims = [unann_ims[i] for i in sampled_unann_indices]
             sampled_unann_im_dict[key] = sampled_unann_ims
             new_train_file_path = new_train_file_paths[key]
+            print(f"sampled_unann_ims: {sampled_unann_ims}, self.cur_oracle_ims[key]: {self.cur_oracle_ims[key]}")
             with open(new_train_file_path, 'w') as new_file:
                 new_file.write(''.join(sampled_unann_ims + self.cur_oracle_ims[key]))
         return sampled_unann_im_dict
