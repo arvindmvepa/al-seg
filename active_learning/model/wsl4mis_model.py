@@ -23,7 +23,7 @@ class DMPLSModel(BaseModel):
 
     def __init__(self, ann_type="scribble", data_root="/home/asjchoi/WSL4MIS/data/ACDC", ensemble_size=1,
                  seg_model='unet_cct', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
-                 patch_size=(256,256), seed=0, fold="fold1", gpus="0", tag="",
+                 patch_size=(256,256), seed=0, gpus="0", tag="",
                  virtualenv='/home/asjchoi/WSL4MIS/wsl4mis-env'):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag, virtualenv=virtualenv)
@@ -34,7 +34,6 @@ class DMPLSModel(BaseModel):
         self.deterministic = deterministic
         self.base_lr = base_lr
         self.patch_size = patch_size
-        self.fold = fold
 
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0,
                     inf_train=False, save_params=None):
@@ -59,10 +58,9 @@ class DMPLSModel(BaseModel):
                                                      cur_total_oracle_split=cur_total_oracle_split,
                                                      cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[0]]
 
-        db_train = BaseDataSets(split="train", transform=transforms.Compose([
-            RandomGenerator(self.patch_size)
-        ]), fold=self.fold, sup_type=self.ann_type, train_file=train_file)
-        db_val = BaseDataSets(base_dir=self.data_root, fold=self.fold, split="val", val_file=self.orig_val_im_list_file)
+        db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
+                                sup_type=self.ann_type, train_file=train_file)
+        db_val = BaseDataSets(base_dir=self.data_root, split="val", val_file=self.orig_val_im_list_file)
 
         trainloader = DataLoader(db_train, batch_size=self.batch_size, shuffle=True, num_workers=8, pin_memory=True)
         valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
