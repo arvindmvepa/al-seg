@@ -78,7 +78,7 @@ class DMPLSModel(BaseModel):
         logging.info("{} iterations per epoch".format(len(trainloader)))
 
         iter_num = 0
-        max_epoch = self.max_iter // len(trainloader) + 1
+        max_epoch = self.max_iter(cur_total_oracle_split, cur_total_pseudo_split) // len(trainloader) + 1
         best_performance = 0.0
         iterator = tqdm(range(max_epoch), ncols=70)
         alpha = 1.0
@@ -110,7 +110,7 @@ class DMPLSModel(BaseModel):
                 loss.backward()
                 optimizer.step()
 
-                lr_ = self.base_lr * (1.0 - iter_num / self.max_iter) ** 0.9
+                lr_ = self.base_lr * (1.0 - iter_num / self.max_iter(cur_total_oracle_split, cur_total_pseudo_split)) ** 0.9
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = lr_
 
@@ -180,9 +180,9 @@ class DMPLSModel(BaseModel):
                     torch.save(model.state_dict(), save_mode_path)
                     logging.info("save model to {}".format(save_mode_path))
 
-                if iter_num >= self.max_iter:
+                if iter_num >= self.max_iter(cur_total_oracle_split, cur_total_pseudo_split):
                     break
-            if iter_num >= self.max_iter:
+            if iter_num >= self.max_iter(cur_total_oracle_split, cur_total_pseudo_split):
                 iterator.close()
                 break
         writer.close()
