@@ -87,6 +87,8 @@ class DMPLSModel(BaseModel):
                 volume_batch, label_batch = sampled_batch['image'], sampled_batch['label']
                 volume_batch, label_batch = volume_batch.cuda(), label_batch.cuda()
 
+                print(f"volume_batch.shape : {volume_batch.shape}")
+
                 outputs, outputs_aux1 = model(
                     volume_batch)
                 outputs_soft1 = torch.softmax(outputs, dim=1)
