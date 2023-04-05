@@ -87,7 +87,7 @@ class DMPLSModel(BaseModel):
                 volume_batch, label_batch = sampled_batch['image'], sampled_batch['label']
                 volume_batch, label_batch = volume_batch.cuda(), label_batch.cuda()
 
-                print(f"volume_batch.shape : {volume_batch.shape}")
+                print(f"i_batch: {i_batch}, volume_batch.shape : {volume_batch.shape}")
                 sys.stdout.flush()
 
                 outputs, outputs_aux1 = model(
