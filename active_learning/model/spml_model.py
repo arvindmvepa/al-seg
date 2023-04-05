@@ -174,6 +174,7 @@ class SPMLModel(BaseModel):
                                               if self.tag else
                                               self.left_base_im_list + "al" + str(cur_total_oracle_split) + "-" + \
                                               self.tag + "seed" + str(self.seed) + "_" + self.right_base_im_list)
+        new_train_im_list_file = new_train_im_list_file + ".txt"
         new_train_pim_list_file = os.path.join(round_dir,
                                                self.left_base_pim_list + "_al" + str(cur_total_oracle_split) + \
                                                "_" + self.tag + "_seed" + str(self.seed) + "_" + \
@@ -182,7 +183,7 @@ class SPMLModel(BaseModel):
                                                self.left_base_pim_list + "al" + str(cur_total_oracle_split) + \
                                                "-" + self.tag + "seed" + str(self.seed) + "_" + \
                                                self.right_base_pim_list)
-
+        new_train_pim_list_file = new_train_pim_list_file + ".txt"
         return {self.file_keys[0]: new_train_im_list_file, self.file_keys[1]: new_train_pim_list_file}
 
     def _convert_ensemble_results_to_arr(self, models_result_file):

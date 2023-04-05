@@ -58,8 +58,6 @@ class DMPLSModel(BaseModel):
                                                      cur_total_oracle_split=cur_total_oracle_split,
                                                      cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[0]]
 
-        print(f"train_file: {train_file}, self.orig_val_im_list_file: {self.orig_val_im_list_file}")
-
         db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
                                 sup_type=self.ann_type, train_file=train_file, data_root=self.data_root)
         db_val = BaseDataSets(split="val", val_file=self.orig_val_im_list_file, data_root=self.data_root)
@@ -194,7 +192,7 @@ class DMPLSModel(BaseModel):
                                               "_seed" + str(self.seed) \
                                               if self.tag else \
                                               "train_al" + str(cur_total_oracle_split) + "_seed" + str(self.seed))
-
+        new_train_im_list_file = new_train_im_list_file + ".txt"
         return {self.file_keys[0]: new_train_im_list_file}
 
     def _init_train_file_info(self):
