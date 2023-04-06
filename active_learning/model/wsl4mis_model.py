@@ -200,7 +200,7 @@ class DMPLSModel(BaseModel):
 
                 outputs = model(volume_batch)[0]
                 outputs_soft = torch.softmax(outputs, dim=1)
-                train_preds[idx] = np.numpy.float16(outputs_soft)
+                train_preds[idx] = np.float16(outputs_soft)
 
                 train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
                 np.savez_compressed(train_preds_path, **train_preds)
