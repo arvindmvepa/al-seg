@@ -1,8 +1,5 @@
-from active_learning.model.model_params import model_params
 from active_learning.policy.base_policy import BaseActiveLearningPolicy
-import random
 import os
-import time
 
 
 class RankedPolicy(BaseActiveLearningPolicy):

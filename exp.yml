@@ -4,8 +4,8 @@ model:
   ensemble_size: 3
   gpus: "0"
 policy:
-  policy_type: random
-  exp_dir: "DMPLS_test_run1"
+  policy_type: ranked
+  exp_dir: "DMPLS_w_entropy_test_run"
   seed: 0
   ensemble_kwargs:
     skip: False
@@ -13,4 +13,4 @@ policy:
     skip: False
   rounds: [[.05, 0], [.05, 0], [.05, 0]]
 model_uncertainty:
-  model_uncertainty_type: pass
+  model_uncertainty_type: ensemble
