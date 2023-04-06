@@ -168,7 +168,7 @@ class DMPLSModel(BaseModel):
                         'iteration %d : mean_dice : %f mean_hd95 : %f' % (iter_num, performance, mean_hd95))
                     model.train()
 
-                if iter_num > 0 and iter_num % 500 == 0:
+                if iter_num > 0 and iter_num % (500 * (cur_total_oracle_split + cur_total_pseudo_split)) == 0:
                     if alpha > 0.01:
                         alpha = alpha - 0.01
                     else:
@@ -187,6 +187,19 @@ class DMPLSModel(BaseModel):
                 break
         writer.close()
         return "Training Finished!"
+
+    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False):
+        print("Starting to Ensemble Predictions")
+        f = open(im_score_file, "w")
+        train_results_dir = os.path.join(round_dir, "*", self.model_params['train_results_dir'])
+        filt_models_result_files = self._filter_unann_ims(train_results_dir, ignore_ims_dict)
+        for models_result_file in tqdm(zip(*filt_models_result_files)):
+            results_arr, base_name = self._convert_ensemble_results_to_arr(models_result_file)
+            # calculate the score_func over the ensemble of predictions
+            score = score_func(results_arr)
+            f.write(f"{base_name},{np.round(score, 7)}\n")
+            f.flush()
+        f.close()
 
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
         new_train_im_list_file = os.path.join(round_dir,
