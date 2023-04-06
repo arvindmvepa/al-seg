@@ -129,6 +129,7 @@ class DMPLSModel(BaseModel):
                     writer.add_image('train/Image', image, iter_num)
                     outputs = torch.argmax(torch.softmax(
                         outputs, dim=1), dim=1, keepdim=True)
+                    print(f"outputs.shape: {outputs.shape}, label_batch.shape: {label_batch.shape}")
                     writer.add_image('train/Prediction',
                                      outputs[1, ...] * 50, iter_num)
                     labs = label_batch[1, ...].unsqueeze(0) * 50
