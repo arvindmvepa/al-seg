@@ -129,11 +129,9 @@ class DMPLSModel(BaseModel):
                     writer.add_image('train/Image', image, iter_num)
                     outputs = torch.argmax(torch.softmax(
                         outputs, dim=1), dim=1, keepdim=True)
-                    print(f"outputs.shape: {outputs.shape}, label_batch.shape: {label_batch.shape}")
-                    sys.stdout.flush()
                     writer.add_image('train/Prediction',
-                                     outputs[1, ...] * 50, iter_num)
-                    labs = label_batch[1, ...].unsqueeze(0) * 50
+                                     outputs[0, ...] * 50, iter_num)
+                    labs = label_batch[0, ...].unsqueeze(0) * 50
                     writer.add_image('train/GroundTruth', labs, iter_num)
 
                 if iter_num > 0 and iter_num % 200 == 0:
