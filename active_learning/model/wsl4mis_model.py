@@ -186,9 +186,30 @@ class DMPLSModel(BaseModel):
                 iterator.close()
                 break
         writer.close()
+
+        if inf_train:
+            model.eval()
+            full_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
+                                         sup_type=self.ann_type, train_file=self.orig_train_im_list_file,
+                                         data_root=self.data_root)
+            full_trainloader = DataLoader(full_db_train, batch_size=1, shuffle=True, num_workers=8, pin_memory=True)
+            train_preds = {}
+            for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
+                volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
+                volume_batch, label_batch, idx = volume_batch.cuda(), label_batch.cuda(), idx.cpu()[0]
+
+                outputs = model(volume_batch)[0]
+                outputs_soft = torch.softmax(outputs, dim=1)
+                train_preds[idx] = np.numpy.float16(outputs_soft)
+
+                train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
+                np.savez_compressed(train_preds_path, **train_preds)
+
         return "Training Finished!"
 
+
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False):
+        """Dummy method for getting ensemble scores"""
         print("Starting to Ensemble Predictions")
         f = open(im_score_file, "w")
         train_results_dir = os.path.join(round_dir, "*", self.model_params['train_results_dir'])

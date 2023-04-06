@@ -11,6 +11,6 @@ policy:
     skip: False
   uncertainty_kwargs:
     skip: False
-  rounds: [[.05, 0], [.05, 0], [.05, 0]]
+  rounds: [[.001, 0], [.001, 0], [.001, 0]]
 model_uncertainty:
   model_uncertainty_type: ensemble
