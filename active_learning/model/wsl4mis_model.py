@@ -203,9 +203,8 @@ class DMPLSModel(BaseModel):
                 # convert idx to string for np.savez_compressed
                 idx = str(idx)
                 train_preds[idx] = np.float16(outputs_soft.cpu().detach().numpy())
-
-                train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
-                np.savez_compressed(train_preds_path, **train_preds)
+            train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
+            np.savez_compressed(train_preds_path, **train_preds)
 
         return "Training Finished!"
 
