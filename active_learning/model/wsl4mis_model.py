@@ -62,8 +62,6 @@ class DMPLSModel(BaseModel):
                                 sup_type=self.ann_type, train_file=train_file, data_root=self.data_root)
         db_val = BaseDataSets(split="val", val_file=self.orig_val_im_list_file, data_root=self.data_root)
 
-        print(f"len(db_train): {len(db_train)}")
-
         trainloader = DataLoader(db_train, batch_size=self.batch_size, shuffle=True, num_workers=8, pin_memory=True)
         valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
 
@@ -89,7 +87,6 @@ class DMPLSModel(BaseModel):
                 volume_batch, label_batch = sampled_batch['image'], sampled_batch['label']
                 volume_batch, label_batch = volume_batch.cuda(), label_batch.cuda()
 
-                print(f"i_batch: {i_batch}, volume_batch.shape : {volume_batch.shape}")
                 sys.stdout.flush()
 
                 outputs, outputs_aux1 = model(
@@ -127,7 +124,7 @@ class DMPLSModel(BaseModel):
                     (iter_num, loss.item(), loss_ce.item(), loss_pse_sup.item(), alpha))
 
                 if iter_num % 20 == 0:
-                    image = volume_batch[1, 0:1, :, :]
+                    image = volume_batch[0, 0:1, :, :]
                     image = (image - image.min()) / (image.max() - image.min())
                     writer.add_image('train/Image', image, iter_num)
                     outputs = torch.argmax(torch.softmax(
