@@ -200,9 +200,9 @@ class DMPLSModel(BaseModel):
 
                 outputs = model(volume_batch)[0]
                 outputs_soft = torch.softmax(outputs, dim=1)
-                # convert idx to string for np.savez_compressed
-                idx = str(idx)
-                train_preds[idx] = np.float16(outputs_soft.cpu().detach().numpy())
+
+                slice_basename = os.path.basename(full_db_train.sample_list[idx])
+                train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
             train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
             np.savez_compressed(train_preds_path, **train_preds)
 
@@ -213,7 +213,7 @@ class DMPLSModel(BaseModel):
         """Dummy method for getting ensemble scores"""
         print("Starting to Ensemble Predictions")
         f = open(im_score_file, "w")
-        train_results_dir = os.path.join(round_dir, "*", self.model_params['train_results_dir'])
+        train_results_dir = os.path.join(round_dir, "*", "train_preds.npz")
         filt_models_result_files = self._filter_unann_ims(train_results_dir, ignore_ims_dict)
         for models_result_file in tqdm(zip(*filt_models_result_files)):
             results_arr, base_name = self._convert_ensemble_results_to_arr(models_result_file)
