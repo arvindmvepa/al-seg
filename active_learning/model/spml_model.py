@@ -154,7 +154,7 @@ class SPMLModel(BaseModel):
         print(cur_script)
         subprocess.run(cur_script, env=env, shell=True)
 
-    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False):
+    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False, delete_preds=True):
         print("Starting to Ensemble Predictions")
         f = open(im_score_file, "w")
         train_results_dir = os.path.join(round_dir, "*", self.model_params['train_results_dir'])
@@ -166,6 +166,10 @@ class SPMLModel(BaseModel):
             f.write(f"{base_name},{np.round(score, 7)}\n")
             f.flush()
         f.close()
+        # after obtaining scores, delete train results for the reounds
+        if delete_preds:
+            for result in train_results_dir:
+                os.rmtree(result)
 
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
         new_train_im_list_file = os.path.join(round_dir,

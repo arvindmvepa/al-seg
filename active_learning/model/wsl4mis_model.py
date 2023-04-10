@@ -197,11 +197,12 @@ class DMPLSModel(BaseModel):
             for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
                 volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
                 volume_batch, label_batch, idx = volume_batch.cuda(), label_batch.cuda(), idx.cpu()[0]
-
+                # skip images that are already annotated
+                if full_db_train.sample_list[idx] in db_train.sample_list:
+                    continue
+                slice_basename = os.path.basename(full_db_train.sample_list[idx])
                 outputs = model(volume_batch)[0]
                 outputs_soft = torch.softmax(outputs, dim=1)
-
-                slice_basename = os.path.basename(full_db_train.sample_list[idx])
                 train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
             train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
             np.savez_compressed(train_preds_path, **train_preds)
@@ -209,19 +210,27 @@ class DMPLSModel(BaseModel):
         return "Training Finished!"
 
 
-    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False):
+    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False, delete_preds=True):
         """Dummy method for getting ensemble scores"""
         print("Starting to Ensemble Predictions")
         f = open(im_score_file, "w")
-        train_results_dir = os.path.join(round_dir, "*", "train_preds.npz")
-        filt_models_result_files = self._filter_unann_ims(train_results_dir, ignore_ims_dict)
-        for models_result_file in tqdm(zip(*filt_models_result_files)):
-            results_arr, base_name = self._convert_ensemble_results_to_arr(models_result_file)
-            # calculate the score_func over the ensemble of predictions
-            score = score_func(results_arr)
-            f.write(f"{base_name},{np.round(score, 7)}\n")
+        train_results = os.path.join(round_dir, "*", "train_preds.npz")
+        im_files = sorted(np.load(train_results[0], mmap_mode='r').files)
+        # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
+        for im_file in im_files:
+            ensemble_preds_arr = []
+            for i, result in enumerate(train_results):
+                preds_arr = np.load(result, mmap_mode='r')[im_file]
+                ensemble_preds_arr.append(preds_arr)
+            score = score_func(ensemble_preds_arr)
+            f.write(f"{im_file},{np.round(score, 7)}\n")
             f.flush()
         f.close()
+        # after obtaining scores, delete train_preds.npz for the round
+        if delete_preds:
+            for result in train_results:
+                os.remove(result)
+
 
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
         new_train_im_list_file = os.path.join(round_dir,

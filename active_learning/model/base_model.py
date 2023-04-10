@@ -72,7 +72,7 @@ class BaseModel(ABC):
             self.train_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, **kwargs)
         print("Finished Training Ensemble")
 
-    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict):
+    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False, delete_preds=True):
         raise NotImplementedError()
 
     @abstractmethod

@@ -5,7 +5,7 @@ model:
   gpus: "0"
 policy:
   policy_type: ranked
-  exp_dir: "DMPLS_w_entropy_test_run"
+  exp_dir: "DMPLS_w_entropy_test_run1"
   seed: 0
   ensemble_kwargs:
     skip: False
@@ -14,3 +14,4 @@ policy:
   rounds: [[.001, 0], [.001, 0], [.001, 0]]
 model_uncertainty:
   model_uncertainty_type: ensemble
+  scoring_method: entropy_w_label_probs

@@ -3,11 +3,22 @@ import multiprocessing
 import numpy as np
 
 
+def entropy_w_label_probs(im_labels):
+    entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 0, im_labels)
+    mean_entropy = np.mean(entropy_arr)
+    return mean_entropy
+
+
 def entropy_w_label_counts(im_labels):
     entropy_arr = parallel_apply_along_axis(pixel_entropy_w_label_counts, 0, im_labels)
     mean_entropy = np.mean(entropy_arr)
     return mean_entropy
 
+
+def pixel_entropy_w_probs(pixel_probs):
+    # take the average probability for each class and calculate entropy from that
+    mean_per_model_pixel_probs = np.mean(pixel_probs, axis=0)
+    return entropy_func(mean_per_model_pixel_probs)
 
 def pixel_entropy_w_label_counts(pixel_labels):
     """https://stackoverflow.com/questions/15450192/fastest-way-to-compute-entropy-in-python"""
@@ -53,4 +64,5 @@ def unpacking_apply_along_axis(all_args):
     return np.apply_along_axis(func1d, axis, arr, *args, **kwargs)
 
 
-scoring_functions = {"entropy_w_label_counts": entropy_w_label_counts}
+scoring_functions = {"entropy_w_label_counts": entropy_w_label_counts,
+                     "entropy_w_probs": entropy_w_label_probs}
