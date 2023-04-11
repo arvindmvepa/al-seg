@@ -8,9 +8,10 @@ policy:
   exp_dir: "DMPLS_w_entropy_test_run1"
   seed: 0
   ensemble_kwargs:
-    skip: False
+    skip: True
   uncertainty_kwargs:
     skip: False
+    delete_preds: False
   rounds: [[.001, 0], [.001, 0], [.001, 0]]
 model_uncertainty:
   model_uncertainty_type: ensemble
