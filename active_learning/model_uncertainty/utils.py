@@ -6,7 +6,7 @@ import sys
 
 def entropy_w_label_probs(im_labels):
     print(f"debug len(im_labels): {len(im_labels)}")
-    print(f"debug im_labels: {im_labels}")
+    print(f"debug im_labels[0].shape: {im_labels[0].shape}")
     sys.stdout.flush()
     entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 0, im_labels)
     mean_entropy = np.mean(entropy_arr)
