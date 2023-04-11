@@ -6,7 +6,6 @@ import sys
 
 def entropy_w_label_probs(im_labels):
     im_labels = np.concatenate(im_labels)
-    print(f"im_labels.shape: {im_labels.shape}")
     sys.stdout.flush()
     entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 0, im_labels)
     mean_entropy = np.mean(entropy_arr)
@@ -48,9 +47,7 @@ def parallel_apply_along_axis(func1d, axis, arr, *args, **kwargs):
 
     # filter chunks if len(sub_arr) = 0
     chunks = [chunk for chunk in chunks if len(chunk[2]) > 0]
-
     pool = multiprocessing.Pool()
-    print(f"chunks: {chunks}")
     individual_results = pool.map(unpacking_apply_along_axis, chunks)
     # Freeing the workers:
     pool.close()
@@ -68,7 +65,6 @@ def unpacking_apply_along_axis(all_args):
     this function can generally be imported from a module, as required
     by map().
     """
-    print(f"all_args: {all_args}")
     (func1d, axis, arr, args, kwargs) = all_args
     return np.apply_along_axis(func1d, axis, arr, *args, **kwargs)
 
