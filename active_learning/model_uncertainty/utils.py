@@ -65,4 +65,4 @@ def unpacking_apply_along_axis(all_args):
 
 
 scoring_functions = {"entropy_w_label_counts": entropy_w_label_counts,
-                     "entropy_w_probs": entropy_w_label_probs}
+                     "entropy_w_label_probs": entropy_w_label_probs}
