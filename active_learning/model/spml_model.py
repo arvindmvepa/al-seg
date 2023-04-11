@@ -286,7 +286,7 @@ class SPMLModel(BaseModel):
                 line = re.sub(r'FEAT_AFF_LOSS_WEIGHT', str(self.feat_aff_loss_weight), line)
                 line = re.sub(r'WORD_SIM_LOSS_WEIGHT', str(self.word_sim_loss_weight), line)
                 line = re.sub(r'IMAGE_SCALE', str(self.image_scale), line)
-                source.write(line)
+                source.write(line+"\n")
 
     def _set_loss_weights(self, sem_ann_concentration, sem_occ_concentration, img_sim_concentration,
                           feat_aff_concentration, sem_ann_loss_weight, sem_occ_loss_weight, word_sim_loss_weight,
