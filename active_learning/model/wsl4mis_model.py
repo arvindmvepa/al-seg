@@ -16,6 +16,7 @@ import torch.optim as optim
 from torch.nn.modules.loss import CrossEntropyLoss
 from tensorboardX import SummaryWriter
 import torch
+from glob import glob
 
 
 class DMPLSModel(BaseModel):
@@ -214,7 +215,7 @@ class DMPLSModel(BaseModel):
         """Dummy method for getting ensemble scores"""
         print("Starting to Ensemble Predictions")
         f = open(im_score_file, "w")
-        train_results = os.path.join(round_dir, "*", "train_preds.npz")
+        train_results = sorted(list(glob(os.path.join(round_dir, "*", "train_preds.npz"))))
         im_files = sorted(np.load(train_results, mmap_mode='r').files)
         # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
         for im_file in im_files:
