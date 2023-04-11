@@ -6,7 +6,7 @@ import sys
 
 def entropy_w_label_probs(im_labels):
     im_labels = np.concatenate(im_labels)
-    sys.stdout.flush()
+    print(f"im_labels.shape: {im_labels.shape}")
     entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 0, im_labels)
     mean_entropy = np.mean(entropy_arr)
     return mean_entropy
@@ -19,6 +19,7 @@ def entropy_w_label_counts(im_labels):
 
 
 def pixel_entropy_w_probs(pixel_probs):
+    print(f"pixel_probs.shape: {pixel_probs.shape}")
     # take the average probability for each class and calculate entropy from that
     mean_per_model_pixel_probs = np.mean(pixel_probs, axis=0)
     return entropy_func(mean_per_model_pixel_probs)
