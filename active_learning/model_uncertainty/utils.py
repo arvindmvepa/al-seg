@@ -47,6 +47,7 @@ def parallel_apply_along_axis(func1d, axis, arr, *args, **kwargs):
               for sub_arr in np.array_split(arr, multiprocessing.cpu_count())]
 
     pool = multiprocessing.Pool()
+    print(f"chunks: {chunks}")
     individual_results = pool.map(unpacking_apply_along_axis, chunks)
     # Freeing the workers:
     pool.close()
@@ -64,6 +65,7 @@ def unpacking_apply_along_axis(all_args):
     this function can generally be imported from a module, as required
     by map().
     """
+    print(f"all_args: {all_args}")
     (func1d, axis, arr, args, kwargs) = all_args
     return np.apply_along_axis(func1d, axis, arr, *args, **kwargs)
 
