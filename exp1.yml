@@ -8,10 +8,10 @@ policy:
   exp_dir: "spml_w_entropy_test_run"
   seed: 0
   ensemble_kwargs:
-    skip: True
+    skip: False
   uncertainty_kwargs:
     skip: False
-    delete_preds: False
+    delete_preds: True
   rounds: [[.001, 0], [.001, 0], [.001, 0]]
 model_uncertainty:
   model_uncertainty_type: ensemble
