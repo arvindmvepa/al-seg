@@ -25,7 +25,7 @@ def entropy_w_label_counts(im_labels):
 
 
 def pixel_entropy_w_probs(pixel_probs):
-    print(f"pixel_probs.shape: {pixel_probs.shape}")
+    #print(f"pixel_probs.shape: {pixel_probs.shape}")
     return entropy_func(pixel_probs)
 
 def pixel_entropy_w_label_counts(pixel_labels):
