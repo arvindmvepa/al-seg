@@ -217,7 +217,7 @@ class DMPLSModel(BaseModel):
         train_results = sorted(list(glob(os.path.join(round_dir, "*", "train_preds.npz"))))
         im_files = sorted(np.load(train_results[0], mmap_mode='r').files)
         # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
-        for im_file in im_files:
+        for im_file in tqdm(im_files):
             ensemble_preds_arr = []
             for i, result in enumerate(train_results):
                 preds_arr = np.load(result, mmap_mode='r')[im_file]

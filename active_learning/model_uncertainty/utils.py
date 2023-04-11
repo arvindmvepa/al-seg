@@ -6,13 +6,11 @@ import sys
 
 def entropy_w_label_probs(im_labels):
     im_labels = np.concatenate(im_labels)
-    print(f"im_labels.shape: {im_labels.shape}")
     # take the average probability for each class and calculate entropy from that
     im_labels = np.mean(im_labels, axis=0)
-    print(f"im_labels.shape: {im_labels.shape}")
+    # flatten image dimensions
     im_labels = im_labels.reshape((im_labels.shape[0], -1))
-    print(f"im_labels.shape: {im_labels.shape}")
-    # parallelize over the flattened im dimension
+
     entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 0, im_labels)
     mean_entropy = np.mean(entropy_arr)
     return mean_entropy
@@ -25,7 +23,6 @@ def entropy_w_label_counts(im_labels):
 
 
 def pixel_entropy_w_probs(pixel_probs):
-    #print(f"pixel_probs.shape: {pixel_probs.shape}")
     return entropy_func(pixel_probs)
 
 def pixel_entropy_w_label_counts(pixel_labels):
@@ -72,7 +69,6 @@ def unpacking_apply_along_axis(all_args):
     by map().
     """
     (func1d, axis, arr, args, kwargs) = all_args
-    print(f"arr.shape: {arr.shape}")
     return np.apply_along_axis(func1d, axis, arr, *args, **kwargs)
 
 
