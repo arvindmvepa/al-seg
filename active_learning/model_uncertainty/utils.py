@@ -5,7 +5,7 @@ import sys
 
 
 def entropy_w_label_probs(im_labels):
-    im_labels = np.stack(im_labels)
+    im_labels = np.concatenate(im_labels)
     print(f"im_labels.shape: {im_labels.shape}")
     im_labels = im_labels.reshape((im_labels.shape[0], im_labels.shape[1], im_labels.shape[2], -1))
     print(f"im_labels.shape: {im_labels.shape}")
