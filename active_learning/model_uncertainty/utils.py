@@ -1,10 +1,13 @@
 from scipy.stats import entropy as entropy_func
 import multiprocessing
 import numpy as np
+import sys
 
 
 def entropy_w_label_probs(im_labels):
     im_labels = np.concatenate(im_labels)
+    print(f"im_labels.shape: {im_labels.shape}")
+    sys.stdout.flush()
     entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 0, im_labels)
     mean_entropy = np.mean(entropy_arr)
     return mean_entropy

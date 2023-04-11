@@ -21,6 +21,7 @@ class EnsembleUncertainty(BaseModelUncertainty):
         if skip:
             print("Skipping Calculating Uncertainty!")
             return
+        print("Starting to Ensemble Predictions")
         self.model.get_ensemble_scores(score_func=self.score_func, round_dir=round_dir, im_score_file=im_score_file,
                                        ignore_ims_dict=ignore_ims_dict, **kwargs)
 

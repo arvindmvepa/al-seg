@@ -155,7 +155,6 @@ class SPMLModel(BaseModel):
         subprocess.run(cur_script, env=env, shell=True)
 
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False, delete_preds=True):
-        print("Starting to Ensemble Predictions")
         f = open(im_score_file, "w")
         train_results_dir = os.path.join(round_dir, "*", self.model_params['train_results_dir'])
         filt_models_result_files = self._filter_unann_ims(train_results_dir, ignore_ims_dict)

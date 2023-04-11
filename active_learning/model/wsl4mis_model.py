@@ -213,7 +213,6 @@ class DMPLSModel(BaseModel):
 
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False, delete_preds=True):
         """Dummy method for getting ensemble scores"""
-        print("Starting to Ensemble Predictions")
         f = open(im_score_file, "w")
         train_results = sorted(list(glob(os.path.join(round_dir, "*", "train_preds.npz"))))
         im_files = sorted(np.load(train_results[0], mmap_mode='r').files)
