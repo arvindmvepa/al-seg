@@ -107,7 +107,6 @@ class SPMLModel(BaseModel):
         # save execute_params
         execute_params = dict()
         execute_params['env'] = env
-        execute_params['MODEL'] = str(self)
         execute_params['ANN_TYPE'] = self.ann_type
         execute_params['TRAIN_SCRIPT'] = train_script
         execute_params['PROTOTYPE_SCRIPT'] = prototype_script
