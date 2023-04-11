@@ -9,7 +9,7 @@ def entropy_w_label_probs(im_labels):
     print(f"im_labels.shape: {im_labels.shape}")
     im_labels = im_labels.reshape((im_labels.shape[0], im_labels.shape[1], -1))
     print(f"im_labels.shape: {im_labels.shape}")
-    entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 0, im_labels)
+    entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 2, im_labels)
     mean_entropy = np.mean(entropy_arr)
     return mean_entropy
 
