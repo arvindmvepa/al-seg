@@ -1,14 +1,10 @@
 from scipy.stats import entropy as entropy_func
 import multiprocessing
 import numpy as np
-import sys
 
 
 def entropy_w_label_probs(im_labels):
     im_labels = np.concatenate(im_labels)
-    print(f"debug im_labels.shape: {im_labels.shape}")
-    print(f"debug im_labels[0].shape: {im_labels[0].shape}")
-    sys.stdout.flush()
     entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 0, im_labels)
     mean_entropy = np.mean(entropy_arr)
     return mean_entropy
@@ -22,8 +18,6 @@ def entropy_w_label_counts(im_labels):
 
 def pixel_entropy_w_probs(pixel_probs):
     # take the average probability for each class and calculate entropy from that
-    print(f"debug len(pixel_probs): {len(pixel_probs)}")
-    sys.stdout.flush()
     mean_per_model_pixel_probs = np.mean(pixel_probs, axis=0)
     return entropy_func(mean_per_model_pixel_probs)
 
