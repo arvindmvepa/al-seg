@@ -5,7 +5,9 @@ import sys
 
 
 def entropy_w_label_probs(im_labels):
-    im_labels = np.concatenate(im_labels)
+    im_labels = np.stack(im_labels)
+    print(f"im_labels.shape: {im_labels.shape}")
+    im_labels = im_labels.reshape((im_labels.shape[0], im_labels.shape[1], im_labels.shape[2], -1))
     print(f"im_labels.shape: {im_labels.shape}")
     entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 0, im_labels)
     mean_entropy = np.mean(entropy_arr)
@@ -48,6 +50,7 @@ def parallel_apply_along_axis(func1d, axis, arr, *args, **kwargs):
 
     # filter chunks if len(sub_arr) = 0
     chunks = [chunk for chunk in chunks if len(chunk[2]) > 0]
+
     pool = multiprocessing.Pool()
     individual_results = pool.map(unpacking_apply_along_axis, chunks)
     # Freeing the workers:
@@ -67,6 +70,7 @@ def unpacking_apply_along_axis(all_args):
     by map().
     """
     (func1d, axis, arr, args, kwargs) = all_args
+    print(f"arr.shape: {arr.shape}")
     return np.apply_along_axis(func1d, axis, arr, *args, **kwargs)
 
 
