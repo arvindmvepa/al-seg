@@ -9,6 +9,7 @@ def entropy_w_label_probs(im_labels):
     print(f"im_labels.shape: {im_labels.shape}")
     # take the average probability for each class and calculate entropy from that
     im_labels = np.mean(im_labels, axis=0)
+    print(f"im_labels.shape: {im_labels.shape}")
     im_labels = im_labels.reshape((im_labels.shape[0], -1))
     print(f"im_labels.shape: {im_labels.shape}")
     # parallelize over the flattened im dimension

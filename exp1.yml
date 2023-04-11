@@ -1,0 +1,18 @@
+model:
+  model_type: "spml"
+  ann_type: "box"
+  ensemble_size: 3
+  gpus: "0"
+policy:
+  policy_type: ranked
+  exp_dir: "spml_w_entropy_test_run"
+  seed: 0
+  ensemble_kwargs:
+    skip: True
+  uncertainty_kwargs:
+    skip: False
+    delete_preds: False
+  rounds: [[.001, 0], [.001, 0], [.001, 0]]
+model_uncertainty:
+  model_uncertainty_type: ensemble
+  scoring_method: entropy_w_label_counts
