@@ -46,6 +46,9 @@ def parallel_apply_along_axis(func1d, axis, arr, *args, **kwargs):
     chunks = [(func1d, effective_axis, sub_arr, args, kwargs)
               for sub_arr in np.array_split(arr, multiprocessing.cpu_count())]
 
+    # filter chunks if len(sub_arr) = 0
+    chunks = [chunk for chunk in chunks if len(chunk[2]) > 0]
+
     pool = multiprocessing.Pool()
     print(f"chunks: {chunks}")
     individual_results = pool.map(unpacking_apply_along_axis, chunks)
