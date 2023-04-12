@@ -30,6 +30,7 @@ def pixel_entropy_w_probs(pixel_probs):
 
 def pixel_entropy_w_label_counts(pixel_labels):
     """https://stackoverflow.com/questions/15450192/fastest-way-to-compute-entropy-in-python"""
+    print(f"pixel_labels.shape: {pixel_labels.shape}")
     value,counts = np.unique(pixel_labels, return_counts=True)
     print(f"counts.shape: {counts.shape}")
     return entropy_func(counts)
