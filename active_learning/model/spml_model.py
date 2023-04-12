@@ -21,7 +21,7 @@ class SPMLModel(BaseModel):
                  sem_ann_concentration=None, sem_occ_concentration=None, img_sim_concentration=None,
                  feat_aff_concentration=None, sem_ann_loss_weight=None, sem_occ_loss_weight=None,
                  word_sim_loss_weight=None, img_sim_loss_weight=None, feat_aff_loss_weight=None,
-                 pretrained="snapshots/imagenet/trained/resnet-101-cuhk.pth", inference_split='val'):
+                 pretrained="/home/asjchoi/SPML_Arvind/snapshots/imagenet/trained/resnet-101-cuhk.pth", inference_split='val'):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag, virtualenv=virtualenv)
         self._set_loss_weights(sem_ann_concentration, sem_occ_concentration, img_sim_concentration,
