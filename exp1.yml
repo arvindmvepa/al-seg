@@ -8,7 +8,7 @@ policy:
   exp_dir: "spml_w_entropy_test_run"
   seed: 0
   ensemble_kwargs:
-    skip: False
+    skip: True
   uncertainty_kwargs:
     skip: False
     delete_preds: True
