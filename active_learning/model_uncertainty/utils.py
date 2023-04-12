@@ -1,7 +1,6 @@
 from scipy.stats import entropy as entropy_func
 import multiprocessing
 import numpy as np
-import sys
 
 
 def entropy_w_label_probs(im_labels):
@@ -17,9 +16,7 @@ def entropy_w_label_probs(im_labels):
 
 
 def entropy_w_label_counts(im_labels):
-    print(f"im_labels.shape: {im_labels.shape}")
     im_labels = im_labels.reshape((im_labels.shape[0], -1))
-    print(f"reshaped im_labels.shape: {im_labels.shape}")
     entropy_arr = parallel_apply_along_axis(pixel_entropy_w_label_counts, 0, im_labels)
     mean_entropy = np.mean(entropy_arr)
     return mean_entropy
@@ -30,9 +27,7 @@ def pixel_entropy_w_probs(pixel_probs):
 
 def pixel_entropy_w_label_counts(pixel_labels):
     """https://stackoverflow.com/questions/15450192/fastest-way-to-compute-entropy-in-python"""
-    print(f"pixel_labels.shape: {pixel_labels.shape}")
     value,counts = np.unique(pixel_labels, return_counts=True)
-    print(f"counts.shape: {counts.shape}")
     return entropy_func(counts)
 
 
@@ -74,7 +69,6 @@ def unpacking_apply_along_axis(all_args):
     by map().
     """
     (func1d, axis, arr, args, kwargs) = all_args
-    print(f"arr.shape: {arr.shape}")
     return np.apply_along_axis(func1d, axis, arr, *args, **kwargs)
 
 
