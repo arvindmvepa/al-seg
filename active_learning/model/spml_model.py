@@ -7,6 +7,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 import re
+import shutil
 
 
 class SPMLModel(BaseModel):
@@ -14,14 +15,16 @@ class SPMLModel(BaseModel):
 
     def __init__(self, ann_type="box", data_root="/home/asjchoi/SPML/PASCAL", ensemble_size=1, epoch_len=10578,
                  num_epochs=3, seed=0, gpus="0", tag="", virtualenv='/home/asjchoi/SPML_Arvind/spml-env',
-                 backbone_types="panoptic_deeplab_101", embedding_dim=64, prediction_types="segsort", lr_policy='poly',
-                 use_syncbn=True, warmup_iteration=100, lr=3e-3, wd=5e-4, batch_size=4, crop_size=256, image_scale=0.5,
-                 memory_bank_size=2, kmeans_iterations=10, kmeans_num_clusters=6, sem_ann_loss_types="segsort",
-                 sem_occ_loss_types="segsort", img_sim_loss_types="segsort", feat_aff_loss_types="none",
-                 sem_ann_concentration=None, sem_occ_concentration=None, img_sim_concentration=None,
-                 feat_aff_concentration=None, sem_ann_loss_weight=None, sem_occ_loss_weight=None,
-                 word_sim_loss_weight=None, img_sim_loss_weight=None, feat_aff_loss_weight=None,
-                 pretrained="/home/asjchoi/SPML_Arvind/snapshots/imagenet/trained/resnet-101-cuhk.pth", inference_split='val'):
+                 backbone_types="panoptic_deeplab_101", embedding_dim=64, prediction_types="segsort",
+                 use_segsort_softmax=False, lr_policy='poly', use_syncbn=True, warmup_iteration=100, lr=3e-3,
+                 wd=5e-4, batch_size=4, crop_size=256, image_scale=0.5, memory_bank_size=2, kmeans_iterations=10,
+                 kmeans_num_clusters=6, sem_ann_loss_types="segsort", sem_occ_loss_types="segsort",
+                 img_sim_loss_types="segsort", feat_aff_loss_types="none", sem_ann_concentration=None,
+                 sem_occ_concentration=None, img_sim_concentration=None, feat_aff_concentration=None,
+                 sem_ann_loss_weight=None, sem_occ_loss_weight=None, word_sim_loss_weight=None,
+                 img_sim_loss_weight=None, feat_aff_loss_weight=None,
+                 pretrained="/home/asjchoi/SPML_Arvind/snapshots/imagenet/trained/resnet-101-cuhk.pth",
+                 inference_split='val'):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag, virtualenv=virtualenv)
         self._set_loss_weights(sem_ann_concentration, sem_occ_concentration, img_sim_concentration,
@@ -30,6 +33,7 @@ class SPMLModel(BaseModel):
         self.backbone_types = backbone_types
         self.embedding_dim = embedding_dim
         self.prediction_types = prediction_types
+        self.use_segsort_softmax = use_segsort_softmax
         self.lr_policy = lr_policy
         self.use_syncbn = use_syncbn
         self.epoch_len = epoch_len
@@ -76,20 +80,36 @@ class SPMLModel(BaseModel):
                            f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', train_split)} " \
                            f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} --label_divisor 2048 " \
                            f"--kmeans_num_clusters 12,12 --cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
-        inference_train_script = f"python3 spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
-                                 f"--data_list {orig_train_data_list} " \
-                                 f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', orig_train_split)} " \
-                                 f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
-                                 f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
-                                 f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                                 f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
-        inference_val_script = f"python3 spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
-                                 f"--data_list {val_data_list} " \
-                                 f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)} " \
-                                 f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
-                                 f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
-                                 f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                                 f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
+        if self.use_segsort_softmax:
+            inference_train_script = f"python3 spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
+                                     f"--data_list {orig_train_data_list} --save_logits " \
+                                     f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', orig_train_split)} " \
+                                     f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
+                                     f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
+                                     f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
+                                     f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
+            inference_val_script = f"python3 spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
+                                   f"--data_list {val_data_list} " \
+                                   f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)} " \
+                                   f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
+                                   f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
+                                   f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
+                                   f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
+        else:
+            inference_train_script = f"python3 spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
+                                     f"--data_list {orig_train_data_list} " \
+                                     f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', orig_train_split)} " \
+                                     f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
+                                     f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
+                                     f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
+                                     f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
+            inference_val_script = f"python3 spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
+                                     f"--data_list {val_data_list} " \
+                                     f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)} " \
+                                     f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
+                                     f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
+                                     f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
+                                     f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
 
         stdout_file = lambda file_type: f"> {os.path.join(snapshot_dir, file_type + '_box_AL_PROP' + str(cur_total_oracle_split) + '_MODEL_NO' + str(model_no) + '.results')}"
         stderr_file = lambda file_type: f"2> {os.path.join(snapshot_dir, file_type + '_box_AL_PROP' + str(cur_total_oracle_split) + '_MODEL_NO' + str(model_no) + '.error')}"
@@ -153,7 +173,7 @@ class SPMLModel(BaseModel):
         print(cur_script)
         subprocess.run(cur_script, env=env, shell=True)
 
-    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False, delete_preds=True):
+    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
         f = open(im_score_file, "w")
         train_results_dir = os.path.join(round_dir, "*", self.model_params['train_results_dir'])
         filt_models_result_files = self._filter_unann_ims(train_results_dir, ignore_ims_dict)
@@ -167,7 +187,7 @@ class SPMLModel(BaseModel):
         # after obtaining scores, delete train results for the reounds
         if delete_preds:
             for result in train_results_dir:
-                os.rmtree(result)
+                shutil.rmtree(result)
 
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
         new_train_im_list_file = os.path.join(round_dir,

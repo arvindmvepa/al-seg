@@ -1,5 +1,4 @@
 import sys
-sys.path.append("./wsl4mis/code")
 from active_learning.model.base_model import BaseModel
 import json
 import os
@@ -211,7 +210,7 @@ class DMPLSModel(BaseModel):
         return "Training Finished!"
 
 
-    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, skip=False, delete_preds=True):
+    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
         """Dummy method for getting ensemble scores"""
         f = open(im_score_file, "w")
         train_results = sorted(list(glob(os.path.join(round_dir, "*", "train_preds.npz"))))
