@@ -89,7 +89,7 @@ class SPMLModel(BaseModel):
                                      f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
                                      f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
             inference_val_script = f"python3 spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
-                                   f"--data_list {val_data_list} " \
+                                   f"--data_list {val_data_list} --save_results" \
                                    f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)} " \
                                    f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
                                    f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
