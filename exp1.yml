@@ -1,11 +1,11 @@
 model:
-  model_type: "spml"
-  ann_type: "box"
+  model_type: "dmpls"
+  ann_type: "scribble"
   ensemble_size: 3
   gpus: "0"
 policy:
   policy_type: ranked
-  exp_dir: "spml_w_entropy_test_run"
+  exp_dir: "DMPLS_w_entropy_test_run1"
   seed: 0
   ensemble_kwargs:
     skip: True
@@ -15,4 +15,4 @@ policy:
   rounds: [[.001, 0], [.001, 0], [.001, 0]]
 model_uncertainty:
   model_uncertainty_type: ensemble
-  scoring_method: entropy_w_label_counts
+  scoring_method: entropy_w_label_probs
