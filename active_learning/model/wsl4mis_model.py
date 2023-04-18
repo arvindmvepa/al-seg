@@ -1,5 +1,5 @@
 import sys
-from active_learning.model.base_model import BaseModel
+from active_learning.model.base_model import BaseModel, SoftmaxMixin
 import json
 import os
 import logging
@@ -18,7 +18,7 @@ import torch
 from glob import glob
 
 
-class DMPLSModel(BaseModel):
+class DMPLSModel(BaseModel, SoftmaxMixin):
     """DMPLS Model class"""
 
     def __init__(self, ann_type="scribble", data_root="/home/asjchoi/WSL4MIS/data/ACDC", ensemble_size=1,
@@ -209,28 +209,6 @@ class DMPLSModel(BaseModel):
 
         return "Training Finished!"
 
-
-    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
-        """Dummy method for getting ensemble scores"""
-        f = open(im_score_file, "w")
-        train_results = sorted(list(glob(os.path.join(round_dir, "*", "train_preds.npz"))))
-        im_files = sorted(np.load(train_results[0], mmap_mode='r').files)
-        # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
-        for im_file in tqdm(im_files):
-            ensemble_preds_arr = []
-            for i, result in enumerate(train_results):
-                preds_arr = np.load(result, mmap_mode='r')[im_file]
-                ensemble_preds_arr.append(preds_arr)
-            score = score_func(ensemble_preds_arr)
-            f.write(f"{im_file},{np.round(score, 7)}\n")
-            f.flush()
-        f.close()
-        # after obtaining scores, delete train_preds.npz for the round
-        if delete_preds:
-            for result in train_results:
-                os.remove(result)
-
-
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
         new_train_im_list_file = os.path.join(round_dir,
                                               "train_al" + str(cur_total_oracle_split) + "_" + self.tag + \
@@ -268,3 +246,4 @@ class DMPLSModel(BaseModel):
         mapping = self.__dict__
         mapping["model_cls"] = "DMPLSModel"
         return json.dumps(mapping)
+

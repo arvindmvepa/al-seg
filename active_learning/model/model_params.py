@@ -15,7 +15,8 @@ model_params = {
                           "orig_train_pim_list_file" : os.path.join("spml", "datasets", "voc12",  "panoptic_train+_hed.txt"),
                           "val_pim_list": os.path.join("spml", "datasets", "voc12", "panoptic_val.txt"),
                           "exec_script": "spml/bashscripts/voc12/train_spml_box_al.sh",
-                          "train_results_dir": os.path.join("stage1", "results", "train+", "semantic_gray")
+                          "train_results_dir": os.path.join("stage1", "results", "train+", "semantic_gray"),
+                          "train_logits_path": os.path.join("stage1", "results", "train+", "logits", "save_preds.npz")
                       },
                   "scribble":
                       {
@@ -28,7 +29,8 @@ model_params = {
                           "orig_train_pim_list_file" : os.path.join("spml", "datasets", "voc12",  "panoptic_train+_hed.txt"),
                           "val_pim_list": os.path.join("spml", "datasets", "voc12", "panoptic_val.txt"),
                           "exec_script": "spml/bashscripts/voc12/train_spml_scribble_al.sh",
-                          "train_results_dir": os.path.join("stage1", "results", "train+", "semantic_gray")
+                          "train_results_dir": os.path.join("stage1", "results", "train+", "semantic_gray"),
+                          "train_logits_path": os.path.join("stage1", "results", "train+", "logits", "save_preds.npz")
                       },
                   },
     "dpmls":                  {
@@ -42,7 +44,8 @@ model_params = {
                                                     "data",
                                                     "ACDC",
                                                     "val.txt"),
-                          "train_results_dir": ""
+                          "train_results_dir": "",
+                          "train_logits_path": "train_preds.npz"
                       },
                   },
     "a2gnn": {}
