@@ -15,7 +15,7 @@ import torch.optim as optim
 from torch.nn.modules.loss import CrossEntropyLoss
 from tensorboardX import SummaryWriter
 import torch
-from glob import glob
+from active_learning.model.utils import load_virtualenv
 
 
 class DMPLSModel(BaseModel, SoftmaxMixin):
@@ -34,6 +34,8 @@ class DMPLSModel(BaseModel, SoftmaxMixin):
         self.deterministic = deterministic
         self.base_lr = base_lr
         self.patch_size = patch_size
+        load_virtualenv(self.virtualenv)
+
 
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0,
                     inf_train=False, save_params=None):
