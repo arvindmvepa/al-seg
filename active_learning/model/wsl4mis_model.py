@@ -34,7 +34,8 @@ class DMPLSModel(BaseModel, SoftmaxMixin):
         self.deterministic = deterministic
         self.base_lr = base_lr
         self.patch_size = patch_size
-        load_virtualenv(self.virtualenv)
+        if self.virtualenv:
+            load_virtualenv(self.virtualenv)
 
 
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0,

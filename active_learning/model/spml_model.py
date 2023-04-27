@@ -83,8 +83,11 @@ class SPMLModel(BaseModel):
 
         # env for python scripts
         env = dict()
-        env['VIRTUAL_ENV'] = self.virtualenv
-        env['PATH'] = f"{env['VIRTUAL_ENV']}/bin:{os.environ['PATH']}"
+        if self.virtualenv:
+            env['VIRTUAL_ENV'] = self.virtualenv
+            env['PATH'] = f"{env['VIRTUAL_ENV']}/bin:{os.environ['PATH']}"
+        else:
+            env['PATH'] = f"{os.environ['PATH']}"
         env['PYTHONPATH'] ="spml"
         if isinstance(self.gpus, str):
             env['CUDA_VISIBLE_DEVICES'] = self.gpus
