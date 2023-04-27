@@ -87,6 +87,7 @@ class SPMLModel(BaseModel):
             env['VIRTUAL_ENV'] = self.virtualenv
             env['PATH'] = f"{env['VIRTUAL_ENV']}/bin:{os.environ['PATH']}"
         else:
+            env = os.environ.copy()
             env['PATH'] = f"{os.environ['PATH']}"
         env['PYTHONPATH'] ="spml"
         if isinstance(self.gpus, str):
