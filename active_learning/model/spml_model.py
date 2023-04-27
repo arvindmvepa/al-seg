@@ -302,7 +302,7 @@ class SPMLModel(BaseModel):
         return json.dumps(mapping)
 
 
-class SPMLwMajorityVote(SPMLModel, MajorityVoteMixin):
+class SPMLwMajorityVote(MajorityVoteMixin, SPMLModel):
 
     def _get_inference_scripts(self, snapshot_dir, train_split, orig_train_split, orig_train_data_list, val_data_list):
         inference_train_script = f"python3 spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
@@ -322,7 +322,7 @@ class SPMLwMajorityVote(SPMLModel, MajorityVoteMixin):
         return {'train': inference_train_script, 'val': inference_val_script}
 
 
-class SPMLwSoftmax(SPMLModel, SoftmaxMixin):
+class SPMLwSoftmax(SoftmaxMixin, SPMLModel):
 
     def _get_inference_scripts(self, snapshot_dir, train_split, orig_train_split, orig_train_data_list, val_data_list):
         inference_train_script = f"python3 spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \

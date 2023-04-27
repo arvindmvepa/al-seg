@@ -18,7 +18,7 @@ import torch
 from active_learning.model.utils import load_virtualenv
 
 
-class DMPLSModel(BaseModel, SoftmaxMixin):
+class DMPLSModel(SoftmaxMixin, BaseModel):
     """DMPLS Model class"""
 
     def __init__(self, ann_type="scribble", data_root="/home/asjchoi/WSL4MIS/data/ACDC", ensemble_size=1,
