@@ -43,14 +43,15 @@ class BaseModel(ABC):
 
     """
 
-    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, gpus="0", tag="",
-                 virtualenv='/home/asjchoi/SPML_Arvind/spml-env'):
+    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, cuda_visible_devices="0", gpus="0",
+                 tag="", virtualenv='/home/asjchoi/SPML_Arvind/spml-env'):
         self.model_params = model_params[self.model_string][ann_type]
         self.ann_type = ann_type
         self.data_root = data_root
         self.ensemble_size = ensemble_size
         self.seed = seed
         self.random_gen = Random(seed)
+        self.cuda_visible_devices = cuda_visible_devices
         self.gpus = gpus
         self.tag = tag
         self.virtualenv = virtualenv
