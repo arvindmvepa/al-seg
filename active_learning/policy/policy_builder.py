@@ -34,7 +34,7 @@ class PolicyBuilder:
     def build(self):
         self.check_params()
 
-        model = ModelFactory.create(**self._model_params)
+        model = ModelFactory.create_model(**self._model_params)
         model_uncertainty = ModelUncertaintyFactory.create_model_uncertainty(model=model,
                                                                              **self._model_uncertainty_params)
         return PolicyFactory.create_policy(model=model, model_uncertainty=model_uncertainty,
