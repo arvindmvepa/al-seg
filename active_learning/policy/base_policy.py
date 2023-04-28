@@ -1,8 +1,6 @@
 from active_learning.model_uncertainty.base_model_uncertainty import NoModelUncertainty
 from random import Random
 import os
-import shutil
-
 
 
 class BaseActiveLearningPolicy:
@@ -70,10 +68,6 @@ class BaseActiveLearningPolicy:
         self._round_num = None
         self.round_dir = None
         self.exp_dir = exp_dir
-        if not os.path.exists(self.exp_dir):
-            os.makedirs(self.exp_dir)
-        # copy exp_params_file to experiment directory
-        shutil.copyfile(exp_params_file, os.path.join(self.exp_dir, os.path.basename(exp_params_file)))
         self.pseudolabels = pseudolabels
         self.tag = tag
         self.seed = seed

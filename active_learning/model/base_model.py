@@ -43,15 +43,14 @@ class BaseModel(ABC):
 
     """
 
-    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, cuda_visible_devices="0", gpus="0",
-                 tag="", virtualenv='/home/asjchoi/SPML_Arvind/spml-env'):
+    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, gpus="0", tag="",
+                 virtualenv='/home/asjchoi/SPML_Arvind/spml-env'):
         self.model_params = model_params[self.model_string][ann_type]
         self.ann_type = ann_type
         self.data_root = data_root
         self.ensemble_size = ensemble_size
         self.seed = seed
         self.random_gen = Random(seed)
-        self.cuda_visible_devices = cuda_visible_devices
         self.gpus = gpus
         self.tag = tag
         self.virtualenv = virtualenv
@@ -119,8 +118,9 @@ class MajorityVoteMixin:
 
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
         f = open(im_score_file, "w")
-        train_results_dir = os.path.join(round_dir, "*", self.model_params['train_results_dir'])
-        filt_models_result_files = self._filter_unann_ims(train_results_dir, ignore_ims_dict)
+        train_results_dirs = sorted(list(glob(os.path.join(round_dir, "*",
+                                                           self.model_params['train_results_dir']))))
+        filt_models_result_files = self._filter_unann_ims(train_results_dirs, ignore_ims_dict)
         for models_result_file in tqdm(zip(*filt_models_result_files)):
             results_arr, base_name = self._convert_ensemble_results_to_arr(models_result_file)
             # calculate the score_func over the ensemble of predictions
@@ -130,8 +130,8 @@ class MajorityVoteMixin:
         f.close()
         # after obtaining scores, delete train results for the rounds
         if delete_preds:
-            for result in train_results_dir:
-                shutil.rmtree(result)
+            for train_result_dir in train_results_dirs:
+                shutil.rmtree(train_result_dir)
 
     def _convert_ensemble_results_to_arr(self, models_result_file):
         results = []
@@ -143,10 +143,10 @@ class MajorityVoteMixin:
         base_name = os.path.basename(models_result_file[0])
         return results_arr, base_name
 
-    def _filter_unann_ims(self, train_results_dir, ignore_ims_dict):
+    def _filter_unann_ims(self, train_results_dirs, ignore_ims_dict):
         # load models' results files
-        models_result_files = [sorted(glob(os.path.join(result_dir, "*"))) for result_dir in
-                               sorted(list(glob(train_results_dir)))]
+        models_result_files = [sorted(glob(os.path.join(train_results_dir, "*"))) for train_results_dir in
+                               train_results_dirs]
         # filter model results in which we already have annotations
         # Note: filter predictions for first model and use the filtering results for the other models
         filt_models_result_files = []

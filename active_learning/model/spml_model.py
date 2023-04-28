@@ -22,10 +22,11 @@ class SPMLModel(BaseModel):
                  pretrained="/home/asjchoi/SPML_Arvind/snapshots/imagenet/trained/resnet-101-cuhk.pth",
                  inference_split='val'):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed,
-                         cuda_visible_devices=cuda_visible_devices, gpus=gpus, tag=tag, virtualenv=virtualenv)
+                         gpus=gpus, tag=tag, virtualenv=virtualenv)
         self._set_loss_weights(sem_ann_concentration, sem_occ_concentration, img_sim_concentration,
                                feat_aff_concentration, sem_ann_loss_weight, sem_occ_loss_weight, word_sim_loss_weight,
                                img_sim_loss_weight, feat_aff_loss_weight)
+        self.cuda_visible_devices = cuda_visible_devices
         self.backbone_types = backbone_types
         self.embedding_dim = embedding_dim
         self.prediction_types = prediction_types

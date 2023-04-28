@@ -3,9 +3,9 @@ model:
   ann_type: "box"
   ensemble_size: 3
   gpus: "0"
+  cuda_visible_devices: "1"
 policy:
   policy_type: ranked
-  exp_dir: "spml_w_entropy_test_run2"
   seed: 0
   ensemble_kwargs:
     skip: False
@@ -16,3 +16,4 @@ policy:
 model_uncertainty:
   model_uncertainty_type: ensemble
   scoring_method: entropy_w_label_probs
+exp_dir: "spml_w_entropy_test_run2"

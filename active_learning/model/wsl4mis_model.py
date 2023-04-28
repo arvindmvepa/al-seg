@@ -34,6 +34,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         self.deterministic = deterministic
         self.base_lr = base_lr
         self.patch_size = patch_size
+        torch.set_default_device("cuda:" + self.gpus)
         if self.virtualenv:
             load_virtualenv(self.virtualenv)
 
