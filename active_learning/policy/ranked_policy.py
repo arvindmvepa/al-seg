@@ -26,12 +26,12 @@ class RankedPolicy(BaseActiveLearningPolicy):
 
     """
 
-    def __init__(self, model, exp_params_file, model_uncertainty=None, ensemble_kwargs=None, uncertainty_kwargs=None,
+    def __init__(self, model, model_uncertainty=None, ensemble_kwargs=None, uncertainty_kwargs=None,
                  save_im_score_file="scores.txt", rank_type="desc", rounds=(), exp_dir="test", pseudolabels=False,
                  tag="", seed=0):
-        super().__init__(model=model, exp_params_file=exp_params_file, model_uncertainty=model_uncertainty,
-                         ensemble_kwargs=ensemble_kwargs, uncertainty_kwargs=uncertainty_kwargs, rounds=rounds,
-                         pseudolabels=pseudolabels, exp_dir=exp_dir, tag=tag, seed=seed)
+        super().__init__(model=model, model_uncertainty=model_uncertainty, ensemble_kwargs=ensemble_kwargs,
+                         uncertainty_kwargs=uncertainty_kwargs, rounds=rounds, pseudolabels=pseudolabels,
+                         exp_dir=exp_dir, tag=tag, seed=seed)
         self.save_im_score_file = save_im_score_file
         self.prev_round_im_score_file = None
         self.rank_type = rank_type

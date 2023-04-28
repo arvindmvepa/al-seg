@@ -54,7 +54,7 @@ class BaseActiveLearningPolicy:
 
     """
 
-    def __init__(self, model, exp_params_file, model_uncertainty=None, ensemble_kwargs=None,
+    def __init__(self, model, model_uncertainty=None, ensemble_kwargs=None,
                  uncertainty_kwargs=None, rounds=(), exp_dir="test", pseudolabels=False,
                  tag="", seed=0):
         self.model = model
