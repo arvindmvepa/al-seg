@@ -11,12 +11,13 @@ class PolicyBuilder:
     def __init__(self):
         pass
 
-    def create_exp_dir(self, exp_dir, exp_params_file):
+    def make_exp_dir(self, exp_dir, exp_params_file):
         self._exp_dir = exp_dir
         if not os.path.exists(self._exp_dir):
             os.makedirs(self._exp_dir)
         # copy exp_params_file to experiment directory
         shutil.copyfile(exp_params_file, os.path.join(self._exp_dir, os.path.basename(exp_params_file)))
+        return self
 
     def with_model_params(self, model_params):
         self._model_params = model_params
@@ -48,7 +49,7 @@ class PolicyBuilder:
         exp_params = load_yaml(exp_params_file)
 
         return PolicyBuilder()\
-            .create_exp_dir(exp_params['exp_dir'], exp_params_file)\
+            .make_exp_dir(exp_params['exp_dir'], exp_params_file)\
             .with_model_params(exp_params['model'])\
             .with_model_uncertainty_params(exp_params['model_uncertainty'])\
             .with_policy_params(exp_params['policy'])\
