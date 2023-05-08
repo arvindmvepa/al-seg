@@ -15,13 +15,16 @@ def random_policy(mocker):
     base_model_obj = mocker.Mock(spec=BaseModel)
     mock_get_round_train_file_paths = mocker.MagicMock()
     mock_get_round_train_file_paths.return_value = "test.txt"
-    mocker.patch.multiple(BaseModel, __abstractmethods__=set(), get_round_train_file_paths=mock_get_round_train_file_paths)
+    mocker.patch.multiple(BaseModel, __abstractmethods__=set(), 
+                          get_round_train_file_paths=mock_get_round_train_file_paths)
     base_model_uncertainty_obj = mocker.Mock(spec=BaseModelUncertainty)
     mocker.patch.multiple(BaseModelUncertainty, __abstractmethods__=set())
-
-    random_policy = RandomActiveLearningPolicy(base_model_obj, base_model_uncertainty_obj, rounds=[(0.3, 0.3, .4)])
-    random_policy.all_train_files_dict = {"images": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-    yield random_policy
+    policy = RandomActiveLearningPolicy(base_model_obj, 
+                                        base_model_uncertainty_obj, 
+                                        rounds=[(0.3, 0.3, .4)])
+    policy.all_train_files_dict = {"images": [1, 2, 3, 4, 5, 
+                                              6, 7, 8, 9, 10]}
+    yield policy
     os.remove("test.txt")
 
 
