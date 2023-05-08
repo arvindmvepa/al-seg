@@ -3,7 +3,7 @@ import pytest
 from active_learning.model.base_model import BaseModel
 from active_learning.model_uncertainty.base_model_uncertainty import BaseModelUncertainty
 from active_learning.policy.base_policy import RandomActiveLearningPolicy
-from active_learning.policy.ranked_policy import RankedActiveLearningPolicy
+from active_learning.policy.ranked_policy import RankedPolicy
 import os
 
 
