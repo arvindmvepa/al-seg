@@ -56,6 +56,7 @@ class BaseModel(ABC):
         self.virtualenv = virtualenv
         if len(self.file_keys) == 0:
             raise ValueError(f"file_keys needs at least one key")
+        self.all_train_files_dict = None
         self._init_train_file_info()
         self._init_val_file_info()
 
