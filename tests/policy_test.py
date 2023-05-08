@@ -17,8 +17,8 @@ def random_policy(mocker, file_keys, im_key, train_files_dict, rounds):
     mock_base_model.all_train_files_dict = mocker.Mock(return_value=train_files_dict)
     mocker.patch.multiple(BaseModel, __abstractmethods__=set(), 
                           get_round_train_file_paths=mocker.Mock(return_value="test.txt"),
-                          file_keys=file_keys,
-                          im_key=im_key)
+                          file_keys=mocker.Mock(return_value=file_keys),
+                          im_key=mocker.Mock(return_value=im_key))
     # mock BaseModelUncertainty
     mock_base_model_uncertainty = mocker.Mock(spec=BaseModelUncertainty)
     mocker.patch.multiple(BaseModelUncertainty, __abstractmethods__=set())
