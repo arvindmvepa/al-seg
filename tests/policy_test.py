@@ -8,7 +8,7 @@ import os
 
 
 @pytest.fixture
-def random_policy(mocker):
+def random_policy(mocker, train_files_dict, rounds):
     """
     Mock model and model_uncertainty and create random policy object
     """
@@ -16,25 +16,26 @@ def random_policy(mocker):
     mock_get_round_train_file_paths = mocker.MagicMock()
     mock_get_round_train_file_paths.return_value = "test.txt"
     mocker.patch.multiple(BaseModel, __abstractmethods__=set(), 
-                          get_round_train_file_paths=mock_get_round_train_file_paths)
+                          get_round_train_file_paths=mock_get_round_train_file_paths,
+                          all_train_files_dict=train_files_dict)
     base_model_uncertainty_obj = mocker.Mock(spec=BaseModelUncertainty)
     mocker.patch.multiple(BaseModelUncertainty, __abstractmethods__=set())
     policy = RandomActiveLearningPolicy(base_model_obj, 
                                         base_model_uncertainty_obj, 
-                                        rounds=[(0.3, 0.3, .4)])
-    policy.all_train_files_dict = {"images": [1, 2, 3, 4, 5, 
-                                              6, 7, 8, 9, 10]}
+                                        rounds=rounds)
     yield policy
     os.remove("test.txt")
 
 
-def test_random_split(random_policy):
+@pytest.mark.parametrize("train_files_dict, rounds, exp_round1_count", [({"images": [1, 2, 3, 4]},
+                                                                         [(0.25, 0.25)],
+                                                                          1)])
+def test_random_split(random_policy, train_files_dict, rounds, exp_round1_count):
     """
     Test that random_split works correctly
     """
-    random_split_dict = random_policy.random_split()
-
-    assert len(random_split_dict["images"]) == 3
+    random_split_dict = random_policy(train_files_dict, rounds).random_split()
+    assert len(random_split_dict["images"]) == exp_round1_count
 
 
 #def test_ranked_split(mocker):
