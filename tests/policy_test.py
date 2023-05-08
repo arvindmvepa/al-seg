@@ -14,9 +14,9 @@ def random_policy(mocker, train_files_dict, rounds):
     """
     # mock BaseModel
     mock_base_model = mocker.Mock(spec=BaseModel)
-    mock_base_model.all_train_files_dict.return_value = train_files_dict
+    mock_base_model.all_train_files_dict = mocker.Mock(return_value=train_files_dict)
     mocker.patch.multiple(BaseModel, __abstractmethods__=set(), 
-                          get_round_train_file_paths=mocker.Mock(return_value = "test.txt"))
+                          get_round_train_file_paths=mocker.Mock(return_value="test.txt"))
     # mock BaseModelUncertainty
     mock_base_model_uncertainty = mocker.Mock(spec=BaseModelUncertainty)
     mocker.patch.multiple(BaseModelUncertainty, __abstractmethods__=set())
