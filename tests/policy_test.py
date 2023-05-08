@@ -8,7 +8,7 @@ import os
 
 
 @pytest.fixture
-def random_policy(mocker, train_files_dict, rounds):
+def random_policy(mocker, file_keys, im_key, train_files_dict, rounds):
     """
     Mock model and model_uncertainty and create random policy object
     """
@@ -16,7 +16,9 @@ def random_policy(mocker, train_files_dict, rounds):
     mock_base_model = mocker.Mock(spec=BaseModel)
     mock_base_model.all_train_files_dict = mocker.Mock(return_value=train_files_dict)
     mocker.patch.multiple(BaseModel, __abstractmethods__=set(), 
-                          get_round_train_file_paths=mocker.Mock(return_value="test.txt"))
+                          get_round_train_file_paths=mocker.Mock(return_value="test.txt"),
+                          file_keys=file_keys,
+                          im_key=im_key)
     # mock BaseModelUncertainty
     mock_base_model_uncertainty = mocker.Mock(spec=BaseModelUncertainty)
     mocker.patch.multiple(BaseModelUncertainty, __abstractmethods__=set())
@@ -29,14 +31,13 @@ def random_policy(mocker, train_files_dict, rounds):
     os.remove("test.txt")
 
 
-@pytest.mark.parametrize("train_files_dict, rounds, exp_round1_count", [({"images": [1, 2, 3, 4]},
-                                                                         [(0.25, 0.25)],
-                                                                          1)])
-def test_random_split(random_policy, train_files_dict, rounds, exp_round1_count):
+@pytest.mark.parametrize("file_keys, im_key, train_files_dict, rounds, exp_round1_count", 
+                         [(["images"], "images", {"images": [1, 2, 3, 4]}, [(0.25, 0.25)], 1)])
+def test_random_split(random_policy, file_keys, im_key, train_files_dict, rounds, exp_round1_count):
     """
     Test that random_split works correctly
     """
-    random_split_dict = random_policy(train_files_dict, rounds).random_split()
+    random_split_dict = random_policy(file_keys, im_key, train_files_dict, rounds).random_split()
     assert len(random_split_dict["images"]) == exp_round1_count
 
 
