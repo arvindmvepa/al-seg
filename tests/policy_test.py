@@ -16,8 +16,8 @@ def random_policy(mocker, train_files_dict, rounds):
     mock_get_round_train_file_paths = mocker.MagicMock()
     mock_get_round_train_file_paths.return_value = "test.txt"
     mocker.patch.multiple(BaseModel, __abstractmethods__=set(), 
-                          get_round_train_file_paths=mock_get_round_train_file_paths,
-                          all_train_files_dict=train_files_dict)
+                          get_round_train_file_paths=mock_get_round_train_file_paths)
+    mocker.patch.object(base_model_obj, "all_train_files_dict", return_value=train_files_dict)
     base_model_uncertainty_obj = mocker.Mock(spec=BaseModelUncertainty)
     mocker.patch.multiple(BaseModelUncertainty, __abstractmethods__=set())
     policy = RandomActiveLearningPolicy(base_model_obj, 
