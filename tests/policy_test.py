@@ -1,6 +1,5 @@
 """test random_split and ranked_split"""
 import pytest
-from pytest_mock import Mock
 from active_learning.model.base_model import BaseModel
 from active_learning.model_uncertainty.base_model_uncertainty import BaseModelUncertainty
 from active_learning.policy.base_policy import RandomActiveLearningPolicy
