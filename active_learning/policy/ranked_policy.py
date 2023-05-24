@@ -69,7 +69,7 @@ class RankedPolicy(BaseActiveLearningPolicy):
         elif self.rank_type == "inc":
             sorted_im_scores_list = sorted(im_scores_list, key=lambda x: x[1])
         else:
-            raise ValueError(f"Behavior for rank_type {rank_type} is undefined")
+            raise ValueError(f"Behavior for rank_type {self.rank_type} is undefined")
         print(f"Top scores: {sorted_im_scores_list[:5]}")
         sorted_im_list = [im_score[0] for im_score in sorted_im_scores_list]
 
