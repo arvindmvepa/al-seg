@@ -1,5 +1,7 @@
 --extra-index-url https://download.pytorch.org/whl/cu116
 scipy==1.7.3
+easydict==1.10
+opencv-python==4.7.0.72
 transformers==4.29.2
 tensorboardX==2.6
 torch==1.12.1+cu116 

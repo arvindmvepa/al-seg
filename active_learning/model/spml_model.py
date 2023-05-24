@@ -9,7 +9,7 @@ import sys
 class SPMLModel(BaseModel):
     """SPML Model class"""
 
-    def __init__(self, ann_type="box", data_root=os.path.join("spml_data", "PASCAL"), ensemble_size=1, epoch_len=10578,
+    def __init__(self, ann_type="box", data_root="spml_data/PASCAL", ensemble_size=1, epoch_len=10578,
                  num_epochs=3, seed=0, cuda_visible_devices="0", gpus="0", tag="",
                  backbone_types="panoptic_deeplab_101", embedding_dim=64, prediction_types="segsort",
                  lr_policy='poly', use_syncbn=True, warmup_iteration=100, lr=3e-3,
@@ -19,7 +19,7 @@ class SPMLModel(BaseModel):
                  sem_occ_concentration=None, img_sim_concentration=None, feat_aff_concentration=None,
                  sem_ann_loss_weight=None, sem_occ_loss_weight=None, word_sim_loss_weight=None,
                  img_sim_loss_weight=None, feat_aff_loss_weight=None,
-                 pretrained=os.path.join("spml_pretrained", "resnet-101-cuhk.pth"),
+                 pretrained="spml_pretrained/resnet-101-cuhk.pth",
                  inference_split='val'):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed,
                          gpus=gpus, tag=tag)
