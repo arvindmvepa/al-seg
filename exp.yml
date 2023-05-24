@@ -2,8 +2,9 @@ model:
   model_type: "spml_mv"
   ann_type: "box"
   ensemble_size: 3
-  gpus: "0"
   cuda_visible_devices: "1"
+    gpus: "0"
+  virtualenv: null
 policy:
   policy_type: ranked
   seed: 0
