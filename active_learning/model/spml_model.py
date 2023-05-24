@@ -3,14 +3,14 @@ import json
 import os
 import subprocess
 import re
+import sys
 
 
 class SPMLModel(BaseModel):
     """SPML Model class"""
 
-    def __init__(self, ann_type="box", data_root="/home/asjchoi/SPML/PASCAL", ensemble_size=1, epoch_len=10578,
+    def __init__(self, ann_type="box", data_root=os.path.join("spml_data", "PASCAL"), ensemble_size=1, epoch_len=10578,
                  num_epochs=3, seed=0, cuda_visible_devices="0", gpus="0", tag="",
-                 virtualenv='/home/asjchoi/SPML_Arvind/spml-env',
                  backbone_types="panoptic_deeplab_101", embedding_dim=64, prediction_types="segsort",
                  lr_policy='poly', use_syncbn=True, warmup_iteration=100, lr=3e-3,
                  wd=5e-4, batch_size=4, crop_size=256, image_scale=0.5, memory_bank_size=2, kmeans_iterations=10,
@@ -19,13 +19,14 @@ class SPMLModel(BaseModel):
                  sem_occ_concentration=None, img_sim_concentration=None, feat_aff_concentration=None,
                  sem_ann_loss_weight=None, sem_occ_loss_weight=None, word_sim_loss_weight=None,
                  img_sim_loss_weight=None, feat_aff_loss_weight=None,
-                 pretrained="/home/asjchoi/SPML_Arvind/snapshots/imagenet/trained/resnet-101-cuhk.pth",
+                 pretrained=os.path.join("spml_pretrained", "resnet-101-cuhk.pth"),
                  inference_split='val'):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed,
-                         gpus=gpus, tag=tag, virtualenv=virtualenv)
+                         gpus=gpus, tag=tag)
         self._set_loss_weights(sem_ann_concentration, sem_occ_concentration, img_sim_concentration,
                                feat_aff_concentration, sem_ann_loss_weight, sem_occ_loss_weight, word_sim_loss_weight,
                                img_sim_loss_weight, feat_aff_loss_weight)
+        self.exec_python = sys.executable
         self.cuda_visible_devices = cuda_visible_devices
         self.backbone_types = backbone_types
         self.embedding_dim = embedding_dim
@@ -68,10 +69,10 @@ class SPMLModel(BaseModel):
         train_split = self.train_split(cur_total_oracle_split, cur_total_pseudo_split)
         orig_train_split = self.model_params['train_split']
 
-        train_script = f"python3 spml/pyscripts/train/train.py --data_dir {self.data_root} " \
+        train_script = f"{self.exec_python} spml/pyscripts/train/train.py --data_dir {self.data_root} " \
                        f"--data_list {train_data_list} --snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
                        f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
-        prototype_script = f"python3 spml/pyscripts/inference/prototype.py --data_dir {self.data_root} " \
+        prototype_script = f"{self.exec_python } spml/pyscripts/inference/prototype.py --data_dir {self.data_root} " \
                            f"--data_list {memory_data_list} " \
                            f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', train_split)} " \
                            f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} --label_divisor 2048 " \
@@ -85,12 +86,8 @@ class SPMLModel(BaseModel):
 
         # env for python scripts
         env = dict()
-        if self.virtualenv:
-            env['VIRTUAL_ENV'] = self.virtualenv
-            env['PATH'] = f"{env['VIRTUAL_ENV']}/bin:{os.environ['PATH']}"
-        else:
-            env = os.environ.copy()
-            env['PATH'] = f"{os.environ['PATH']}"
+        env = os.environ.copy()
+        env['PATH'] = f"{os.environ['PATH']}"
         env['PYTHONPATH'] ="spml"
         if isinstance(self.gpus, str):
             env['CUDA_VISIBLE_DEVICES'] = self.cuda_visible_devices
@@ -307,14 +304,14 @@ class SPMLModel(BaseModel):
 class SPMLwMajorityVote(MajorityVoteMixin, SPMLModel):
 
     def _get_inference_scripts(self, snapshot_dir, train_split, orig_train_split, orig_train_data_list, val_data_list):
-        inference_train_script = f"python3 spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
+        inference_train_script = f"{self.exec_python} spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
                                  f"--data_list {orig_train_data_list} " \
                                  f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', orig_train_split)} " \
                                  f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
                                  f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
                                  f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
                                  f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
-        inference_val_script = f"python3 spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
+        inference_val_script = f"{self.exec_python} spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
                                f"--data_list {val_data_list} " \
                                f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)} " \
                                f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
@@ -327,14 +324,14 @@ class SPMLwMajorityVote(MajorityVoteMixin, SPMLModel):
 class SPMLwSoftmax(SoftmaxMixin, SPMLModel):
 
     def _get_inference_scripts(self, snapshot_dir, train_split, orig_train_split, orig_train_data_list, val_data_list):
-        inference_train_script = f"python3 spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
+        inference_train_script = f"{self.exec_python} spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
                                  f"--data_list {orig_train_data_list} --save_logits " \
                                  f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', orig_train_split)} " \
                                  f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
                                  f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
                                  f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
                                  f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
-        inference_val_script = f"python3 spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
+        inference_val_script = f"{self.exec_python} spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
                                f"--data_list {val_data_list} --save_results" \
                                f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)} " \
                                f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \

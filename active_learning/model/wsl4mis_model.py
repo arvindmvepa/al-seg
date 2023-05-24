@@ -15,7 +15,6 @@ import torch.optim as optim
 from torch.nn.modules.loss import CrossEntropyLoss
 from tensorboardX import SummaryWriter
 import torch
-from active_learning.model.utils import load_virtualenv
 
 
 class DMPLSModel(BaseModel, SoftmaxMixin):
@@ -23,10 +22,9 @@ class DMPLSModel(BaseModel, SoftmaxMixin):
 
     def __init__(self, ann_type="scribble", data_root="/home/asjchoi/WSL4MIS/data/ACDC", ensemble_size=1,
                  seg_model='unet_cct', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
-                 patch_size=(256,256), seed=0, gpus="0", tag="",
-                 virtualenv='/home/asjchoi/WSL4MIS/wsl4mis-env'):
+                 patch_size=(256,256), seed=0, gpus="0", tag=""):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
-                         tag=tag, virtualenv=virtualenv)
+                         tag=tag)
         self.seg_model = seg_model
         self.num_classes = num_classes
         self.batch_size = batch_size
@@ -35,8 +33,6 @@ class DMPLSModel(BaseModel, SoftmaxMixin):
         self.base_lr = base_lr
         self.patch_size = patch_size
         torch.set_default_device("cuda:" + self.gpus)
-        if self.virtualenv:
-            load_virtualenv(self.virtualenv)
 
 
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0,

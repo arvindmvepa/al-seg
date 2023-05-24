@@ -4,7 +4,6 @@ model:
   ensemble_size: 3
   cuda_visible_devices: "1"
   gpus: "0"
-  virtualenv: null
 policy:
   policy_type: ranked
   seed: 0
