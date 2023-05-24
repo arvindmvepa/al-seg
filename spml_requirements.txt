@@ -1,0 +1,5 @@
+--find-links https://download.pytorch.org/whl/cu116
+transformers==4.29.2
+tensorboardX==2.6
+torch==1.12.1+cu116 
+torchvision==0.13.1+cu116
