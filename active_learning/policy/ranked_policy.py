@@ -61,9 +61,10 @@ class RankedPolicy(BaseActiveLearningPolicy):
 
     def _ranked_sample_unann_indices(self):
         unann_im_dict, num_samples = self._get_unann_train_file_paths(), self._get_unann_num_samples()
-        # get the scores per image from the score file
+        # get the scores per image from the score file in this format: img_name, score
         im_scores_list = open(self.prev_round_im_score_file).readlines()
         im_scores_list = [im_score.strip().split(",") for im_score in im_scores_list]
+        im_scores_list = [(im_score[0], float(im_score[1])) for im_score in im_scores_list]
         if self.rank_type == "desc":
             sorted_im_scores_list = sorted(im_scores_list, key=lambda x: x[1], reverse=True)
         elif self.rank_type == "inc":

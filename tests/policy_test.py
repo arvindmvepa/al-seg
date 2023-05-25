@@ -96,10 +96,18 @@ def test_random_split(random_policy, exp_split_count):
 
 @pytest.mark.parametrize("file_keys, im_key, train_files_dict, im_score_file, im_score_dict, " \
                          "split, ann_base_file, exp_file_split", 
-                         [(["images"], "images", 
+                         [
+                           # standard test case
+                           (["images"], "images", 
                            {"images": ["image1.png", "image2.png", "image3.png", "image4.png"]}, 
                            "scores.txt", 
                            {"image1.png": 0.1, "image2.png": 0.3, "image3.png": 0.2, "image4.png": 0.05},
+                           .5, "test.txt", {"image2.png", "image3.png"}),
+                           # test scientific notation
+                           (["images"], "images", 
+                           {"images": ["image1.png", "image2.png", "image3.png", "image4.png"]}, 
+                           "scores.txt", 
+                           {"image1.png": 0.1, "image2.png": 0.3, "image3.png": 0.2, "image4.png": 9.5e-5},
                            .5, "test.txt", {"image2.png", "image3.png"})
                            ])
 def test_ranked_split(ranked_policy, exp_file_split):
