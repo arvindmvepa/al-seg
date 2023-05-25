@@ -102,6 +102,7 @@ class SPMLModel(BaseModel):
         execute_params['PROTOTYPE_SCRIPT'] = prototype_script
         execute_params['INFERENCE_TRAIN_SCRIPT'] = inference_scripts['train']
         execute_params['INFERENCE_VAL_SCRIPT'] = inference_scripts['val']
+        execute_params['METRICS_VAL'] = inference_scripts['metrics_val']
         execute_params['STDOUT_FILE'] = (stdout_file)("file_type")
         execute_params['STDERR_FILE'] = (stderr_file)("file_type")
         execute_params['SAVED'] = save_params
@@ -140,6 +141,13 @@ class SPMLModel(BaseModel):
         cur_stdout_file = (stdout_file)('inf_val')
         cur_stderr_file = (stderr_file)('inf_val')
         cur_script = f"{inference_scripts['val']} {cur_stdout_file} {cur_stderr_file}"
+        print(cur_script)
+        subprocess.run(cur_script, env=env, shell=True)
+
+        print("\Metrics on Val Script")
+        cur_stdout_file = (stdout_file)('metrics_val')
+        cur_stderr_file = (stderr_file)('metrics_val')
+        cur_script = f"{inference_scripts['metrics_val']} {cur_stdout_file} {cur_stderr_file}"
         print(cur_script)
         subprocess.run(cur_script, env=env, shell=True)
 
@@ -318,7 +326,13 @@ class SPMLwMajorityVote(MajorityVoteMixin, SPMLModel):
                                f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
                                f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
                                f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
-        return {'train': inference_train_script, 'val': inference_val_script}
+        metrics_val_script = f"{self.exec_python} spml/pyscripts/benchmark/benchmark_by_mIoU.py " \
+                               f"--gt_dir {os.path.join(self.data_root, 'VOC2012', 'segcls')} " \
+                               f" --pred_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)}  " \
+                               f" --num_classes 21  --img_scale {self.image_scale}"
+
+        return {'train': inference_train_script, 'val': inference_val_script, 
+                'metrics_val': metrics_val_script}
 
 
 class SPMLwSoftmax(SoftmaxMixin, SPMLModel):
@@ -338,4 +352,10 @@ class SPMLwSoftmax(SoftmaxMixin, SPMLModel):
                                f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
                                f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
                                f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
-        return {'train': inference_train_script, 'val': inference_val_script}
+        metrics_val_script = f"{self.exec_python} spml/pyscripts/benchmark/benchmark_by_mIoU.py " \
+                               f"--gt_dir {os.path.join(self.data_root, 'VOC2012', 'segcls')} " \
+                               f" --pred_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)}  " \
+                               f" --num_classes 21  --img_scale {self.image_scale}"
+
+        return {'train': inference_train_script, 'val': inference_val_script, 
+                'metrics_val': metrics_val_script}

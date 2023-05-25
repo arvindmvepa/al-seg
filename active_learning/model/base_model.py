@@ -24,7 +24,6 @@ class BaseModel(ABC):
     num_epochs : int
     seed : int
     tag : str
-    virtualenv : str
 
     Methods
     -------
@@ -43,8 +42,7 @@ class BaseModel(ABC):
 
     """
 
-    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, gpus="0", tag="",
-                 virtualenv='/home/asjchoi/SPML_Arvind/spml-env'):
+    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, gpus="0", tag=""):
         self.model_params = model_params[self.model_string][ann_type]
         self.ann_type = ann_type
         self.data_root = data_root
@@ -53,7 +51,6 @@ class BaseModel(ABC):
         self.random_gen = Random(seed)
         self.gpus = gpus
         self.tag = tag
-        self.virtualenv = virtualenv
         if len(self.file_keys) == 0:
             raise ValueError(f"file_keys needs at least one key")
         self.all_train_files_dict = None
