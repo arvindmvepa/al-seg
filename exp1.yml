@@ -1,9 +1,9 @@
 model:
-  model_type: "dmpls"
-  ann_type: "scribble"
+  model_type: "spml_sm"
+  ann_type: "box"
   ensemble_size: 3
-  gpus: "0"
   cuda_visible_devices: "1"
+  gpus: "0"
 policy:
   policy_type: ranked
   seed: 0
@@ -11,9 +11,9 @@ policy:
     skip: False
   uncertainty_kwargs:
     skip: False
-    delete_preds: True
+    delete_preds: False
   rounds: [[.001, 0], [.001, 0], [.001, 0]]
 model_uncertainty:
   model_uncertainty_type: ensemble
   scoring_method: entropy_w_label_probs
-exp_dir: "DMPLS_w_entropy_test_run1"
+exp_dir: "spml_w_entropy_test_run1"
