@@ -314,21 +314,21 @@ class SPMLwMajorityVote(MajorityVoteMixin, SPMLModel):
     def _get_inference_scripts(self, snapshot_dir, train_split, orig_train_split, orig_train_data_list, val_data_list):
         inference_train_script = f"{self.exec_python} spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
                                  f"--data_list {orig_train_data_list} " \
-                                 f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', orig_train_split)} " \
-                                 f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
+                                 f"--save_dir {snapshot_dir}/stage1/results/{orig_train_split} " \
+                                 f"--snapshot_dir {snapshot_dir}/stage1 " \
                                  f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
                                  f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                                 f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
+                                 f"--cfg_path {snapshot_dir}/config_emb.yaml "
         inference_val_script = f"{self.exec_python} spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
                                f"--data_list {val_data_list} " \
-                               f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)} " \
-                               f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
+                               f"--save_dir {snapshot_dir}/stage1/results/{self.inference_split} " \
+                               f"--snapshot_dir {snapshot_dir}/stage1 " \
                                f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
                                f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                               f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
+                               f"--cfg_path {snapshot_dir}/config_emb.yaml "
         metrics_val_script = f"{self.exec_python} spml/pyscripts/benchmark/benchmark_by_mIoU.py " \
-                               f"--gt_dir {os.path.join(self.data_root, 'VOC2012', 'segcls')} " \
-                               f" --pred_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)}  " \
+                               f"--gt_dir {self.data_root}/VOC2012/segcls " \
+                               f" --pred_dir {snapshot_dir}/stage1/results/{self.inference_split}  " \
                                f" --num_classes 21  --img_scale {self.image_scale}"
 
         return {'train': inference_train_script, 'val': inference_val_script, 
@@ -340,21 +340,21 @@ class SPMLwSoftmax(SoftmaxMixin, SPMLModel):
     def _get_inference_scripts(self, snapshot_dir, train_split, orig_train_split, orig_train_data_list, val_data_list):
         inference_train_script = f"{self.exec_python} spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
                                  f"--data_list {orig_train_data_list} --save_logits " \
-                                 f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', orig_train_split)} " \
-                                 f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
+                                 f"--save_dir {snapshot_dir}/stage1/results/orig_train_split " \
+                                 f"--snapshot_dir {snapshot_dir}/stage1 " \
                                  f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
                                  f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                                 f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
+                                 f"--cfg_path {snapshot_dir}/config_emb.yaml "
         inference_val_script = f"{self.exec_python} spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
-                               f"--data_list {val_data_list} --save_results" \
-                               f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)} " \
-                               f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
+                               f"--data_list {val_data_list} --save_results " \
+                               f"--save_dir {snapshot_dir}/stage1/results/{self.inference_split} " \
+                               f"--snapshot_dir {snapshot_dir}/stage1 " \
                                f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
                                f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                               f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
+                               f"--cfg_path {snapshot_dir}/config_emb.yaml "
         metrics_val_script = f"{self.exec_python} spml/pyscripts/benchmark/benchmark_by_mIoU.py " \
-                               f"--gt_dir {os.path.join(self.data_root, 'VOC2012', 'segcls')} " \
-                               f" --pred_dir {os.path.join(snapshot_dir, 'stage1', 'results', self.inference_split)}  " \
+                               f"--gt_dir {self.data_root}/VOC2012/segcls " \
+                               f" --pred_dir {snapshot_dir}/stage1/results/{self.inference_split}/semantic_gray  " \
                                f" --num_classes 21  --img_scale {self.image_scale}"
 
         return {'train': inference_train_script, 'val': inference_val_script, 
