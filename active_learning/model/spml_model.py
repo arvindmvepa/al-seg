@@ -328,7 +328,7 @@ class SPMLwMajorityVote(MajorityVoteMixin, SPMLModel):
                                f"--cfg_path {snapshot_dir}/config_emb.yaml "
         metrics_val_script = f"{self.exec_python} spml/pyscripts/benchmark/benchmark_by_mIoU.py " \
                                f"--gt_dir {self.data_root}/VOC2012/segcls " \
-                               f" --pred_dir {snapshot_dir}/stage1/results/{self.inference_split}  " \
+                               f" --pred_dir {snapshot_dir}/stage1/results/{self.inference_split}/semantic_gray   " \
                                f" --num_classes 21  --img_scale {self.image_scale}"
 
         return {'train': inference_train_script, 'val': inference_val_script, 
