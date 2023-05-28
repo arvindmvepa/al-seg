@@ -17,7 +17,7 @@ from tensorboardX import SummaryWriter
 import torch
 
 
-class DMPLSModel(BaseModel, SoftmaxMixin):
+class DMPLSModel(SoftmaxMixin, BaseModel):
     """DMPLS Model class"""
 
     def __init__(self, ann_type="scribble", data_root="wsl4mis_data/ACDC", ensemble_size=1,
