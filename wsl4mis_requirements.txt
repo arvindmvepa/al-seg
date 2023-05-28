@@ -1,10 +1,10 @@
---extra-index-url https://download.pytorch.org/whl/cu116
+--extra-index-url https://download.pytorch.org/whl/cu111
 scipy==1.7.3
 PyYAML==6.0
 tqdm==4.65.0
 Pillow==9.5.0
-torch==1.12.1+cu116 
-torchvision==0.13.1+cu116
+torch==1.8.0+cu111
+torchvision==0.9.0+cu111
 efficientnet-pytorch==0.7.1
 opencv-python==4.6.0.66
 h5py==3.8.0
