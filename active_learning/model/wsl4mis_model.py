@@ -32,7 +32,7 @@ class DMPLSModel(BaseModel, SoftmaxMixin):
         self.deterministic = deterministic
         self.base_lr = base_lr
         self.patch_size = patch_size
-        torch.cuda.set_device(self.gpus)
+        torch.cuda.set_device(torch.device("cuda:" + self.gpus))
 
 
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0,
