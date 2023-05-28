@@ -10,16 +10,15 @@ class SPMLModel(BaseModel):
     """SPML Model class"""
 
     def __init__(self, ann_type="box", data_root="spml_data/PASCAL", ensemble_size=1, epoch_len=10578,
-                 num_epochs=3, seed=0, cuda_visible_devices="0", gpus="0", tag="",
-                 backbone_types="panoptic_deeplab_101", embedding_dim=64, prediction_types="segsort",
-                 lr_policy='poly', use_syncbn=True, warmup_iteration=100, lr=3e-3,
-                 wd=5e-4, batch_size=4, crop_size=256, image_scale=0.5, memory_bank_size=2, kmeans_iterations=10,
-                 kmeans_num_clusters=6, sem_ann_loss_types="segsort", sem_occ_loss_types="segsort",
-                 img_sim_loss_types="segsort", feat_aff_loss_types="none", sem_ann_concentration=None,
-                 sem_occ_concentration=None, img_sim_concentration=None, feat_aff_concentration=None,
-                 sem_ann_loss_weight=None, sem_occ_loss_weight=None, word_sim_loss_weight=None,
-                 img_sim_loss_weight=None, feat_aff_loss_weight=None,
-                 pretrained="spml_pretrained/resnet-101-cuhk.pth",
+                 num_epochs=3, seed=0, gpus="0", tag="",ackbone_types="panoptic_deeplab_101", 
+                 embedding_dim=64, prediction_types="segsort", lr_policy='poly', use_syncbn=True, 
+                 warmup_iteration=100, lr=3e-3, wd=5e-4, batch_size=4, crop_size=256, image_scale=0.5, 
+                 memory_bank_size=2, kmeans_iterations=10,kmeans_num_clusters=6, 
+                 sem_ann_loss_types="segsort", sem_occ_loss_types="segsort", img_sim_loss_types="segsort", 
+                 feat_aff_loss_types="none", sem_ann_concentration=None, sem_occ_concentration=None, 
+                 img_sim_concentration=None, feat_aff_concentration=None, sem_ann_loss_weight=None, 
+                 sem_occ_loss_weight=None, word_sim_loss_weight=None, img_sim_loss_weight=None, 
+                 feat_aff_loss_weight=None, pretrained="spml_pretrained/resnet-101-cuhk.pth",
                  inference_split='val'):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed,
                          gpus=gpus, tag=tag)
@@ -27,7 +26,6 @@ class SPMLModel(BaseModel):
                                feat_aff_concentration, sem_ann_loss_weight, sem_occ_loss_weight, word_sim_loss_weight,
                                img_sim_loss_weight, feat_aff_loss_weight)
         self.exec_python = sys.executable
-        self.cuda_visible_devices = cuda_visible_devices
         self.backbone_types = backbone_types
         self.embedding_dim = embedding_dim
         self.prediction_types = prediction_types
@@ -90,7 +88,7 @@ class SPMLModel(BaseModel):
         env['PATH'] = f"{os.environ['PATH']}"
         env['PYTHONPATH'] ="spml"
         if isinstance(self.gpus, str):
-            env['CUDA_VISIBLE_DEVICES'] = self.cuda_visible_devices
+            env['CUDA_VISIBLE_DEVICES'] = self.gpus
         else:
             raise ValueError("cuda_devices must be str type")
 
