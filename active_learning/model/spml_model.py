@@ -340,7 +340,7 @@ class SPMLwSoftmax(SoftmaxMixin, SPMLModel):
     def _get_inference_scripts(self, snapshot_dir, train_split, orig_train_split, orig_train_data_list, val_data_list):
         inference_train_script = f"{self.exec_python} spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
                                  f"--data_list {orig_train_data_list} --save_logits " \
-                                 f"--save_dir {snapshot_dir}/stage1/results/orig_train_split " \
+                                 f"--save_dir {snapshot_dir}/stage1/results/{orig_train_split} " \
                                  f"--snapshot_dir {snapshot_dir}/stage1 " \
                                  f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
                                  f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
