@@ -2,8 +2,7 @@ model:
   model_type: "dmpls"
   ann_type: "scribble"
   ensemble_size: 3
-  cuda_visible_devices: "1"
-  gpus: "0"
+  gpus: "1"
 policy:
   policy_type: ranked
   seed: 0

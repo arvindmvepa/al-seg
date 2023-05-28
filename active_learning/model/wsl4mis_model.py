@@ -20,7 +20,7 @@ import torch
 class DMPLSModel(BaseModel, SoftmaxMixin):
     """DMPLS Model class"""
 
-    def __init__(self, ann_type="scribble", data_root="/home/asjchoi/WSL4MIS/data/ACDC", ensemble_size=1,
+    def __init__(self, ann_type="scribble", data_root="wsl4mis_data/ACDC", ensemble_size=1,
                  seg_model='unet_cct', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
                  patch_size=(256,256), seed=0, gpus="0", tag=""):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
