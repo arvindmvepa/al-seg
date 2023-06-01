@@ -10,7 +10,7 @@ class SPMLModel(BaseModel):
     """SPML Model class"""
 
     def __init__(self, ann_type="box", data_root="spml_data/PASCAL", ensemble_size=1, epoch_len=10578,
-                 num_epochs=3, seed=0, gpus="0", tag="",ackbone_types="panoptic_deeplab_101", 
+                 num_epochs=3, seed=0, gpus="0", tag="",backbone_types="panoptic_deeplab_101", 
                  embedding_dim=64, prediction_types="segsort", lr_policy='poly', use_syncbn=True, 
                  warmup_iteration=100, lr=3e-3, wd=5e-4, batch_size=4, crop_size=256, image_scale=0.5, 
                  memory_bank_size=2, kmeans_iterations=10,kmeans_num_clusters=6, 
