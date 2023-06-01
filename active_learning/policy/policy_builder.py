@@ -16,7 +16,8 @@ class PolicyBuilder:
         if not os.path.exists(self._exp_dir):
             os.makedirs(self._exp_dir)
         # copy exp_params_file to experiment directory
-        shutil.copyfile(exp_params_file, os.path.join(self._exp_dir, os.path.basename(exp_params_file)))
+        shutil.copyfile(exp_params_file, 
+                        os.path.join(self._exp_dir, "exp.yml"))
         return self
 
     def with_model_params(self, model_params):
