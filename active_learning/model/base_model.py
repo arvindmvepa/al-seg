@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
 from active_learning.model.model_params import model_params
-import json
 import os
-import time
-
+from random import Random
+from tqdm import tqdm
+import numpy as np
+from glob import glob
+import shutil
+from PIL import Image
 
 class BaseModel(ABC):
     """Abstract class for model interface
@@ -21,7 +24,6 @@ class BaseModel(ABC):
     num_epochs : int
     seed : int
     tag : str
-    virtualenv : str
 
     Methods
     -------
@@ -40,20 +42,18 @@ class BaseModel(ABC):
 
     """
 
-    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  epoch_len = 10578, num_epochs = 3,
-                 seed=0, gpus="0", tag="", virtualenv='/home/asjchoi/SPML_Arvind/spml-env'):
+    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, gpus="0", tag=""):
         self.model_params = model_params[self.model_string][ann_type]
         self.ann_type = ann_type
         self.data_root = data_root
         self.ensemble_size = ensemble_size
-        self.epoch_len = epoch_len
-        self.num_epochs = num_epochs
         self.seed = seed
+        self.random_gen = Random(seed)
         self.gpus = gpus
         self.tag = tag
-        self.virtualenv = virtualenv
         if len(self.file_keys) == 0:
             raise ValueError(f"file_keys needs at least one key")
+        self.all_train_files_dict = None
         self._init_train_file_info()
         self._init_val_file_info()
 
@@ -74,7 +74,7 @@ class BaseModel(ABC):
             self.train_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, **kwargs)
         print("Finished Training Ensemble")
 
-    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict):
+    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
         raise NotImplementedError()
 
     @abstractmethod
@@ -110,3 +110,78 @@ class BaseModel(ABC):
     @abstractmethod
     def __repr__(self):
         raise NotImplementedError()
+
+
+class MajorityVoteMixin:
+
+    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
+        f = open(im_score_file, "w")
+        train_results_dirs = sorted(list(glob(os.path.join(round_dir, "*",
+                                                           self.model_params['train_results_dir']))))
+        filt_models_result_files = self._filter_unann_ims(train_results_dirs, ignore_ims_dict)
+        for models_result_file in tqdm(zip(*filt_models_result_files)):
+            results_arr, base_name = self._convert_ensemble_results_to_arr(models_result_file)
+            # calculate the score_func over the ensemble of predictions
+            score = score_func(results_arr)
+            f.write(f"{base_name},{np.round(score, 7)}\n")
+            f.flush()
+        f.close()
+        # after obtaining scores, delete train results for the rounds
+        if delete_preds:
+            for train_result_dir in train_results_dirs:
+                shutil.rmtree(train_result_dir)
+
+    def _convert_ensemble_results_to_arr(self, models_result_file):
+        results = []
+        for model_result_file in models_result_file:
+            arr = np.asarray(Image.open(model_result_file).convert('L'))
+            results.append(arr)
+        results_arr = np.stack(results)
+        # use the first model's pred_file basename because it's the same image
+        base_name = os.path.basename(models_result_file[0])
+        return results_arr, base_name
+
+    def _filter_unann_ims(self, train_results_dirs, ignore_ims_dict):
+        # load models' results files
+        models_result_files = [sorted(glob(os.path.join(train_results_dir, "*"))) for train_results_dir in
+                               train_results_dirs]
+        # filter model results in which we already have annotations
+        # Note: filter predictions for first model and use the filtering results for the other models
+        filt_models_result_files = []
+        for _ in range(self.ensemble_size):
+            filt_models_result_files.append([])
+        for i, result_file in enumerate(models_result_files[0]):
+            remove = False
+            for im_file in ignore_ims_dict[self.im_key]:
+                if os.path.basename(result_file)[:-4] in im_file:
+                    remove = True
+                if remove:
+                    break
+            if not remove:
+                for j in range(self.ensemble_size):
+                    filt_models_result_files[j].append(models_result_files[j][i])
+        return filt_models_result_files
+
+
+class SoftmaxMixin:
+
+    def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
+        f = open(im_score_file, "w")
+        train_logits_path = os.path.join(round_dir, "*", self.model_params['train_logits_path'])
+        train_results = sorted(list(glob(train_logits_path)))
+        im_files = sorted(np.load(train_results[0], mmap_mode='r').files)
+        filtered_im_files = [im_file for im_file in im_files if im_file not in ignore_ims_dict[self.im_key]]
+        # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
+        for im_file in tqdm(filtered_im_files):
+            ensemble_preds_arr = []
+            for i, result in enumerate(train_results):
+                preds_arr = np.load(result, mmap_mode='r')[im_file]
+                ensemble_preds_arr.append(preds_arr)
+            score = score_func(ensemble_preds_arr)
+            f.write(f"{im_file},{np.round(score, 7)}\n")
+            f.flush()
+        f.close()
+        # after obtaining scores, delete the *.npz files for the round
+        if delete_preds:
+            for result in train_results:
+                os.remove(result)

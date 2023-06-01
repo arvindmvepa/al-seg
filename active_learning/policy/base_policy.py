@@ -1,12 +1,6 @@
-from active_learning.model.model_params import model_params
 from active_learning.model_uncertainty.base_model_uncertainty import NoModelUncertainty
-import random
+from random import Random
 import os
-import json
-import subprocess
-import shutil
-import itertools
-
 
 
 class BaseActiveLearningPolicy:
@@ -60,7 +54,7 @@ class BaseActiveLearningPolicy:
 
     """
 
-    def __init__(self, model, exp_params_file, model_uncertainty=None, ensemble_kwargs=None,
+    def __init__(self, model, model_uncertainty=None, ensemble_kwargs=None,
                  uncertainty_kwargs=None, rounds=(), exp_dir="test", pseudolabels=False,
                  tag="", seed=0):
         self.model = model
@@ -74,14 +68,10 @@ class BaseActiveLearningPolicy:
         self._round_num = None
         self.round_dir = None
         self.exp_dir = exp_dir
-        if not os.path.exists(self.exp_dir):
-            os.makedirs(self.exp_dir)
-        # copy exp_params_file to experiment directory
-        shutil.copyfile(exp_params_file, os.path.join(self.exp_dir, os.path.basename(exp_params_file)))
         self.pseudolabels = pseudolabels
         self.tag = tag
         self.seed = seed
-        random.seed(self.seed)
+        self.random_gen = Random(self.seed)
 
         self.all_train_files_dict = self.model.all_train_files_dict
         self.file_keys = self.model.file_keys
@@ -139,13 +129,13 @@ class BaseActiveLearningPolicy:
             sampled_unann_im_dict[key] = sampled_unann_ims
             new_train_file_path = new_train_file_paths[key]
             with open(new_train_file_path, 'w') as new_file:
-                new_file.write(''.join(sampled_unann_ims + self.cur_oracle_ims[key]))
+                new_file.write('\n'.join(sampled_unann_ims + self.cur_oracle_ims[key]))
         return sampled_unann_im_dict
 
     def _random_sample_unann_files(self):
         num_samples = self._get_unann_num_samples()
         indices = list(range(num_samples))
-        return random.sample(indices, num_samples)
+        return self.random_gen.sample(indices, num_samples)
 
     def _get_unann_train_file_paths(self):
         unann_im_dict = {key: [] for key in self.file_keys}

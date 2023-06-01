@@ -1,5 +1,5 @@
 model:
-  model_type: "spml_mv"
+  model_type: "spml_sm"
   ann_type: "box"
   ensemble_size: 3
   gpus: "1"
@@ -14,5 +14,5 @@ policy:
   rounds: [[.001, 0], [.001, 0], [.001, 0]]
 model_uncertainty:
   model_uncertainty_type: ensemble
-  scoring_method: entropy_w_label_counts
-exp_dir: "spml_w_entropy_test_run"
+  scoring_method: entropy_w_label_probs
+exp_dir: "spml_w_entropy_test_run1"
