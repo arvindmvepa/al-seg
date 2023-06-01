@@ -123,7 +123,6 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                     'iteration %d : loss : %f, loss_ce: %f, loss_pse_sup: %f, alpha: %f' %
                     (iter_num, loss.item(), loss_ce.item(), loss_pse_sup.item(), alpha))
 
-                # below constant isn't scaled to account for small (cur_total_oracle_split + cur_total_pseudo_split)
                 if iter_num % 20 == 0:
                     image = volume_batch[0, 0:1, :, :]
                     image = (image - image.min()) / (image.max() - image.min())
@@ -135,12 +134,15 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                     labs = label_batch[0, ...].unsqueeze(0) * 50
                     writer.add_image('train/GroundTruth', labs, iter_num)
 
-                if iter_num > 0 and iter_num % (200 * (cur_total_oracle_split + cur_total_pseudo_split)) == 0:
+                if iter_num > 0 and (iter_num % 200 == 0 or 
+                                     iter_num == self.max_iter(cur_total_oracle_split, 
+                                                               cur_total_pseudo_split)):
                     model.eval()
                     metric_list = 0.0
                     for i_batch, sampled_batch in enumerate(valloader):
                         metric_i = test_single_volume_cct(
-                            sampled_batch["image"], sampled_batch["label"], model, classes=self.num_classes)
+                            sampled_batch["image"], sampled_batch["label"], 
+                            model, classes=self.num_classes)
                         metric_list += np.array(metric_i)
                     metric_list = metric_list / len(db_val)
                     for class_i in range(self.num_classes-1):
@@ -175,7 +177,9 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                     else:
                         alpha = 0.01
 
-                if iter_num % (3000 * (cur_total_oracle_split + cur_total_pseudo_split)) == 0:
+                if iter_num % (3000 * (cur_total_oracle_split + cur_total_pseudo_split)) == 0 or \
+                    iter_num == self.max_iter(cur_total_oracle_split, cur_total_pseudo_split):
+
                     save_mode_path = os.path.join(
                         snapshot_dir, 'iter_' + str(iter_num) + '.pth')
                     torch.save(model.state_dict(), save_mode_path)
