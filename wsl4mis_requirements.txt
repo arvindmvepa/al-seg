@@ -10,3 +10,5 @@ opencv-python==4.6.0.66
 h5py==3.8.0
 MedPy==0.4.0
 tensorboardX==2.5.1
+pytest-mock==3.10.0
+pytest-pythonpath==0.7.4
