@@ -22,6 +22,27 @@ def entropy_w_label_counts(im_labels):
     return mean_entropy
 
 
+def ensemble_variance_ratio(im_labels):
+    n_members = len(im_labels)
+
+    im_labels = np.concatenate(im_labels)
+
+    # Convert probabilities to class indices
+    im_class_labels = im_labels.argmax(axis=1)
+
+    # Count the number of times each class is the modal class, pixel-wise
+    # This gives an array of shape (n_members, 256, 256)
+    fm = np.apply_along_axis(lambda x: np.bincount(x, minlength=n_members).max(), 
+                             axis=0, 
+                             arr=im_class_labels)
+
+    # Compute variance ratio
+    v = 1 - fm / n_members
+
+    average_disperson = np.mean(v)
+    return average_disperson
+
+
 def pixel_entropy_w_probs(pixel_probs):
     return entropy_func(pixel_probs)
 
@@ -73,4 +94,5 @@ def unpacking_apply_along_axis(all_args):
 
 
 scoring_functions = {"entropy_w_label_counts": entropy_w_label_counts,
-                     "entropy_w_label_probs": entropy_w_label_probs}
+                     "entropy_w_label_probs": entropy_w_label_probs,
+                     "ensemble_variance_ratio": ensemble_variance_ratio}

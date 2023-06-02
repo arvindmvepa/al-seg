@@ -1,0 +1,19 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  ensemble_size: 3
+  batch_size: 6
+  gpus: "mps"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+  uncertainty_kwargs:
+    skip: False
+    delete_preds: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0]]
+model_uncertainty:
+  model_uncertainty_type: ensemble
+  scoring_method: entropy_w_label_probs
+exp_dir: "DMPLS_w_entropy_test_strong_run"

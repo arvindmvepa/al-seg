@@ -5,10 +5,10 @@ import os
 import logging
 import numpy as np
 from tqdm import tqdm
-from wsl4mis.code.networks.net_factory import net_factory
+from wsl4mis.code.val_2D import test_single_volume
 from wsl4mis.code.dataloaders.dataset import BaseDataSets, RandomGenerator
+from wsl4mis.code.networks.net_factory import net_factory
 from wsl4mis.code.utils import losses
-from wsl4mis.code.val_2D import test_single_volume_cct
 from torchvision import transforms
 from torch.utils.data import DataLoader
 import torch.optim as optim
@@ -17,11 +17,11 @@ from tensorboardX import SummaryWriter
 import torch
 
 
-class DMPLSModel(SoftmaxMixin, BaseModel):
-    """DMPLS Model class"""
+class StronglySupModel(SoftmaxMixin, BaseModel):
+    """Strong supervision model for active learning."""
 
-    def __init__(self, ann_type="scribble", data_root="wsl4mis_data/ACDC", ensemble_size=1,
-                 seg_model='unet_cct', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
+    def __init__(self, ann_type="label", data_root="wsl4mis_data/ACDC", ensemble_size=1,
+                 seg_model='unet', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
                  patch_size=(256,256), seed=0, gpus="0", tag=""):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
@@ -68,7 +68,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         optimizer = optim.SGD(model.parameters(), lr=self.base_lr,
                               momentum=0.9, weight_decay=0.0001)
         ce_loss = CrossEntropyLoss(ignore_index=4)
-        dice_loss = losses.pDLoss(self.num_classes, ignore_index=4)
+        dice_loss = losses.DiceLoss(self.num_classes)
 
         logging.info("{} iterations per epoch".format(len(trainloader)))
 
@@ -85,24 +85,14 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                 volume_batch, label_batch = volume_batch.to(self.gpus), label_batch.to(self.gpus)
 
                 sys.stdout.flush()
+                
+                outputs = model(volume_batch)
+                outputs_soft = torch.softmax(outputs, dim=1)
+        
+                loss_ce = ce_loss(outputs, label_batch[:].long())
+                loss = 0.5 * (loss_ce + dice_loss(outputs_soft,
+                            label_batch.unsqueeze(1)))
 
-                outputs, outputs_aux1 = model(
-                    volume_batch)
-                outputs_soft1 = torch.softmax(outputs, dim=1)
-                outputs_soft2 = torch.softmax(outputs_aux1, dim=1)
-
-                loss_ce1 = ce_loss(outputs, label_batch[:].long())
-                loss_ce2 = ce_loss(outputs_aux1, label_batch[:].long())
-                loss_ce = 0.5 * (loss_ce1 + loss_ce2)
-
-                beta = self.random_gen.random() + 1e-10
-
-                pseudo_supervision = torch.argmax(
-                    (beta * outputs_soft1.detach() + (1.0-beta) * outputs_soft2.detach()), dim=1, keepdim=False)
-
-                loss_pse_sup = 0.5 * (dice_loss(outputs_soft1, pseudo_supervision.unsqueeze(1)) + dice_loss(outputs_soft2, pseudo_supervision.unsqueeze(1)))
-
-                loss = loss_ce + 0.5 * loss_pse_sup
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -114,9 +104,8 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                 iter_num = iter_num + 1
 
                 logging.info(
-                    'iteration %d : loss : %f, loss_ce: %f, loss_pse_sup: %f, alpha: %f' %
-                    (iter_num, loss.item(), loss_ce.item(), loss_pse_sup.item(), alpha))
-
+                    'iteration %d : loss : %f, loss_ce: %f, alpha: %f' %
+                    (iter_num, loss.item(), loss_ce.item(), alpha))
 
                 if iter_num > 0 and (iter_num % 200 == 0 or 
                                      iter_num == self.max_iter(cur_total_oracle_split, 
@@ -124,7 +113,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                     model.eval()
                     metric_list = 0.0
                     for i_batch, sampled_batch in enumerate(valloader):
-                        metric_i = test_single_volume_cct(
+                        metric_i = test_single_volume(
                             sampled_batch["image"], sampled_batch["label"], 
                             model, classes=self.num_classes, gpus=self.gpus)
                         metric_list += np.array(metric_i)
@@ -193,7 +182,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
         metric_list = 0.0
         for i_batch, sampled_batch in enumerate(evalloader):
-            metric_i = test_single_volume_cct(
+            metric_i = test_single_volume(
                 sampled_batch["image"], sampled_batch["label"],
                 model, classes=self.num_classes, gpus=self.gpus)
             metric_list += np.array(metric_i)
@@ -224,6 +213,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         best_model_path = os.path.join(snapshot_dir, '{}_best_model.pth'.format(self.seg_model))
         model.load_state_dict(torch.load(best_model_path))
         return model
+    
 
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         new_train_im_list_file = os.path.join(round_dir,
@@ -259,10 +249,9 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
 
     @property
     def model_string(self):
-        return "dpmls"
+        return "strong"
 
     def __repr__(self):
         mapping = self.__dict__
-        mapping["model_cls"] = "DMPLSModel"
+        mapping["model_cls"] = "StronglySupModel"
         return json.dumps(mapping)
-
