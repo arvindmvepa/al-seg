@@ -32,7 +32,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         self.deterministic = deterministic
         self.base_lr = base_lr
         self.patch_size = patch_size
-        torch.cuda.set_device(torch.device("cuda:" + self.gpus))
+        # torch.cuda.set_device(torch.device("cuda:" + self.gpus))
 
 
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0,
@@ -85,7 +85,9 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
             for i_batch, sampled_batch in enumerate(trainloader):
 
                 volume_batch, label_batch = sampled_batch['image'], sampled_batch['label']
-                volume_batch, label_batch = volume_batch.cuda(), label_batch.cuda()
+                # volume_batch, label_batch = volume_batch.cuda(), label_batch.cuda()
+
+                volume_batch, label_batch = volume_batch.to('mps'), label_batch.to('mps')
 
                 sys.stdout.flush()
 
@@ -201,7 +203,9 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
             train_preds = {}
             for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
                 volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
-                volume_batch, label_batch, idx = volume_batch.cuda(), label_batch.cuda(), idx.cpu()[0]
+                # volume_batch, label_batch, idx = volume_batch.cuda(), label_batch.cuda(), idx.cpu()[0]
+                # volume_batch, label_batch, idx = volume_batch, label_batch, idx[0]
+                volume_batch, label_batch, idx = volume_batch.to('mps'), label_batch.to('mps'), idx.cpu()[0]
                 # skip images that are already annotated
                 if full_db_train.sample_list[idx] in db_train.sample_list:
                     continue
@@ -209,6 +213,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                 outputs = model(volume_batch)[0]
                 outputs_soft = torch.softmax(outputs, dim=1)
                 train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
+                # train_preds[slice_basename] = np.float16(outputs_soft.detach().numpy())
             train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
             np.savez_compressed(train_preds_path, **train_preds)
 
