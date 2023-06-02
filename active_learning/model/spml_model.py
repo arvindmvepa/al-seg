@@ -201,7 +201,7 @@ class SPMLModel(BaseModel):
                 line = re.sub(r'EMBEDDING_MODEL', "", line)
                 line = re.sub(r'PREDICTION_MODEL', "", line)
                 line = re.sub(r'EMBEDDING_DIM', str(self.embedding_dim), line)
-                line = re.sub(r'GPUS', self.gpus, line)
+                line = re.sub(r'GPUS', self._convert_cuda_gpus_to_spml(), line)
                 line = re.sub(r'BATCH_SIZE', str(self.batch_size), line)
                 line = re.sub(r'LABEL_DIVISOR', "2048", line)
                 line = re.sub(r'USE_SYNCBN', str(self.use_syncbn), line)
@@ -288,6 +288,9 @@ class SPMLModel(BaseModel):
                 self.sem_occ_loss_weight = 0.5
         else:
             self.sem_occ_loss_weight = sem_occ_loss_weight
+
+    def _convert_cuda_gpus_to_spml(self):
+        return ",".join([str(i) for i,_ in enumerate(self.gpus.split(","))])
 
     @property
     def file_keys(self):
