@@ -1,2 +1,4 @@
 spml-env
 __pycache__
+.env/
+.idea/
