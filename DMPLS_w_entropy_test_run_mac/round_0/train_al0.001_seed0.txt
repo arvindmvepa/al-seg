@@ -1,0 +1,1 @@
+ACDC_training_slices/patient001_frame01_slice_0.h5
