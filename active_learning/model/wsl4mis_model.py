@@ -53,7 +53,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
         logging.info(str(self.__dict__))
 
-        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
+        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes, gpus=self.gpus)
 
         train_file = self.get_round_train_file_paths(round_dir=round_dir,
                                                      cur_total_oracle_split=cur_total_oracle_split,
