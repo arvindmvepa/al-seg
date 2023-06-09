@@ -2,3 +2,4 @@ spml-env
 __pycache__
 .env/
 .idea/
+wsl4mis_data/
