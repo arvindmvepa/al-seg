@@ -6,6 +6,3 @@
 	path = wsl4mis
 	url = https://github.com/arvindmvepa/WSL4MIS.git
 	branch = dev
-[submodule "seg_models"]
-	path = seg_models
-	url = https://github.com/qubvel/segmentation_models.git
