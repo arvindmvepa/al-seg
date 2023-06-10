@@ -9,3 +9,4 @@
 [submodule "seg_models"]
 	path = seg_models
 	url = https://github.com/zukangy/segmentation_models.pytorch.git
+	branch = ly-dev
