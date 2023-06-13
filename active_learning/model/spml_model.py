@@ -268,21 +268,21 @@ class SPMLModel(BaseModel):
         else:
             self.feat_aff_loss_weight = feat_aff_loss_weight
         if sem_occ_concentration is None:
-            if self.ann_type == "box":
+            if (self.ann_type == "box") or (self.ann_type == "liger"):
                 self.sem_occ_concentration = 8
             if self.ann_type == "scribble":
                 self.sem_occ_concentration = 12
         else:
             self.sem_occ_concentration = sem_occ_concentration
         if sem_ann_loss_weight is None:
-            if self.ann_type == "box":
+            if (self.ann_type == "box") or (self.ann_type == "liger"):
                 self.sem_ann_loss_weight = 0.3
             if self.ann_type == "scribble":
                 self.sem_ann_loss_weight = 1.0
         else:
             self.sem_ann_loss_weight = sem_ann_loss_weight
         if sem_occ_loss_weight is None:
-            if self.ann_type == "box":
+            if (self.ann_type == "box") or (self.ann_type == "liger"):
                 self.sem_occ_loss_weight = 0.3
             if self.ann_type == "scribble":
                 self.sem_occ_loss_weight = 0.5
