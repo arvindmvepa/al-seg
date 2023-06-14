@@ -1,6 +1,6 @@
 model:
   model_type: "spml_mv"
-  ann_type: "liger"
+  ann_type: "liger100"
   ensemble_size: 1
   gpus: "1"
 policy:
@@ -14,4 +14,4 @@ policy:
   rounds: [[1.0, 0]]
 model_uncertainty:
   model_uncertainty_type: pass
-exp_dir: "liger_test"
+exp_dir: "liger100_test"
