@@ -1,6 +1,6 @@
-num_clusters = 10
+num_clusters = 21
 emb="_mae"
-tag="_top3_anns"
+tag=""
 
 if num_clusters:
     replace_string = f'liger_num_clusters{num_clusters}{emb}{tag}' 

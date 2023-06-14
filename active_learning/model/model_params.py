@@ -46,12 +46,12 @@ model_params = {
                           "train_results_dir": os.path.join("stage1", "results", "train+", "semantic_gray"),
                           "train_logits_path": os.path.join("stage1", "results", "train+", "logits", "save_preds.npz")
                       },
-                    "liger21_mae_3":
+                    "liger21_mae":
                       {
                           "train_split": "train+",
                           "left_base_im_list": "train+",
-                          "right_base_im_list": "liger_num_clusters21_mae_top3_hed.txt",
-                          "orig_train_im_list_file": os.path.join("spml", "datasets", "voc12", "train+liger_num_clusters21_mae_top3_anns_hed.txt"),
+                          "right_base_im_list": "liger_num_clusters21_mae_hed.txt",
+                          "orig_train_im_list_file": os.path.join("spml", "datasets", "voc12", "train+liger_num_clusters21_mae_hed.txt"),
                           "left_base_pim_list": "panoptic_train+",
                           "right_base_pim_list": "hed.txt",
                           "orig_train_pim_list_file" : os.path.join("spml", "datasets", "voc12",  "panoptic_train+_hed.txt"),
