@@ -1,8 +1,9 @@
-num_clusters = 100
+num_clusters = 10
+tag=""
 
 if num_clusters:
-    replace_string = f'liger_num_clusters{num_clusters}' 
-    new_file = f'spml/datasets/voc12/train+liger_num_clusters{num_clusters}_hed.txt'
+    replace_string = f'liger_num_clusters{num_clusters}{tag}' 
+    new_file = f'spml/datasets/voc12/train+liger_num_clusters{num_clusters}{tag}_hed.txt'
 else:
     replace_string = 'liger_orig'
     new_file = 'spml/datasets/voc12/train+liger_hed.txt'
