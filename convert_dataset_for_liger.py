@@ -1,5 +1,5 @@
 num_clusters = 21
-emb="_mae"
+emb="_mae_large"
 tag=""
 
 if num_clusters:

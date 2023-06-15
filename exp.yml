@@ -1,11 +1,8 @@
 model:
   model_type: "spml_mv"
-  ann_type: "liger"
-  ensemble_size: 2
+  ann_type: "liger21_mae_large"
+  ensemble_size: 3
   gpus: "0"
-  sem_occ_concentration: 10
-  sem_ann_loss_weight: .65
-  sem_occ_loss_weight: .4
 policy:
   policy_type: random
   seed: 0
@@ -17,4 +14,4 @@ policy:
   rounds: [[1.0, 0]]
 model_uncertainty:
   model_uncertainty_type: pass
-exp_dir: "liger_new_params"
+exp_dir: "liger21_mae_large"
