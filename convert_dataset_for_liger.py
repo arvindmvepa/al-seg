@@ -1,10 +1,11 @@
 num_clusters = 21
 emb="_mae_large"
 tag=""
+class_balance_tag = "_cb"
 
 if num_clusters:
-    replace_string = f'liger_num_clusters{num_clusters}{emb}{tag}' 
-    new_file = f'spml/datasets/voc12/train+liger_num_clusters{num_clusters}{emb}{tag}_hed.txt'
+    replace_string = f'liger_num_clusters{num_clusters}{emb}{tag}{class_balance_tag}' 
+    new_file = f'spml/datasets/voc12/train+liger_num_clusters{num_clusters}{emb}{tag}{class_balance_tag}_hed.txt'
 else:
     replace_string = 'liger_orig'
     new_file = 'spml/datasets/voc12/train+liger_hed.txt'
