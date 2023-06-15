@@ -1,5 +1,5 @@
 num_clusters = 21
-emb="_mae_large"
+emb=""
 tag=""
 class_balance_tag = "_cb"
 
