@@ -1,0 +1,4 @@
+model:
+  model_type: "dmpls"
+  gpus: "mps"
+exp_dir: "test_run_mac"
