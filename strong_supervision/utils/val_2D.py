@@ -15,7 +15,7 @@ def calculate_metric_percase(pred, gt):
         return 0, 0
 
 
-def test_single_volume(image, label, net, classes, patch_size=[256, 256]):
+def test_single_volume(image, label, net, classes, patch_size=[256, 256], gpus="0"):
     image, label = image.squeeze(0).cpu().detach(
     ).numpy(), label.squeeze(0).cpu().detach().numpy()
     if len(image.shape) == 3:
@@ -25,8 +25,12 @@ def test_single_volume(image, label, net, classes, patch_size=[256, 256]):
             x, y = slice.shape[0], slice.shape[1]
             slice = zoom(
                 slice, (patch_size[0] / x, patch_size[1] / y), order=0)
-            input = torch.from_numpy(slice).unsqueeze(
-                0).unsqueeze(0).float().cuda()
+            if gpus == "mps":
+                input = torch.from_numpy(slice).unsqueeze(
+                    0).unsqueeze(0).float().to('mps')
+            else:
+                input = torch.from_numpy(slice).unsqueeze(
+                    0).unsqueeze(0).float().cuda()
             net.eval()
             with torch.no_grad():
                 out = torch.argmax(torch.softmax(
@@ -36,8 +40,12 @@ def test_single_volume(image, label, net, classes, patch_size=[256, 256]):
                     out, (x / patch_size[0], y / patch_size[1]), order=0)
                 prediction[ind] = pred
     else:
-        input = torch.from_numpy(image).unsqueeze(
-            0).unsqueeze(0).float().cuda()
+        if gpus == "mps":
+            input = torch.from_numpy(image).unsqueeze(
+                0).unsqueeze(0).float().to('mps')
+        else:
+            input = torch.from_numpy(image).unsqueeze(
+                0).unsqueeze(0).float().cuda()
         net.eval()
         with torch.no_grad():
             out = torch.argmax(torch.softmax(

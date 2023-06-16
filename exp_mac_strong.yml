@@ -1,4 +1,11 @@
 model:
-  model_type: "dmpls"
+  arch: "DeepLabV3"
+  encoder: "resnet18"
+  encoder_weights: "imagenet"
+  fold: "fold1"
+  batch_size: 8
+  max_iterations: 300
+  seed: 124
   gpus: "mps"
-exp_dir: "test_run_mac"
+  data_root: "./wsl4mis/data/ACDC"
+  exp_dir: "./test"
