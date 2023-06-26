@@ -18,6 +18,10 @@ class ModelFactory:
             sys.path.append("./wsl4mis/code")
             from active_learning.model.wsl4mis_model import DMPLSModel
             model = DMPLSModel(**model_kwargs)
+        elif model_type == "strong_dpmls":
+            sys.path.append("./wsl4mis/code")
+            from active_learning.model.strong_model import StrongDPMLSModel
+            model = StrongDPMLSModel(**model_kwargs)
         else:
             raise ValueError(f"There is no model_type {model_type}")
         return model
