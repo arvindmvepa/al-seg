@@ -48,7 +48,7 @@ model_params = {
                           "train_logits_path": "train_preds.npz"
                       },
                   },
-    "strong_dpmls":            {
+    "strong":            {
                   "label":
                       {
                           "train_file": os.path.join("wsl4mis",

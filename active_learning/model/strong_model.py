@@ -5,9 +5,9 @@ import os
 import logging
 import numpy as np
 from tqdm import tqdm
-from strong_supervision.models.net_factory import StrongModel
-from strong_supervision.utils.val_2D import test_single_volume
+from wsl4mis.code.val_2D import test_single_volume
 from wsl4mis.code.dataloaders.dataset import BaseDataSets, RandomGenerator
+from wsl4mis.code.networks.net_factory import net_factory
 from wsl4mis.code.utils import losses
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -17,24 +17,21 @@ from tensorboardX import SummaryWriter
 import torch
 
 
-class StrongDPMLSModel(SoftmaxMixin, BaseModel):
-    """DMPLS Model class for Strong Supervision"""
+class StrongModel(SoftmaxMixin, BaseModel):
+    """Strong supervision model for active learning."""
 
-    def __init__(self, ann_type="label", data_root="wsl4mis_data/ACDC", arch='Unet', encoder='resnet18', encoder_weights='imagenet', 
-                 ensemble_size=1, num_classes=4, batch_size=12, base_lr=0.01, max_iterations=60000, deterministic=1,
+    def __init__(self, ann_type="label", data_root="wsl4mis_data/ACDC", ensemble_size=1, 
+                 seg_model='unet', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
                  patch_size=(256,256), seed=0, gpus="0", tag=""):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
-        
+        self.seg_model = seg_model
         self.num_classes = num_classes
         self.batch_size = batch_size
         self.max_iterations = max_iterations
         self.deterministic = deterministic
         self.base_lr = base_lr
         self.patch_size = patch_size
-        self.arch = arch  # model architecture
-        self.encoder = encoder
-        self.encoder_weights = encoder_weights
 
         if self.gpus != 'mps':
             torch.cuda.set_device(torch.device("cuda:" + self.gpus))
@@ -54,11 +51,9 @@ class StrongDPMLSModel(SoftmaxMixin, BaseModel):
         logging.basicConfig(filename=os.path.join(snapshot_dir, "log.txt"), level=logging.INFO,
                             format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-        # logging.info(str(self.__dict__))
+        logging.info(str(self.__dict__))
 
-        model_obj = StrongModel(arch=self.arch, encoder_name=self.encoder, encoder_weights=self.encoder_weights,
-                                num_classes=self.num_classes, in_channels=1, gpus=self.gpus)
-        model = model_obj.create_model()
+        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes, gpus=self.gpus)
 
         model.train()
 
@@ -76,7 +71,7 @@ class StrongDPMLSModel(SoftmaxMixin, BaseModel):
         optimizer = optim.SGD(model.parameters(), lr=self.base_lr,
                               momentum=0.9, weight_decay=0.0001)
         ce_loss = CrossEntropyLoss(ignore_index=4)
-        dice_loss = losses.pDLoss(self.num_classes, ignore_index=4)
+        dice_loss = losses.DiceLoss(self.num_classes)
 
         writer = SummaryWriter(os.path.join(snapshot_dir, 'log'))
         logging.info("{} iterations per epoch".format(len(trainloader)))
@@ -87,8 +82,8 @@ class StrongDPMLSModel(SoftmaxMixin, BaseModel):
         iterator = tqdm(range(max_epoch), ncols=70)
         alpha = 1.0
 
-        for _ in iterator:
-            for _, sampled_batch in enumerate(trainloader):
+        for epoch_num in iterator:
+            for i_batch, sampled_batch in enumerate(trainloader):
 
                 volume_batch, label_batch = sampled_batch['image'], sampled_batch['label']
                 if self.gpus == 'mps':
@@ -98,7 +93,6 @@ class StrongDPMLSModel(SoftmaxMixin, BaseModel):
                 sys.stdout.flush()
                 
                 outputs = model(volume_batch)
-            
                 outputs_soft = torch.softmax(outputs, dim=1)
         
                 loss_ce = ce_loss(outputs, label_batch[:].long())
@@ -124,7 +118,7 @@ class StrongDPMLSModel(SoftmaxMixin, BaseModel):
 
                 if iter_num % 20 == 0:
                     image = volume_batch[0, 0:1, :, :]
-                    # image = (image - image.min()) / (image.max() - image.min())
+                    image = (image - image.min()) / (image.max() - image.min())
                     writer.add_image('train/Image', image, iter_num)
                     outputs = torch.argmax(torch.softmax(
                         outputs, dim=1), dim=1, keepdim=True)
@@ -133,12 +127,12 @@ class StrongDPMLSModel(SoftmaxMixin, BaseModel):
                     labs = label_batch[0, ...].unsqueeze(0) * 50
                     writer.add_image('train/GroundTruth', labs, iter_num)
 
-                if iter_num > 0 and (iter_num % 5 == 0 or 
+                if iter_num > 0 and (iter_num % 200 == 0 or 
                                      iter_num == self.max_iter(cur_total_oracle_split, 
                                                                cur_total_pseudo_split)):
                     model.eval()
                     metric_list = 0.0
-                    for _, sampled_batch in enumerate(valloader):
+                    for i_batch, sampled_batch in enumerate(valloader):
                         metric_i = test_single_volume(
                             sampled_batch["image"], sampled_batch["label"], 
                             model, classes=self.num_classes, gpus=self.gpus)
@@ -198,7 +192,7 @@ class StrongDPMLSModel(SoftmaxMixin, BaseModel):
                                          data_root=self.data_root)
             full_trainloader = DataLoader(full_db_train, batch_size=1, shuffle=True, num_workers=1, pin_memory=True)
             train_preds = {}
-            for _, sampled_batch in tqdm(enumerate(full_trainloader)):
+            for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
                 volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
                 if self.gpus == 'mps':
                     volume_batch, label_batch, idx = volume_batch.to('mps'), label_batch.to('mps'), idx.cpu()[0]
@@ -247,9 +241,9 @@ class StrongDPMLSModel(SoftmaxMixin, BaseModel):
 
     @property
     def model_string(self):
-        return "strong_dpmls"
+        return "strong"
 
     def __repr__(self):
         mapping = self.__dict__
-        mapping["model_cls"] = "StrongDPMLSModel"
+        mapping["model_cls"] = "StrongModel"
         return json.dumps(mapping)

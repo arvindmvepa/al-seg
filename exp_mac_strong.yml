@@ -1,8 +1,5 @@
 model:
-  model_type: "strong_dpmls"
-  arch: "Unet"
-  encoder: "resnet18"
-  encoder_weights: "imagenet"
+  model_type: "strong"
   ann_type: "label"
   ensemble_size: 3
   batch_size: 6
@@ -19,4 +16,4 @@ policy:
 model_uncertainty:
   model_uncertainty_type: ensemble
   scoring_method: entropy_w_label_probs
-exp_dir: "DMPLS_w_entropy_test_strong_run_mac"
+exp_dir: "DMPLS_w_entropy_test_strong_run"
