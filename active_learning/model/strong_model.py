@@ -53,7 +53,8 @@ class StrongModel(SoftmaxMixin, BaseModel):
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
         logging.info(str(self.__dict__))
 
-        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes, gpus=self.gpus)
+        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
+        model = model.to(self.gpus)
 
         model.train()
 
