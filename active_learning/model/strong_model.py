@@ -86,10 +86,7 @@ class StrongModel(SoftmaxMixin, BaseModel):
             for i_batch, sampled_batch in enumerate(trainloader):
 
                 volume_batch, label_batch = sampled_batch['image'], sampled_batch['label']
-                if self.gpus == 'mps':
-                    volume_batch, label_batch = volume_batch.to('mps'), label_batch.to('mps')
-                else:
-                    volume_batch, label_batch = volume_batch.cuda(), label_batch.cuda()
+                volume_batch, label_batch = volume_batch.to(self.gpus), label_batch.to(self.gpus)
                 sys.stdout.flush()
                 
                 outputs = model(volume_batch)
@@ -194,10 +191,7 @@ class StrongModel(SoftmaxMixin, BaseModel):
             train_preds = {}
             for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
                 volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
-                if self.gpus == 'mps':
-                    volume_batch, label_batch, idx = volume_batch.to('mps'), label_batch.to('mps'), idx.cpu()[0]
-                else:
-                    volume_batch, label_batch, idx = volume_batch.cuda(), label_batch.cuda(), idx.cpu()[0]
+                volume_batch, label_batch, idx = volume_batch.to(self.gpus), label_batch.to(self.gpus), idx.cpu()[0]
                 # skip images that are already annotated
                 if full_db_train.sample_list[idx] in db_train.sample_list:
                     continue
