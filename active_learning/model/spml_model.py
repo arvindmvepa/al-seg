@@ -4,6 +4,7 @@ import os
 import subprocess
 import re
 import sys
+from functools import partial
 
 
 class SPMLModel(BaseModel):
@@ -19,7 +20,7 @@ class SPMLModel(BaseModel):
                  img_sim_concentration=None, feat_aff_concentration=None, sem_ann_loss_weight=None, 
                  sem_occ_loss_weight=None, word_sim_loss_weight=None, img_sim_loss_weight=None, 
                  feat_aff_loss_weight=None, pretrained="spml_pretrained/resnet-101-cuhk.pth",
-                 inference_split='val'):
+                 val_split='val', test_split='test'):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed,
                          gpus=gpus, tag=tag)
         self._set_loss_weights(sem_ann_concentration, sem_occ_concentration, img_sim_concentration,
@@ -47,112 +48,125 @@ class SPMLModel(BaseModel):
         self.img_sim_loss_types = img_sim_loss_types
         self.feat_aff_loss_types = feat_aff_loss_types
         self.pretrained = pretrained
-        self.inference_split = inference_split
+        self.orig_train_split = self.model_params['train_split']
+        self.val_split = val_split
+        self.test_split = test_split
 
-    def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0,
-                    inf_train=False, save_params=None):
-        if save_params is None:
-            save_params = dict()
+    def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         self._write_config_file(snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
 
+        train_script = self.get_train_script(snapshot_dir, round_dir, cur_total_oracle_split, cur_total_pseudo_split)
+        prototype_script = self.get_prototype_script(snapshot_dir, round_dir, cur_total_oracle_split, cur_total_pseudo_split)
+        scripts = {'train': train_script, 'prototype': prototype_script}
+
+        for script_type, script in scripts.items():
+            self.run_spml_script(script_type, script, model_no, snapshot_dir, cur_total_oracle_split)
+    
+    def inf_model(self, inf_type, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        script = self.get_inference_script(inf_type, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
+        self.run_spml_script(inf_type, script, model_no, snapshot_dir, cur_total_oracle_split)
+
+    def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.inf_model(inf_type='inf_train', model_no=model_no, snapshot_dir=snapshot_dir, 
+                       round_dir=round_dir, cur_total_oracle_split=cur_total_oracle_split, 
+                       cur_total_pseudo_split=cur_total_pseudo_split)
+
+    def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.inf_model(inf_type='inf_val', model_no=model_no, snapshot_dir=snapshot_dir, 
+                       round_dir=round_dir, cur_total_oracle_split=cur_total_oracle_split, 
+                       cur_total_pseudo_split=cur_total_pseudo_split)
+        self.metrics_val_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, 
+                               cur_total_oracle_split=cur_total_oracle_split, 
+                               cur_total_pseudo_split=cur_total_pseudo_split)
+
+    def metrics_model(self, script_type, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        script = self.get_metrics_script(script_type, snapshot_dir)
+        self.run_spml_script(script_type, script, model_no, snapshot_dir, cur_total_oracle_split)
+    
+    def metrics_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.metrics_model(script_type='metrics_val', model_no=model_no, snapshot_dir=snapshot_dir, 
+                           round_dir=round_dir, cur_total_oracle_split=cur_total_oracle_split,
+                           cur_total_pseudo_split=cur_total_pseudo_split)
+    
+    def run_spml_script(self, script_type, script, model_no, snapshot_dir, cur_total_oracle_split=0):
+        stdout_file = self._generate_stdout_bash_string(script_type, snapshot_dir, cur_total_oracle_split, model_no)
+        stderr_file = self._generate_stderr_bash_string(script_type, snapshot_dir, cur_total_oracle_split, model_no)
+        self._save_execute_params(script_type, script, stdout_file, stderr_file, snapshot_dir)
+
+        full_script = f"{script} {stdout_file} {stderr_file}"
+        print(full_script)
+        subprocess.run(full_script, env=self.subproc_env, shell=True)
+    
+    def _save_execute_params(self, script_type, script, stdout_bash_string, stderr_bash_string, snapshot_dir):
+        execute_params = dict()
+        execute_params['env'] = self.subproc_env
+        execute_params['ANN_TYPE'] = self.ann_type
+        execute_params[f'{script_type}_SCRIPT'.upper()] = script
+        execute_params[f'{script_type}_STDOUT_FILE'.upper()] = stdout_bash_string
+        execute_params[f'{script_type}_STDERR_FILE'.upper()] = stderr_bash_string
+        execute_params_file = os.path.join(snapshot_dir, f"{script_type}_execute_params.json")
+        with open(execute_params_file, "w") as outfile:
+            json_object = json.dumps(execute_params, indent=4)
+            outfile.write(json_object)
+        return execute_params
+    
+    def get_train_script(self, snapshot_dir, round_dir, cur_total_oracle_split, cur_total_pseudo_split):
         train_data_list = self.get_round_train_file_paths(round_dir=round_dir,
                                                           cur_total_oracle_split=cur_total_oracle_split,
                                                           cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[0]]
-        # seems like a bug b/c it's a different file type than train_data_list but seems to work fine
-        val_data_list = self.val_pim_list_file
-        orig_train_data_list = self.orig_train_im_list_file
+        train_script = f"{self.exec_python} spml/pyscripts/train/train.py --data_dir {self.data_root} " \
+                       f"--data_list {train_data_list} --snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
+                       f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
+        return train_script
+
+    def get_prototype_script(self, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         memory_data_list = self.get_round_train_file_paths(round_dir=round_dir,
                                                            cur_total_oracle_split=cur_total_oracle_split,
                                                            cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[1]]
         train_split = self.train_split(cur_total_oracle_split, cur_total_pseudo_split)
-        orig_train_split = self.model_params['train_split']
-
-        train_script = f"{self.exec_python} spml/pyscripts/train/train.py --data_dir {self.data_root} " \
-                       f"--data_list {train_data_list} --snapshot_dir {os.path.join(snapshot_dir, 'stage1')} " \
-                       f"--cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
         prototype_script = f"{self.exec_python } spml/pyscripts/inference/prototype.py --data_dir {self.data_root} " \
                            f"--data_list {memory_data_list} " \
                            f"--save_dir {os.path.join(snapshot_dir, 'stage1', 'results', train_split)} " \
                            f"--snapshot_dir {os.path.join(snapshot_dir, 'stage1')} --label_divisor 2048 " \
                            f"--kmeans_num_clusters 12,12 --cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
-
-        inference_scripts  = self._get_inference_scripts(snapshot_dir, train_split,orig_train_split,
-                                                         orig_train_data_list, val_data_list)
-
-        stdout_file = lambda file_type: f"> {os.path.join(snapshot_dir, file_type + '_box_AL_PROP' + str(cur_total_oracle_split) + '_MODEL_NO' + str(model_no) + '.results')}"
-        stderr_file = lambda file_type: f"2> {os.path.join(snapshot_dir, file_type + '_box_AL_PROP' + str(cur_total_oracle_split) + '_MODEL_NO' + str(model_no) + '.error')}"
-
-        # env for python scripts
-        env = dict()
-        env = os.environ.copy()
-        env['PATH'] = f"{os.environ['PATH']}"
-        env['PYTHONPATH'] ="spml"
-        if isinstance(self.gpus, str):
-            env['CUDA_VISIBLE_DEVICES'] = self.gpus
+        return prototype_script
+    
+    def get_inference_script(self, script_type, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split):
+        train_split = self.train_split(cur_total_oracle_split, cur_total_pseudo_split)
+        if script_type == 'inf_train':
+            return self.get_train_inference_script(snapshot_dir, self.orig_train_split, train_split, self.orig_train_im_list_file)
+        elif script_type == 'inf_val':
+            return self.get_val_inference_script(snapshot_dir, self.val_split, train_split, self.val_pim_list_file)
+        elif script_type == 'inf_test':
+            return self.get_test_inference_script(snapshot_dir, self.test_split, train_split, self.test_pim_list_file)
         else:
-            raise ValueError("cuda_devices must be str type")
-
-        # save execute_params
-        execute_params = dict()
-        execute_params['env'] = env
-        execute_params['ANN_TYPE'] = self.ann_type
-        execute_params['TRAIN_SCRIPT'] = train_script
-        execute_params['PROTOTYPE_SCRIPT'] = prototype_script
-        execute_params['INFERENCE_TRAIN_SCRIPT'] = inference_scripts['train']
-        execute_params['INFERENCE_VAL_SCRIPT'] = inference_scripts['val']
-        execute_params['METRICS_VAL'] = inference_scripts['metrics_val']
-        execute_params['STDOUT_FILE'] = (stdout_file)("file_type")
-        execute_params['STDERR_FILE'] = (stderr_file)("file_type")
-        execute_params['SAVED'] = save_params
-
-        execute_params_file = os.path.join(snapshot_dir, "execute_params.json")
-        with open(execute_params_file, "w") as outfile:
-            json_object = json.dumps(execute_params)
-            outfile.write(json_object)
-
-        # Train model
-        print(f"\tTrain model {model_no}")
-
-        print("\tTraining Script")
-        cur_stdout_file = (stdout_file)('train')
-        cur_stderr_file = (stderr_file)('train')
-        cur_script = f"{train_script} {cur_stdout_file} {cur_stderr_file}"
-        print(cur_script)
-        subprocess.run(cur_script, env=env, shell=True)
-
-        print("\tPrototype Script")
-        cur_stdout_file = (stdout_file)('prototype')
-        cur_stderr_file = (stderr_file)('prototype')
-        cur_script = f"{prototype_script} {cur_stdout_file} {cur_stderr_file}"
-        print(cur_script)
-        subprocess.run(cur_script, env=env, shell=True)
-
-        if inf_train:
-            print("\tInference on Train Script")
-            cur_stdout_file = (stdout_file)('inf_train')
-            cur_stderr_file = (stderr_file)('inf_train')
-            cur_script = f"{inference_scripts['train']} {cur_stdout_file} {cur_stderr_file}"
-            print(cur_script)
-            subprocess.run(cur_script, env=env, shell=True)
-
-        print("\tInference on Val Script")
-        cur_stdout_file = (stdout_file)('inf_val')
-        cur_stderr_file = (stderr_file)('inf_val')
-        cur_script = f"{inference_scripts['val']} {cur_stdout_file} {cur_stderr_file}"
-        print(cur_script)
-        subprocess.run(cur_script, env=env, shell=True)
-
-        print("\Metrics on Val Script")
-        cur_stdout_file = (stdout_file)('metrics_val')
-        cur_stderr_file = (stderr_file)('metrics_val')
-        cur_script = f"{inference_scripts['metrics_val']} {cur_stdout_file} {cur_stderr_file}"
-        print(cur_script)
-        subprocess.run(cur_script, env=env, shell=True)
-
-    def _get_inference_scripts(self, snapshot_dir, train_split, orig_train_split, orig_train_data_list, val_data_list):
+            raise ValueError(f"script_type {script_type} not recognized")
+    
+    def get_train_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
         raise NotImplementedError()
 
-    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
+    def get_val_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
+        raise NotImplementedError()
+    
+    def get_test_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
+        raise NotImplementedError()
+
+    def get_metrics_script(self, script_type, snapshot_dir):
+        if script_type == 'metrics_val':
+            return self._get_metrics_script(snapshot_dir, self.val_split)
+        elif script_type == 'metrics_test':
+            return self._get_metrics_script(snapshot_dir, self.test_split)
+        else:
+            raise ValueError(f"script_type {script_type} not recognized")
+
+    def _get_metrics_script(self, snapshot_dir, inference_split):
+        metrics_script = f"{self.exec_python} spml/pyscripts/benchmark/benchmark_by_mIoU.py " \
+                         f"--gt_dir {self.data_root}/VOC2012/segcls " \
+                         f" --pred_dir {snapshot_dir}/stage1/results/{inference_split}/semantic_gray  " \
+                         f" --num_classes 21  --img_scale {self.image_scale}"
+        return metrics_script
+
+    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         new_train_im_list_file = os.path.join(round_dir,
                                               self.left_base_im_list + "_al" + str(cur_total_oracle_split) + "_" + \
                                               self.tag + "_seed" + str(self.seed) + "_" + self.right_base_im_list
@@ -186,6 +200,12 @@ class SPMLModel(BaseModel):
 
     def _init_val_file_info(self):
         self.val_pim_list_file = self.model_params["val_pim_list"]
+    
+    def _generate_stdout_bash_string(self, file_type, snapshot_dir, cur_total_oracle_split, model_no):
+        return f"> {os.path.join(snapshot_dir, file_type + f'_{self.ann_type}_AL_PROP' + str(cur_total_oracle_split) + '_MODEL_NO' + str(model_no) + '.results')}"
+
+    def _generate_stderr_bash_string(self, file_type, snapshot_dir, cur_total_oracle_split, model_no):
+        return f"2> {os.path.join(snapshot_dir, file_type + f'_{self.ann_type}_AL_PROP' + str(cur_total_oracle_split) + '_MODEL_NO' + str(model_no) + '.error')}"
 
     def max_iter(self, cur_total_oracle_split, cur_total_pseudo_split):
         return int(self.num_epochs * self.epoch_len * (cur_total_oracle_split + cur_total_pseudo_split))
@@ -216,7 +236,7 @@ class SPMLModel(BaseModel):
                 line = re.sub(r'KMEANS_ITERATIONS', str(self.kmeans_iterations), line)
                 line = re.sub(r'KMEANS_NUM_CLUSTERS', str(self.kmeans_num_clusters), line)
                 line = re.sub(r'TRAIN_CROP_SIZE', str(self.crop_size), line)
-                line = re.sub(r'TEST_SPLIT', str(self.inference_split), line)
+                line = re.sub(r'TEST_SPLIT', str(self.val_split), line)
                 line = re.sub(r'TEST_IMAGE_SIZE', str(self.crop_size), line)
                 line = re.sub(r'TEST_CROP_SIZE_H', str(self.crop_size), line)
                 line = re.sub(r'TEST_CROP_SIZE_W', str(self.crop_size), line)
@@ -268,23 +288,23 @@ class SPMLModel(BaseModel):
         else:
             self.feat_aff_loss_weight = feat_aff_loss_weight
         if sem_occ_concentration is None:
-            if self.ann_type == "box":
+            if (self.ann_type == "box") or ("liger" in self.ann_type):
                 self.sem_occ_concentration = 8
-            if self.ann_type == "scribble":
+            elif self.ann_type == "scribble":
                 self.sem_occ_concentration = 12
         else:
             self.sem_occ_concentration = sem_occ_concentration
         if sem_ann_loss_weight is None:
-            if self.ann_type == "box":
+            if (self.ann_type == "box") or ("liger" in self.ann_type):
                 self.sem_ann_loss_weight = 0.3
-            if self.ann_type == "scribble":
+            elif self.ann_type == "scribble":
                 self.sem_ann_loss_weight = 1.0
         else:
             self.sem_ann_loss_weight = sem_ann_loss_weight
         if sem_occ_loss_weight is None:
-            if self.ann_type == "box":
+            if (self.ann_type == "box") or ("liger" in self.ann_type):
                 self.sem_occ_loss_weight = 0.3
-            if self.ann_type == "scribble":
+            elif self.ann_type == "scribble":
                 self.sem_occ_loss_weight = 0.5
         else:
             self.sem_occ_loss_weight = sem_occ_loss_weight
@@ -303,60 +323,61 @@ class SPMLModel(BaseModel):
     @property
     def model_string(self):
         return "spml"
+    
+    @property
+    def subproc_env(self):
+        env = dict()
+        env = os.environ.copy()
+        env['PATH'] = f"{os.environ['PATH']}"
+        env['PYTHONPATH'] ="spml"
+        if isinstance(self.gpus, str):
+            env['CUDA_VISIBLE_DEVICES'] = self.gpus
+        else:
+            raise ValueError("cuda_devices must be str type")
+        return env
 
     def __repr__(self):
         mapping = self.__dict__
         mapping["model_cls"] = "SPMLModel"
-        return json.dumps(mapping)
+        return json.dumps(mapping, indent=4)
 
 
 class SPMLwMajorityVote(MajorityVoteMixin, SPMLModel):
 
-    def _get_inference_scripts(self, snapshot_dir, train_split, orig_train_split, orig_train_data_list, val_data_list):
-        inference_train_script = f"{self.exec_python} spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
-                                 f"--data_list {orig_train_data_list} " \
-                                 f"--save_dir {snapshot_dir}/stage1/results/{orig_train_split} " \
-                                 f"--snapshot_dir {snapshot_dir}/stage1 " \
-                                 f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
-                                 f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                                 f"--cfg_path {snapshot_dir}/config_emb.yaml "
-        inference_val_script = f"{self.exec_python} spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
-                               f"--data_list {val_data_list} " \
-                               f"--save_dir {snapshot_dir}/stage1/results/{self.inference_split} " \
-                               f"--snapshot_dir {snapshot_dir}/stage1 " \
-                               f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
-                               f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                               f"--cfg_path {snapshot_dir}/config_emb.yaml "
-        metrics_val_script = f"{self.exec_python} spml/pyscripts/benchmark/benchmark_by_mIoU.py " \
-                               f"--gt_dir {self.data_root}/VOC2012/segcls " \
-                               f" --pred_dir {snapshot_dir}/stage1/results/{self.inference_split}/semantic_gray   " \
-                               f" --num_classes 21  --img_scale {self.image_scale}"
+    def _get_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
+        inference_script = f"{self.exec_python} spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
+                           f"--data_list {data_list} " \
+                           f"--save_dir {snapshot_dir}/stage1/results/{save_dir_split} " \
+                           f"--snapshot_dir {snapshot_dir}/stage1 " \
+                           f"--semantic_memory_dir {snapshot_dir}/stage1/results/{semantic_memory_split}/semantic_prototype " \
+                           f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
+                           f"--cfg_path {snapshot_dir}/config_emb.yaml "
+        return inference_script
+    
+    def get_train_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
+        return self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list)
 
-        return {'train': inference_train_script, 'val': inference_val_script, 
-                'metrics_val': metrics_val_script}
-
+    def get_val_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
+        return self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list)
 
 class SPMLwSoftmax(SoftmaxMixin, SPMLModel):
 
-    def _get_inference_scripts(self, snapshot_dir, train_split, orig_train_split, orig_train_data_list, val_data_list):
-        inference_train_script = f"{self.exec_python} spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
-                                 f"--data_list {orig_train_data_list} --save_logits " \
-                                 f"--save_dir {snapshot_dir}/stage1/results/{orig_train_split} " \
-                                 f"--snapshot_dir {snapshot_dir}/stage1 " \
-                                 f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
-                                 f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                                 f"--cfg_path {snapshot_dir}/config_emb.yaml "
-        inference_val_script = f"{self.exec_python} spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
-                               f"--data_list {val_data_list} --save_results " \
-                               f"--save_dir {snapshot_dir}/stage1/results/{self.inference_split} " \
-                               f"--snapshot_dir {snapshot_dir}/stage1 " \
-                               f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
-                               f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                               f"--cfg_path {snapshot_dir}/config_emb.yaml "
-        metrics_val_script = f"{self.exec_python} spml/pyscripts/benchmark/benchmark_by_mIoU.py " \
-                               f"--gt_dir {self.data_root}/VOC2012/segcls " \
-                               f" --pred_dir {snapshot_dir}/stage1/results/{self.inference_split}/semantic_gray  " \
-                               f" --num_classes 21  --img_scale {self.image_scale}"
+    def _get_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list, save_results=False, save_logits=False):
+        inference_script = f"{self.exec_python} spml/pyscripts/inference/inference_segsort_softmax.py " \
+                           f"--data_dir {self.data_root} --data_list {data_list} " \
+                           f"--save_dir {snapshot_dir}/stage1/results/{save_dir_split} " \
+                           f"--snapshot_dir {snapshot_dir}/stage1 " \
+                           f"--semantic_memory_dir {snapshot_dir}/stage1/results/{semantic_memory_split}/semantic_prototype " \
+                           f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
+                           f"--cfg_path {snapshot_dir}/config_emb.yaml "
+        if save_results:
+            inference_script += "--save_results"
+        if save_logits:
+            inference_script += "--save_logits"
+        return inference_script
+    
+    def get_train_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
+        return self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list, save_logits=True)
 
-        return {'train': inference_train_script, 'val': inference_val_script, 
-                'metrics_val': metrics_val_script}
+    def get_val_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
+        return self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list, save_results=True)
