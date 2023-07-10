@@ -99,15 +99,15 @@ class BaseModel(ABC):
             if train:
                 self.train_model(model_no, snapshot_dir, round_dir, cur_total_oracle_split, cur_total_pseudo_split)
             if inf_train:
-                self.inf_train(self, model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
+                self.inf_train(model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
             if inf_val: 
-                self.inf_val(self, model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
+                self.inf_val(model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
             if metrics_val:
-                self.metrics_val(self, model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
+                self.metrics_val(model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
             if inf_test:
-                self.inf_test(self, model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
+                self.inf_test(model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
             if metrics_test:
-                self.metrics_test(self, model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
+                self.metrics_test(model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
         print("Finished Training Ensemble")
 
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
