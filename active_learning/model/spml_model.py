@@ -73,7 +73,7 @@ class SPMLModel(BaseModel):
     def run_spml_script(self, script_type, script, model_no, snapshot_dir, cur_total_oracle_split=0):
         stdout_file = self._generate_stdout_bash_string(script_type, snapshot_dir, cur_total_oracle_split, model_no)
         stderr_file = self._generate_stderr_bash_string(script_type, snapshot_dir, cur_total_oracle_split, model_no)
-        self._save_execute_params(script_type, script, stdout_file(script_type), stderr_file(script_type), snapshot_dir)
+        self._save_execute_params(script_type, script, stdout_file, stderr_file, snapshot_dir)
 
         full_script = f"{script} {stdout_file} {stderr_file}"
         print(full_script)
