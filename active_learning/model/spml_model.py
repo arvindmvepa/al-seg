@@ -116,11 +116,11 @@ class SPMLModel(BaseModel):
     def get_inference_script(self, script_type, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split):
         if script_type == 'inf_train':
             train_split = self.train_split(cur_total_oracle_split, cur_total_pseudo_split)
-            return self._get_inference_script(snapshot_dir, train_split, self.orig_train_split, self.orig_train_im_list_file)
+            return self._get_inference_script(snapshot_dir, self.orig_train_split, train_split, self.orig_train_im_list_file)
         elif script_type == 'inf_val':
-            return self._get_inference_script(snapshot_dir, self.val_split, self.orig_train_split, self.val_pim_list_file)
+            return self._get_inference_script(snapshot_dir, self.val_split, train_split, self.val_pim_list_file)
         elif script_type == 'inf_test':
-            return self._get_inference_script(snapshot_dir, self.test_split, self.orig_train_split, self.test_pim_list_file)
+            return self._get_inference_script(snapshot_dir, self.test_split, train_split, self.test_pim_list_file)
         else:
             raise ValueError(f"script_type {script_type} not recognized")
 
