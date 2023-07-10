@@ -86,7 +86,7 @@ class SPMLModel(BaseModel):
         execute_params[f'{script_type}_SCRIPT'.upper()] = script
         execute_params[f'{script_type}_STDOUT_FILE'.upper()] = stdout_bash_string
         execute_params[f'{script_type}_STDERR_FILE'.upper()] = stderr_bash_string
-        execute_params_file = os.path.join(snapshot_dir, f"{script}_execute_params.json")
+        execute_params_file = os.path.join(snapshot_dir, f"{script_type}_execute_params.json")
         with open(execute_params_file, "w") as outfile:
             json_object = json.dumps(execute_params)
             outfile.write(json_object)
