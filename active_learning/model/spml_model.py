@@ -129,7 +129,7 @@ class SPMLModel(BaseModel):
                            f"--cfg_path {snapshot_dir}/config_emb.yaml "
         return inference_script
 
-    def _get_metrics_script(self, inference_split):
+    def _get_metrics_script(self, snapshot_dir, inference_split):
         metrics_script = f"{self.exec_python} spml/pyscripts/benchmark/benchmark_by_mIoU.py " \
                          f"--gt_dir {self.data_root}/VOC2012/segcls " \
                          f" --pred_dir {snapshot_dir}/stage1/results/{inference_split}/semantic_gray  " \
