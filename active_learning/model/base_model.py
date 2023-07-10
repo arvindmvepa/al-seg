@@ -79,10 +79,10 @@ class BaseModel(ABC):
         raise NotImplementedError()
 
     def metrics_val(self, model_no, snapshot_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
-        self.metrics_model('metrics_val', model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
+        self.metrics_model('metrics_val', model_no, snapshot_dir, cur_total_oracle_split)
     
     def metrics_test(self, model_no, snapshot_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
-        self.metrics_model('metrics_test', model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
+        self.metrics_model('metrics_test', model_no, snapshot_dir, cur_total_oracle_split)
         
 
     def train_ensemble(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0, skip=False, 
