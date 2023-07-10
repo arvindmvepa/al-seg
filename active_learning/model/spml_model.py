@@ -346,10 +346,10 @@ class SPMLwMajorityVote(MajorityVoteMixin, SPMLModel):
         return inference_script
     
     def get_train_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
-        self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list)
+        return self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list)
 
     def get_val_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
-        self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list)
+        return self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list)
 
 class SPMLwSoftmax(SoftmaxMixin, SPMLModel):
 
@@ -366,7 +366,7 @@ class SPMLwSoftmax(SoftmaxMixin, SPMLModel):
         return inference_script
     
     def get_train_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
-        self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list, save_logits=True)
+        return self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list, save_logits=True)
 
     def get_val_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
-        self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list, save_results=True)
+        return self._get_inference_script(snapshot_dir, save_dir_split, semantic_memory_split, data_list, save_results=True)
