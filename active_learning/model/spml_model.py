@@ -88,7 +88,7 @@ class SPMLModel(BaseModel):
         execute_params[f'{script_type}_STDERR_FILE'.upper()] = stderr_bash_string
         execute_params_file = os.path.join(snapshot_dir, f"{script_type}_execute_params.json")
         with open(execute_params_file, "w") as outfile:
-            json_object = json.dumps(execute_params)
+            json_object = json.dumps(execute_params, indent=4)
             outfile.write(json_object)
         return execute_params
     
@@ -312,7 +312,7 @@ class SPMLModel(BaseModel):
     def __repr__(self):
         mapping = self.__dict__
         mapping["model_cls"] = "SPMLModel"
-        return json.dumps(mapping)
+        return json.dumps(mapping, indent=4)
 
 
 class SPMLwMajorityVote(MajorityVoteMixin, SPMLModel):
