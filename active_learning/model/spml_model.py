@@ -62,22 +62,23 @@ class SPMLModel(BaseModel):
         for script_type, script in scripts.items():
             self.run_spml_script(script_type, script, model_no, snapshot_dir, cur_total_oracle_split)
     
-    def inf_model(self, inf_type, model_no, snapshot_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+    def inf_model(self, inf_type, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         script = self.get_inference_script(inf_type, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
         self.run_spml_script(inf_type, script, model_no, snapshot_dir, cur_total_oracle_split)
 
-    def inf_train_model(self, model_no, snapshot_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
-        self.inf_model('inf_train', model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
+    def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.inf_model('inf_train', model_no, snapshot_dir, round_dir, cur_total_oracle_split, cur_total_pseudo_split)
 
-    def inf_val_model(self, model_no, snapshot_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
-        self.inf_model('inf_val', model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
+    def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.inf_model('inf_val', model_no, snapshot_dir, round_dir, cur_total_oracle_split, cur_total_pseudo_split)
+        self.metrics_val_model(model_no, snapshot_dir, round_dir, cur_total_oracle_split, cur_total_pseudo_split)
 
-    def metrics_model(self, script_type, model_no, snapshot_dir, cur_total_oracle_split=0):
+    def metrics_model(self, script_type, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0):
         script = self.get_metrics_script(script_type, snapshot_dir)
         self.run_spml_script(script_type, script, model_no, snapshot_dir, cur_total_oracle_split)
     
-    def metrics_val_model(self, model_no, snapshot_dir, cur_total_oracle_split=0):
-        self.metrics_model('metrics_val', model_no, snapshot_dir, cur_total_oracle_split)
+    def metrics_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0):
+        self.metrics_model('metrics_val', model_no, snapshot_dir, round_dir, cur_total_oracle_split)
     
     def run_spml_script(self, script_type, script, model_no, snapshot_dir, cur_total_oracle_split=0):
         stdout_file = self._generate_stdout_bash_string(script_type, snapshot_dir, cur_total_oracle_split, model_no)

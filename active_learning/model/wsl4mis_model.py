@@ -35,10 +35,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         torch.cuda.set_device(torch.device("cuda:" + self.gpus))
 
 
-    def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0,
-                    inf_train=False, save_params=None):
-        if save_params is None:
-            save_params = dict()
+    def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
 
         # remove previous logger, if exists.
         # close and remove first handler, but just remove (but don't close) second handler (which is standard output)
@@ -72,7 +69,6 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         ce_loss = CrossEntropyLoss(ignore_index=4)
         dice_loss = losses.pDLoss(self.num_classes, ignore_index=4)
 
-        writer = SummaryWriter(os.path.join(snapshot_dir, 'log'))
         logging.info("{} iterations per epoch".format(len(trainloader)))
 
         iter_num = 0
@@ -115,24 +111,11 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                     param_group['lr'] = lr_
 
                 iter_num = iter_num + 1
-                writer.add_scalar('info/lr', lr_, iter_num)
-                writer.add_scalar('info/total_loss', loss, iter_num)
-                writer.add_scalar('info/loss_ce', loss_ce, iter_num)
 
                 logging.info(
                     'iteration %d : loss : %f, loss_ce: %f, loss_pse_sup: %f, alpha: %f' %
                     (iter_num, loss.item(), loss_ce.item(), loss_pse_sup.item(), alpha))
 
-                if iter_num % 20 == 0:
-                    image = volume_batch[0, 0:1, :, :]
-                    image = (image - image.min()) / (image.max() - image.min())
-                    writer.add_image('train/Image', image, iter_num)
-                    outputs = torch.argmax(torch.softmax(
-                        outputs, dim=1), dim=1, keepdim=True)
-                    writer.add_image('train/Prediction',
-                                     outputs[0, ...] * 50, iter_num)
-                    labs = label_batch[0, ...].unsqueeze(0) * 50
-                    writer.add_image('train/GroundTruth', labs, iter_num)
 
                 if iter_num > 0 and (iter_num % 200 == 0 or 
                                      iter_num == self.max_iter(cur_total_oracle_split, 
@@ -145,17 +128,9 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                             model, classes=self.num_classes)
                         metric_list += np.array(metric_i)
                     metric_list = metric_list / len(db_val)
-                    for class_i in range(self.num_classes-1):
-                        writer.add_scalar('info/val_{}_dice'.format(class_i+1),
-                                          metric_list[class_i, 0], iter_num)
-                        writer.add_scalar('info/val_{}_hd95'.format(class_i+1),
-                                          metric_list[class_i, 1], iter_num)
 
                     performance = np.mean(metric_list, axis=0)[0]
-
                     mean_hd95 = np.mean(metric_list, axis=0)[1]
-                    writer.add_scalar('info/val_mean_dice', performance, iter_num)
-                    writer.add_scalar('info/val_mean_hd95', mean_hd95, iter_num)
 
                     if performance > best_performance:
                         best_performance = performance
@@ -190,29 +165,63 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
             if iter_num >= self.max_iter(cur_total_oracle_split, cur_total_pseudo_split):
                 iterator.close()
                 break
-        writer.close()
-
-        if inf_train:
-            model.eval()
-            full_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
-                                         sup_type=self.ann_type, train_file=self.orig_train_im_list_file,
-                                         data_root=self.data_root)
-            full_trainloader = DataLoader(full_db_train, batch_size=1, shuffle=True, num_workers=8, pin_memory=True)
-            train_preds = {}
-            for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
-                volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
-                volume_batch, label_batch, idx = volume_batch.cuda(), label_batch.cuda(), idx.cpu()[0]
-                # skip images that are already annotated
-                if full_db_train.sample_list[idx] in db_train.sample_list:
-                    continue
-                slice_basename = os.path.basename(full_db_train.sample_list[idx])
-                outputs = model(volume_batch)[0]
-                outputs_soft = torch.softmax(outputs, dim=1)
-                train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
-            train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
-            np.savez_compressed(train_preds_path, **train_preds)
 
         return "Training Finished!"
+
+    
+    def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        model = self.load_best_model(snapshot_dir)
+        model.eval()
+        full_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
+                                        sup_type=self.ann_type, train_file=self.orig_train_im_list_file,
+                                        data_root=self.data_root)
+        full_trainloader = DataLoader(full_db_train, batch_size=1, shuffle=True, num_workers=8, pin_memory=True)
+        train_file = self.get_round_train_file_paths(round_dir=round_dir,
+                                                     cur_total_oracle_split=cur_total_oracle_split,
+                                                     cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[0]]
+
+        ann_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
+                                    sup_type=self.ann_type, train_file=train_file, data_root=self.data_root)
+        train_preds = {}
+        for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
+            volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
+            volume_batch, label_batch, idx = volume_batch.cuda(), label_batch.cuda(), idx.cpu()[0]
+            # skip images that are already annotated
+            if full_db_train.sample_list[idx] in ann_db_train.sample_list:
+                continue
+            slice_basename = os.path.basename(full_db_train.sample_list[idx])
+            outputs = model(volume_batch)[0]
+            outputs_soft = torch.softmax(outputs, dim=1)
+            train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
+        train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
+        np.savez_compressed(train_preds_path, **train_preds)
+
+    def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        model = self.load_best_model(snapshot_dir)
+        model.eval()
+        db_val = BaseDataSets(split="val", val_file=self.orig_val_im_list_file, data_root=self.data_root)
+        valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
+        metric_list = 0.0
+        for i_batch, sampled_batch in enumerate(valloader):
+            metric_i = test_single_volume_cct(
+                sampled_batch["image"], sampled_batch["label"], 
+                self.model, classes=self.num_classes)
+            metric_list += np.array(metric_i)
+        metric_list = metric_list / len(db_val)
+
+        performance = np.mean(metric_list, axis=0)[0]
+        mean_hd95 = np.mean(metric_list, axis=0)[1]
+        metrics = {"performance": performance, "mean_hd95": mean_hd95}
+        val_metrics_file = os.path.join(snapshot_dir, f"val_metrics.json")
+        with open(val_metrics_file, "w") as outfile:
+            json_object = json.dumps(metrics, indent=4)
+            outfile.write(json_object)
+    
+    def load_best_model(self, snapshot_dir):
+        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
+        best_model_path = os.path.join(snapshot_dir, '{}_best_model.pth'.format(self.seg_model))
+        model.load_state_dict(torch.load(best_model_path))
+        return model
 
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
         new_train_im_list_file = os.path.join(round_dir,
