@@ -113,21 +113,24 @@ class SPMLModel(BaseModel):
                            f"--kmeans_num_clusters 12,12 --cfg_path {os.path.join(snapshot_dir, 'config_emb.yaml')}"
         return prototype_script
     
-    def get_inference_script(script_type, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split):
-        raise NotImplementedError()
-    
-    def get_metrics_script(script_type, snapshot_dir):
-        raise NotImplementedError()
-        
-    def _get_inference_script(self, snapshot_dir, cur_split, orig_split, orig_data_list):
-        inference_script = f"{self.exec_python} spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
-                           f"--data_list {orig_data_list} " \
-                           f"--save_dir {snapshot_dir}/stage1/results/{orig_split} " \
-                           f"--snapshot_dir {snapshot_dir}/stage1 " \
-                           f"--semantic_memory_dir {snapshot_dir}/stage1/results/{cur_split}/semantic_prototype " \
-                           f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                           f"--cfg_path {snapshot_dir}/config_emb.yaml "
-        return inference_script
+    def get_inference_script(self, script_type, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split):
+        if script_type == 'inf_train':
+            train_split = self.train_split(cur_total_oracle_split, cur_total_pseudo_split)
+            return self._get_inference_script(snapshot_dir, train_split, self.orig_train_split, self.orig_train_im_list_file)
+        elif script_type == 'inf_val':
+            return self._get_inference_script(snapshot_dir, self.val_split, self.orig_train_split, self.val_pim_list_file)
+        elif script_type == 'inf_test':
+            return self._get_inference_script(snapshot_dir, self.test_split, self.orig_train_split, self.test_pim_list_file)
+        else:
+            raise ValueError(f"script_type {script_type} not recognized")
+
+    def get_metrics_script(self, script_type, snapshot_dir):
+        if script_type == 'metrics_val':
+            return self._get_metrics_script(snapshot_dir, self.val_split)
+        elif script_type == 'metrics_test':
+            return self._get_metrics_script(snapshot_dir, self.test_split)
+        else:
+            raise ValueError(f"script_type {script_type} not recognized")
 
     def _get_metrics_script(self, snapshot_dir, inference_split):
         metrics_script = f"{self.exec_python} spml/pyscripts/benchmark/benchmark_by_mIoU.py " \
@@ -314,48 +317,24 @@ class SPMLModel(BaseModel):
 
 class SPMLwMajorityVote(MajorityVoteMixin, SPMLModel):
 
-    def get_inference_script(self, script_type, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split):
-        if script_type == 'inf_train':
-            train_split = self.train_split(cur_total_oracle_split, cur_total_pseudo_split)
-            return self._get_inference_script(snapshot_dir, train_split, self.orig_train_split, self.orig_train_im_list_file)
-        elif script_type == 'inf_val':
-            return self._get_inference_script(snapshot_dir, self.val_split, self.orig_train_split, self.val_pim_list_file)
-        elif script_type == 'inf_test':
-            return self._get_inference_script(snapshot_dir, self.test_split, self.orig_train_split, self.test_pim_list_file)
-        else:
-            raise ValueError(f"script_type {script_type} not recognized")
-
-
-    def get_metrics_script(self, script_type, snapshot_dir):
-        if script_type == 'metrics_val':
-            return self._get_metrics_script(snapshot_dir, self.val_split)
-        elif script_type == 'metrics_test':
-            return self._get_metrics_script(snapshot_dir, self.test_split)
-        else:
-            raise ValueError(f"script_type {script_type} not recognized")
-
+    def _get_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
+        inference_script = f"{self.exec_python} spml/pyscripts/inference/inference.py --data_dir {self.data_root} " \
+                           f"--data_list {data_list} " \
+                           f"--save_dir {snapshot_dir}/stage1/results/{save_dir_split} " \
+                           f"--snapshot_dir {snapshot_dir}/stage1 " \
+                           f"--semantic_memory_dir {snapshot_dir}/stage1/results/{semantic_memory_split}/semantic_prototype " \
+                           f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
+                           f"--cfg_path {snapshot_dir}/config_emb.yaml "
+        return inference_script
 
 class SPMLwSoftmax(SoftmaxMixin, SPMLModel):
 
-    def get_inference_metrics_scripts(self, snapshot_dir, train_split, orig_train_split, orig_train_data_list, val_data_list):
-        inference_train_script = f"{self.exec_python} spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
-                                 f"--data_list {orig_train_data_list} --save_logits " \
-                                 f"--save_dir {snapshot_dir}/stage1/results/{orig_train_split} " \
-                                 f"--snapshot_dir {snapshot_dir}/stage1 " \
-                                 f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
-                                 f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                                 f"--cfg_path {snapshot_dir}/config_emb.yaml "
-        inference_val_script = f"{self.exec_python} spml/pyscripts/inference/inference_segsort_softmax.py --data_dir {self.data_root} " \
-                               f"--data_list {val_data_list} --save_results " \
-                               f"--save_dir {snapshot_dir}/stage1/results/{self.val_split} " \
-                               f"--snapshot_dir {snapshot_dir}/stage1 " \
-                               f"--semantic_memory_dir {snapshot_dir}/stage1/results/{train_split}/semantic_prototype " \
-                               f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
-                               f"--cfg_path {snapshot_dir}/config_emb.yaml "
-        metrics_val_script = f"{self.exec_python} spml/pyscripts/benchmark/benchmark_by_mIoU.py " \
-                               f"--gt_dir {self.data_root}/VOC2012/segcls " \
-                               f" --pred_dir {snapshot_dir}/stage1/results/{self.val_split}/semantic_gray  " \
-                               f" --num_classes 21  --img_scale {self.image_scale}"
-
-        return {'train': inference_train_script, 'val': inference_val_script, 
-                'metrics_val': metrics_val_script}
+    def _get_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
+        inference_script = f"{self.exec_python} spml/pyscripts/inference/inference_segsort_softmax.py " \
+                           f"--data_dir {self.data_root} --data_list {data_list} " \
+                           f"--save_dir {snapshot_dir}/stage1/results/{save_dir_split} " \
+                           f"--snapshot_dir {snapshot_dir}/stage1 " \
+                           f"--semantic_memory_dir {snapshot_dir}/stage1/results/{semantic_memory_split}/semantic_prototype " \
+                           f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
+                           f"--cfg_path {snapshot_dir}/config_emb.yaml "
+        return inference_script
