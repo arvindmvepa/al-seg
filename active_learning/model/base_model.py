@@ -85,8 +85,8 @@ class BaseModel(ABC):
         self.metrics_model('metrics_test', model_no, snapshot_dir, cur_total_oracle_split, cur_total_pseudo_split)
         
 
-    def train_ensemble(self, round_dir, model_no, snapshot_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0, 
-                       skip=False, train=True, inf_train=False, inf_val=True, metrics_val=True, inf_test=False, 
+    def train_ensemble(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0, skip=False, 
+                       train=True, inf_train=False, inf_val=True, metrics_val=True, inf_test=False, 
                        metrics_test=False):
         if skip:
             print("Skip Training Ensemble")
