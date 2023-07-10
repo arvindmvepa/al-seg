@@ -361,8 +361,8 @@ class SPMLwSoftmax(SoftmaxMixin, SPMLModel):
                            f"--semantic_memory_dir {snapshot_dir}/stage1/results/{semantic_memory_split}/semantic_prototype " \
                            f"--label_divisor 2048 --kmeans_num_clusters 12,12 " \
                            f"--cfg_path {snapshot_dir}/config_emb.yaml " \
-                           + "--save_results " if save_results else "" \
-                           + "--save_logits " if save_logits else ""
+                           "--save_results " if save_results else "" \
+                           "--save_logits " if save_logits else ""
         return inference_script
     
     def get_train_inference_script(self, snapshot_dir, save_dir_split, semantic_memory_split, data_list):
