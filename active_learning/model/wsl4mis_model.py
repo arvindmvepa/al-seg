@@ -228,6 +228,8 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                "_seed" + str(self.seed) \
                 if self.tag else \
                     "train_al" + str(cur_total_oracle_split) + "_seed" + str(self.seed))))
+        import sys
+        sys.stdout.flush()
         new_train_im_list_file = os.path.join(round_dir,
                                               "train_al" + str(cur_total_oracle_split) + "_" + self.tag + \
                                               "_seed" + str(self.seed) \
