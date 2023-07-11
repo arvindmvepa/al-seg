@@ -224,6 +224,10 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         return model
 
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
+        print(str((round_dir,"train_al" + str(cur_total_oracle_split) + "_" + self.tag + \
+               "_seed" + str(self.seed) \
+                if self.tag else \
+                    "train_al" + str(cur_total_oracle_split) + "_seed" + str(self.seed))))
         new_train_im_list_file = os.path.join(round_dir,
                                               "train_al" + str(cur_total_oracle_split) + "_" + self.tag + \
                                               "_seed" + str(self.seed) \
