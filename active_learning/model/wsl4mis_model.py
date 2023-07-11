@@ -223,13 +223,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         model.load_state_dict(torch.load(best_model_path))
         return model
 
-    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
-        print(str((round_dir,"train_al" + str(cur_total_oracle_split) + "_" + self.tag + \
-               "_seed" + str(self.seed) \
-                if self.tag else \
-                    "train_al" + str(cur_total_oracle_split) + "_seed" + str(self.seed))))
-        import sys
-        sys.stdout.flush()
+    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         new_train_im_list_file = os.path.join(round_dir,
                                               "train_al" + str(cur_total_oracle_split) + "_" + self.tag + \
                                               "_seed" + str(self.seed) \

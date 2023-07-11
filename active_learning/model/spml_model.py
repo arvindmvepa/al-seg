@@ -158,7 +158,7 @@ class SPMLModel(BaseModel):
                          f" --num_classes 21  --img_scale {self.image_scale}"
         return metrics_script
 
-    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
+    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         new_train_im_list_file = os.path.join(round_dir,
                                               self.left_base_im_list + "_al" + str(cur_total_oracle_split) + "_" + \
                                               self.tag + "_seed" + str(self.seed) + "_" + self.right_base_im_list
