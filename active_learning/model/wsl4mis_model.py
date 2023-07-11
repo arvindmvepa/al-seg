@@ -205,7 +205,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         for i_batch, sampled_batch in enumerate(valloader):
             metric_i = test_single_volume_cct(
                 sampled_batch["image"], sampled_batch["label"], 
-                self.model, classes=self.num_classes)
+                model, classes=self.num_classes)
             metric_list += np.array(metric_i)
         metric_list = metric_list / len(db_val)
 
