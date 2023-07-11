@@ -73,7 +73,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
 
         iter_num = 0
         max_epoch = self.max_iter(cur_total_oracle_split, cur_total_pseudo_split) // len(trainloader) + 1
-        best_performance = 0.0
+        best_performance = -1.0
         iterator = tqdm(range(max_epoch), ncols=70)
         alpha = 1.0
 
