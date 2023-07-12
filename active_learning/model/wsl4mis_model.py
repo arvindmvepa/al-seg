@@ -134,12 +134,8 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
 
                     if performance > best_performance:
                         best_performance = performance
-                        save_mode_path = os.path.join(snapshot_dir,
-                                                      'iter_{}_dice_{}.pth'.format(
-                                                          iter_num, round(best_performance, 4)))
                         save_best = os.path.join(snapshot_dir,
                                                  '{}_best_model.pth'.format(self.seg_model))
-                        torch.save(model.state_dict(), save_mode_path)
                         torch.save(model.state_dict(), save_best)
 
                     logging.info(
@@ -151,14 +147,6 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                         alpha = alpha - 0.01
                     else:
                         alpha = 0.01
-
-                if iter_num % (3000 * (cur_total_oracle_split + cur_total_pseudo_split)) == 0 or \
-                    iter_num == self.max_iter(cur_total_oracle_split, cur_total_pseudo_split):
-
-                    save_mode_path = os.path.join(
-                        snapshot_dir, 'iter_' + str(iter_num) + '.pth')
-                    torch.save(model.state_dict(), save_mode_path)
-                    logging.info("save model to {}".format(save_mode_path))
 
                 if iter_num >= self.max_iter(cur_total_oracle_split, cur_total_pseudo_split):
                     break
