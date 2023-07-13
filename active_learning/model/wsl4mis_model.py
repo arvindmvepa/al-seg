@@ -184,7 +184,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
         np.savez_compressed(train_preds_path, **train_preds)
 
-    def inf_eval_model(self, eval_file, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0,
+    def inf_eval_model(self, eval_file, model_no, snapshot_dir, round_dir, metrics_file, cur_total_oracle_split=0,
                        cur_total_pseudo_split=0):
         model = self.load_best_model(snapshot_dir)
         model.eval()
@@ -201,19 +201,21 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         performance = np.mean(metric_list, axis=0)[0]
         mean_hd95 = np.mean(metric_list, axis=0)[1]
         metrics = {"performance": performance, "mean_hd95": mean_hd95}
-        val_metrics_file = os.path.join(snapshot_dir, f"val_metrics.json")
-        with open(val_metrics_file, "w") as outfile:
+        metrics_file = os.path.join(snapshot_dir, metrics_file)
+        with open(metrics_file, "w") as outfile:
             json_object = json.dumps(metrics, indent=4)
             outfile.write(json_object)
 
     def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         self.inf_eval_model(eval_file=self.orig_val_im_list_file, model_no=model_no, snapshot_dir=snapshot_dir,
-                            round_dir=round_dir, cur_total_oracle_split=cur_total_oracle_split,
+                            metrics_file="val_metrics.json", round_dir=round_dir,
+                            cur_total_oracle_split=cur_total_oracle_split,
                             cur_total_pseudo_split=cur_total_pseudo_split)
 
     def inf_test_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         self.inf_eval_model(eval_file=self.orig_test_im_list_file, model_no=model_no, snapshot_dir=snapshot_dir,
-                            round_dir=round_dir, cur_total_oracle_split=cur_total_oracle_split,
+                            metrics_file="test_metrics.json", round_dir=round_dir,
+                            cur_total_oracle_split=cur_total_oracle_split,
                             cur_total_pseudo_split=cur_total_pseudo_split)
     
     def load_best_model(self, snapshot_dir):
