@@ -184,7 +184,8 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
         np.savez_compressed(train_preds_path, **train_preds)
 
-    def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+    def inf_eval_model(self, eval_file, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0,
+                       cur_total_pseudo_split=0):
         model = self.load_best_model(snapshot_dir)
         model.eval()
         db_val = BaseDataSets(split="val", val_file=self.orig_val_im_list_file, data_root=self.data_root)
@@ -192,7 +193,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         metric_list = 0.0
         for i_batch, sampled_batch in enumerate(valloader):
             metric_i = test_single_volume_cct(
-                sampled_batch["image"], sampled_batch["label"], 
+                sampled_batch["image"], sampled_batch["label"],
                 model, classes=self.num_classes)
             metric_list += np.array(metric_i)
         metric_list = metric_list / len(db_val)
@@ -204,6 +205,16 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         with open(val_metrics_file, "w") as outfile:
             json_object = json.dumps(metrics, indent=4)
             outfile.write(json_object)
+
+    def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.inf_eval_model(eval_file=self.orig_val_im_list_file, model_no=model_no, snapshot_dir=snapshot_dir,
+                            round_dir=round_dir, cur_total_oracle_split=cur_total_oracle_split,
+                            cur_total_pseudo_split=cur_total_pseudo_split)
+
+    def inf_test_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.inf_eval_model(eval_file=self.orig_test_im_list_file, model_no=model_no, snapshot_dir=snapshot_dir,
+                            round_dir=round_dir, cur_total_oracle_split=cur_total_oracle_split,
+                            cur_total_pseudo_split=cur_total_pseudo_split)
     
     def load_best_model(self, snapshot_dir):
         model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
@@ -228,6 +239,9 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
 
     def _init_val_file_info(self):
         self.orig_val_im_list_file = self.model_params["val_file"]
+
+    def _init_test_file_info(self):
+        self.orig_test_im_list_file = self.model_params["test_file"]
 
     def max_iter(self, cur_total_oracle_split, cur_total_pseudo_split):
         return int(self.max_iterations * (cur_total_oracle_split + cur_total_pseudo_split))

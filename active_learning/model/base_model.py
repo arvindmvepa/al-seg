@@ -56,6 +56,7 @@ class BaseModel(ABC):
         self.all_train_files_dict = None
         self._init_train_file_info()
         self._init_val_file_info()
+        self._init_test_file_info()
 
     @abstractmethod
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
@@ -125,6 +126,9 @@ class BaseModel(ABC):
     @abstractmethod
     def _init_val_file_info(self):
         raise NotImplementedError()
+
+    def _init_test_file_info(self):
+        pass
 
     @abstractmethod
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
