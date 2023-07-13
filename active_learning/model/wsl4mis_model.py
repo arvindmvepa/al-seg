@@ -188,15 +188,15 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                        cur_total_pseudo_split=0):
         model = self.load_best_model(snapshot_dir)
         model.eval()
-        db_val = BaseDataSets(split="val", val_file=self.orig_val_im_list_file, data_root=self.data_root)
-        valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
+        db_eval = BaseDataSets(split="val", val_file=self.orig_val_im_list_file, data_root=self.data_root)
+        evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
         metric_list = 0.0
-        for i_batch, sampled_batch in enumerate(valloader):
+        for i_batch, sampled_batch in enumerate(evalloader):
             metric_i = test_single_volume_cct(
                 sampled_batch["image"], sampled_batch["label"],
                 model, classes=self.num_classes)
             metric_list += np.array(metric_i)
-        metric_list = metric_list / len(db_val)
+        metric_list = metric_list / len(db_eval)
 
         performance = np.mean(metric_list, axis=0)[0]
         mean_hd95 = np.mean(metric_list, axis=0)[1]
