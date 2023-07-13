@@ -188,7 +188,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                        cur_total_pseudo_split=0):
         model = self.load_best_model(snapshot_dir)
         model.eval()
-        db_eval = BaseDataSets(split="val", val_file=self.orig_val_im_list_file, data_root=self.data_root)
+        db_eval = BaseDataSets(split="val", val_file=eval_file, data_root=self.data_root)
         evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
         metric_list = 0.0
         for i_batch, sampled_batch in enumerate(evalloader):
