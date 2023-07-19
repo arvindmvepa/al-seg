@@ -53,7 +53,8 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
         logging.info(str(self.__dict__))
 
-        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes, gpus=self.gpus)
+        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
+        model = model.to(self.gpus)
 
         train_file = self.get_round_train_file_paths(round_dir=round_dir,
                                                      cur_total_oracle_split=cur_total_oracle_split,
@@ -84,12 +85,8 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
 
         for epoch_num in iterator:
             for i_batch, sampled_batch in enumerate(trainloader):
-
                 volume_batch, label_batch = sampled_batch['image'], sampled_batch['label']
-                if self.gpus == 'mps':
-                    volume_batch, label_batch = volume_batch.to('mps'), label_batch.to('mps')
-                else:
-                    volume_batch, label_batch = volume_batch.cuda(), label_batch.cuda()
+                volume_batch, label_batch = volume_batch.to(self.gpus), label_batch.to(self.gpus)
                 sys.stdout.flush()
 
                 outputs, outputs_aux1 = model(
@@ -145,7 +142,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                     for i_batch, sampled_batch in enumerate(valloader):
                         metric_i = test_single_volume_cct(
                             sampled_batch["image"], sampled_batch["label"], 
-                            model, classes=self.num_classes)
+                            model, classes=self.num_classes, gpus=self.gpus)
                         metric_list += np.array(metric_i)
                     metric_list = metric_list / len(db_val)
                     for class_i in range(self.num_classes-1):
@@ -204,10 +201,7 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
             train_preds = {}
             for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
                 volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
-                if self.gpus == 'mps':
-                    volume_batch, label_batch, idx = volume_batch.to('mps'), label_batch.to('mps'), idx.cpu()[0]
-                else:
-                    volume_batch, label_batch, idx = volume_batch.cuda(), label_batch.cuda(), idx.cpu()[0]
+                volume_batch, label_batch, idx = volume_batch.to(self.gpus), label_batch.to(self.gpus), idx.cpu()[0]
                 # skip images that are already annotated
                 if full_db_train.sample_list[idx] in db_train.sample_list:
                     continue
@@ -215,7 +209,6 @@ class DMPLSModel(SoftmaxMixin, BaseModel):
                 outputs = model(volume_batch)[0]
                 outputs_soft = torch.softmax(outputs, dim=1)
                 train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
-                # train_preds[slice_basename] = np.float16(outputs_soft.detach().numpy())
             train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
             np.savez_compressed(train_preds_path, **train_preds)
 

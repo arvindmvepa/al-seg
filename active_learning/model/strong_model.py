@@ -154,7 +154,7 @@ class StrongModel(SoftmaxMixin, BaseModel):
                                                       'iter_{}_dice_{}.pth'.format(
                                                           iter_num, round(best_performance, 4)))
                         save_best = os.path.join(snapshot_dir,
-                                                 '{}_best_model.pth'.format(self.arch))
+                                                 '{}_best_model.pth'.format(self.seg_model))
                         torch.save(model.state_dict(), save_mode_path)
                         torch.save(model.state_dict(), save_best)
 
