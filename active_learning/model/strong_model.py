@@ -33,7 +33,7 @@ class StrongModel(SoftmaxMixin, BaseModel):
         self.base_lr = base_lr
         self.patch_size = patch_size
         self.gpus = gpus
-        if self.gpus != 'mps': torch.cuda.set_device(torch.device("cuda:" + self.gpus))
+        #if self.gpus != 'mps': torch.cuda.set_device(torch.device("cuda:" + self.gpus))
 
 
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
@@ -51,7 +51,8 @@ class StrongModel(SoftmaxMixin, BaseModel):
         logging.info(str(self.__dict__))
 
         model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
-        if self.gpus == 'mps': model = model.to(self.gpus)
+        #if self.gpus == 'mps': model = model.to(self.gpus)
+        model = model.to(self.gpus)
 
         train_file = self.get_round_train_file_paths(round_dir=round_dir,
                                                      cur_total_oracle_split=cur_total_oracle_split,
