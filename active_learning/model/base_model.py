@@ -56,13 +56,40 @@ class BaseModel(ABC):
         self.all_train_files_dict = None
         self._init_train_file_info()
         self._init_val_file_info()
+        self._init_test_file_info()
 
     @abstractmethod
-    def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0,
-                    inf_train=False, save_params=None):
+    def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
+    
+    @abstractmethod
+    def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        raise NotImplementedError()
+    
+    @abstractmethod
+    def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        raise NotImplementedError()
+    
+    def inf_test_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        raise NotImplementedError()
+    
+    def inf_train(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.inf_train_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
+                             cur_total_oracle_split=cur_total_oracle_split, 
+                             cur_total_pseudo_split=cur_total_pseudo_split)
 
-    def train_ensemble(self, round_dir, skip=False, **kwargs):
+    def inf_val(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.inf_val_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
+                           cur_total_oracle_split=cur_total_oracle_split,
+                           cur_total_pseudo_split=cur_total_pseudo_split)
+    
+    def inf_test(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.inf_test_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
+                            cur_total_oracle_split=cur_total_oracle_split,
+                            cur_total_pseudo_split=cur_total_pseudo_split)
+
+    def train_ensemble(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0, skip=False, 
+                       train=True, inf_train=False, inf_val=True, inf_test=False):
         if skip:
             print("Skip Training Ensemble")
             return
@@ -71,7 +98,22 @@ class BaseModel(ABC):
             snapshot_dir = os.path.join(round_dir, str(model_no))
             if not os.path.exists(snapshot_dir):
                 os.makedirs(snapshot_dir)
-            self.train_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, **kwargs)
+            if train:
+                self.train_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, 
+                                 cur_total_oracle_split=cur_total_oracle_split, 
+                                 cur_total_pseudo_split=cur_total_pseudo_split)
+            if inf_train:
+                self.inf_train(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, 
+                               cur_total_oracle_split=cur_total_oracle_split, 
+                               cur_total_pseudo_split=cur_total_pseudo_split)
+            if inf_val: 
+                self.inf_val(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, 
+                             cur_total_oracle_split=cur_total_oracle_split, 
+                             cur_total_pseudo_split=cur_total_pseudo_split)
+            if inf_test:
+                self.inf_test(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, 
+                              cur_total_oracle_split=cur_total_oracle_split, 
+                              cur_total_pseudo_split=cur_total_pseudo_split)
         print("Finished Training Ensemble")
 
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
@@ -85,8 +127,11 @@ class BaseModel(ABC):
     def _init_val_file_info(self):
         raise NotImplementedError()
 
+    def _init_test_file_info(self):
+        pass
+
     @abstractmethod
-    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
+    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
 
     def train_split(self, cur_total_oracle_split, cur_total_pseudo_split):

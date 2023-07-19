@@ -20,7 +20,7 @@ import torch
 class StrongModel(SoftmaxMixin, BaseModel):
     """Strong supervision model for active learning."""
 
-    def __init__(self, ann_type="label", data_root="wsl4mis_data/ACDC", ensemble_size=1, 
+    def __init__(self, ann_type="label", data_root="wsl4mis_data/ACDC", ensemble_size=1,
                  seg_model='unet', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
                  patch_size=(256,256), seed=0, gpus="0", tag=""):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
@@ -32,14 +32,11 @@ class StrongModel(SoftmaxMixin, BaseModel):
         self.deterministic = deterministic
         self.base_lr = base_lr
         self.patch_size = patch_size
+        self.gpus = gpus
+        if self.gpus != 'mps': torch.cuda.set_device(torch.device("cuda:" + self.gpus))
 
-        if self.gpus != 'mps':
-            torch.cuda.set_device(torch.device("cuda:" + self.gpus))
 
-    def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0,
-                    inf_train=False, save_params=None):
-        if save_params is None:
-            save_params = dict()
+    def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
 
         # remove previous logger, if exists.
         # close and remove first handler, but just remove (but don't close) second handler (which is standard output)
@@ -54,9 +51,7 @@ class StrongModel(SoftmaxMixin, BaseModel):
         logging.info(str(self.__dict__))
 
         model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
-        model = model.to(self.gpus)
-
-        model.train()
+        if self.gpus == 'mps': model = model.to(self.gpus)
 
         train_file = self.get_round_train_file_paths(round_dir=round_dir,
                                                      cur_total_oracle_split=cur_total_oracle_split,
@@ -69,17 +64,18 @@ class StrongModel(SoftmaxMixin, BaseModel):
         trainloader = DataLoader(db_train, batch_size=self.batch_size, shuffle=True, num_workers=1, pin_memory=True)
         valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
 
+        model.train()
+
         optimizer = optim.SGD(model.parameters(), lr=self.base_lr,
                               momentum=0.9, weight_decay=0.0001)
         ce_loss = CrossEntropyLoss(ignore_index=4)
         dice_loss = losses.DiceLoss(self.num_classes)
 
-        writer = SummaryWriter(os.path.join(snapshot_dir, 'log'))
         logging.info("{} iterations per epoch".format(len(trainloader)))
 
         iter_num = 0
         max_epoch = self.max_iter(cur_total_oracle_split, cur_total_pseudo_split) // len(trainloader) + 1
-        best_performance = 0.0
+        best_performance = -1.0
         iterator = tqdm(range(max_epoch), ncols=70)
         alpha = 1.0
 
@@ -88,6 +84,7 @@ class StrongModel(SoftmaxMixin, BaseModel):
 
                 volume_batch, label_batch = sampled_batch['image'], sampled_batch['label']
                 volume_batch, label_batch = volume_batch.to(self.gpus), label_batch.to(self.gpus)
+
                 sys.stdout.flush()
                 
                 outputs = model(volume_batch)
@@ -106,24 +103,10 @@ class StrongModel(SoftmaxMixin, BaseModel):
                     param_group['lr'] = lr_
 
                 iter_num = iter_num + 1
-                writer.add_scalar('info/lr', lr_, iter_num)
-                writer.add_scalar('info/total_loss', loss, iter_num)
-                writer.add_scalar('info/loss_ce', loss_ce, iter_num)
 
                 logging.info(
                     'iteration %d : loss : %f, loss_ce: %f, alpha: %f' %
                     (iter_num, loss.item(), loss_ce.item(), alpha))
-
-                if iter_num % 20 == 0:
-                    image = volume_batch[0, 0:1, :, :]
-                    image = (image - image.min()) / (image.max() - image.min())
-                    writer.add_image('train/Image', image, iter_num)
-                    outputs = torch.argmax(torch.softmax(
-                        outputs, dim=1), dim=1, keepdim=True)
-                    writer.add_image('train/Prediction',
-                                     outputs[0, ...] * 50, iter_num)
-                    labs = label_batch[0, ...].unsqueeze(0) * 50
-                    writer.add_image('train/GroundTruth', labs, iter_num)
 
                 if iter_num > 0 and (iter_num % 200 == 0 or 
                                      iter_num == self.max_iter(cur_total_oracle_split, 
@@ -136,26 +119,14 @@ class StrongModel(SoftmaxMixin, BaseModel):
                             model, classes=self.num_classes, gpus=self.gpus)
                         metric_list += np.array(metric_i)
                     metric_list = metric_list / len(db_val)
-                    for class_i in range(self.num_classes-1):
-                        writer.add_scalar('info/val_{}_dice'.format(class_i+1),
-                                          metric_list[class_i, 0], iter_num)
-                        writer.add_scalar('info/val_{}_hd95'.format(class_i+1),
-                                          metric_list[class_i, 1], iter_num)
 
                     performance = np.mean(metric_list, axis=0)[0]
-
                     mean_hd95 = np.mean(metric_list, axis=0)[1]
-                    writer.add_scalar('info/val_mean_dice', performance, iter_num)
-                    writer.add_scalar('info/val_mean_hd95', mean_hd95, iter_num)
 
                     if performance > best_performance:
                         best_performance = performance
-                        save_mode_path = os.path.join(snapshot_dir,
-                                                      'iter_{}_dice_{}.pth'.format(
-                                                          iter_num, round(best_performance, 4)))
                         save_best = os.path.join(snapshot_dir,
                                                  '{}_best_model.pth'.format(self.seg_model))
-                        torch.save(model.state_dict(), save_mode_path)
                         torch.save(model.state_dict(), save_best)
 
                     logging.info(
@@ -168,44 +139,84 @@ class StrongModel(SoftmaxMixin, BaseModel):
                     else:
                         alpha = 0.01
 
-                if iter_num % (3000 * (cur_total_oracle_split + cur_total_pseudo_split)) == 0 or \
-                    iter_num == self.max_iter(cur_total_oracle_split, cur_total_pseudo_split):
-
-                    save_mode_path = os.path.join(
-                        snapshot_dir, 'iter_' + str(iter_num) + '.pth')
-                    torch.save(model.state_dict(), save_mode_path)
-                    logging.info("save model to {}".format(save_mode_path))
-
                 if iter_num >= self.max_iter(cur_total_oracle_split, cur_total_pseudo_split):
                     break
             if iter_num >= self.max_iter(cur_total_oracle_split, cur_total_pseudo_split):
                 iterator.close()
                 break
-        writer.close()
-
-        if inf_train:
-            model.eval()
-            full_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
-                                         sup_type=self.ann_type, train_file=self.orig_train_im_list_file,
-                                         data_root=self.data_root)
-            full_trainloader = DataLoader(full_db_train, batch_size=1, shuffle=True, num_workers=1, pin_memory=True)
-            train_preds = {}
-            for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
-                volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
-                volume_batch, label_batch, idx = volume_batch.to(self.gpus), label_batch.to(self.gpus), idx.cpu()[0]
-                # skip images that are already annotated
-                if full_db_train.sample_list[idx] in db_train.sample_list:
-                    continue
-                slice_basename = os.path.basename(full_db_train.sample_list[idx])
-                outputs = model(volume_batch)[0]
-                outputs_soft = torch.softmax(outputs, dim=1)
-                train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
-            train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
-            np.savez_compressed(train_preds_path, **train_preds)
 
         return "Training Finished!"
     
-    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split, **kwargs):
+
+    def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        model = self.load_best_model(snapshot_dir).to(self.gpus)
+        model.eval()
+        full_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
+                                        sup_type=self.ann_type, train_file=self.orig_train_im_list_file,
+                                        data_root=self.data_root)
+        full_trainloader = DataLoader(full_db_train, batch_size=1, shuffle=True, num_workers=8, pin_memory=True)
+        train_file = self.get_round_train_file_paths(round_dir=round_dir,
+                                                     cur_total_oracle_split=cur_total_oracle_split,
+                                                     cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[0]]
+
+        ann_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
+                                    sup_type=self.ann_type, train_file=train_file, data_root=self.data_root)
+        train_preds = {}
+        for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
+            volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
+            volume_batch, label_batch, idx = volume_batch.to(self.gpus), label_batch.to(self.gpus), idx.cpu()[0]
+            # skip images that are already annotated
+            if full_db_train.sample_list[idx] in ann_db_train.sample_list:
+                continue
+            slice_basename = os.path.basename(full_db_train.sample_list[idx])
+            outputs = model(volume_batch)[0]
+            outputs_soft = torch.softmax(outputs, dim=1)
+            train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
+        train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
+        np.savez_compressed(train_preds_path, **train_preds)
+
+    def inf_eval_model(self, eval_file, model_no, snapshot_dir, round_dir, metrics_file, cur_total_oracle_split=0,
+                       cur_total_pseudo_split=0):
+        model = self.load_best_model(snapshot_dir).to(self.gpus)
+        model.eval()
+        db_eval = BaseDataSets(split="val", val_file=eval_file, data_root=self.data_root)
+        evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
+        metric_list = 0.0
+        for i_batch, sampled_batch in enumerate(evalloader):
+            metric_i = test_single_volume(
+                sampled_batch["image"], sampled_batch["label"],
+                model, classes=self.num_classes, gpus=self.gpus)
+            metric_list += np.array(metric_i)
+        metric_list = metric_list / len(db_eval)
+
+        performance = np.mean(metric_list, axis=0)[0]
+        mean_hd95 = np.mean(metric_list, axis=0)[1]
+        metrics = {"performance": performance, "mean_hd95": mean_hd95}
+        metrics_file = os.path.join(snapshot_dir, metrics_file)
+        with open(metrics_file, "w") as outfile:
+            json_object = json.dumps(metrics, indent=4)
+            outfile.write(json_object)
+
+    def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.inf_eval_model(eval_file=self.orig_val_im_list_file, model_no=model_no, snapshot_dir=snapshot_dir,
+                            metrics_file="val_metrics.json", round_dir=round_dir,
+                            cur_total_oracle_split=cur_total_oracle_split,
+                            cur_total_pseudo_split=cur_total_pseudo_split)
+
+    def inf_test_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        self.inf_eval_model(eval_file=self.orig_test_im_list_file, model_no=model_no, snapshot_dir=snapshot_dir,
+                            metrics_file="test_metrics.json", round_dir=round_dir,
+                            cur_total_oracle_split=cur_total_oracle_split,
+                            cur_total_pseudo_split=cur_total_pseudo_split)
+    
+    def load_best_model(self, snapshot_dir):
+        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
+        best_model_path = os.path.join(snapshot_dir, '{}_best_model.pth'.format(self.seg_model))
+        model.load_state_dict(torch.load(best_model_path))
+        return model
+    
+
+    def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         new_train_im_list_file = os.path.join(round_dir,
                                               "train_al" + str(cur_total_oracle_split) + "_" + self.tag + \
                                               "_seed" + str(self.seed) \
@@ -222,6 +233,9 @@ class StrongModel(SoftmaxMixin, BaseModel):
 
     def _init_val_file_info(self):
         self.orig_val_im_list_file = self.model_params["val_file"]
+
+    def _init_test_file_info(self):
+        self.orig_test_im_list_file = self.model_params["test_file"]
 
     def max_iter(self, cur_total_oracle_split, cur_total_pseudo_split):
         return int(self.max_iterations * (cur_total_oracle_split + cur_total_pseudo_split))
