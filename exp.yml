@@ -1,6 +1,6 @@
 model:
   model_type: "spml_mv"
-  ann_type: "liger21_cb"
+  ann_type: "liger21_dino_cb"
   ensemble_size: 3
   gpus: "0"
 policy:
@@ -14,4 +14,4 @@ policy:
   rounds: [[1.0, 0]]
 model_uncertainty:
   model_uncertainty_type: pass
-exp_dir: "liger21_cb"
+exp_dir: "liger21_dino_cb"
