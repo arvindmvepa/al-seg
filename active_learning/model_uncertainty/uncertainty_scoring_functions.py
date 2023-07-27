@@ -6,19 +6,21 @@ from active_learning.utils import seg_entropy_score
 
 
 def mean_score(im_labels):
-    """Mean of the image label scores"""
+    """input is a tensor with dimensions (n_models, ...)"""
     mean_score_ = torch.mean(im_labels)
     return mean_score_
 
 
 def entropy_w_label_probs(im_labels):
+    """input is a tensor with dimensions (n_models, n_classes, height, width)"""
     # calculate average probability per class for all models per pixel
     mean_labels = torch.mean(im_labels, axis=0)
     entropy = seg_entropy_score(mean_labels)
     return entropy
 
-
+# TODO: remove or refactor (unused)
 def entropy_w_label_counts(im_labels):
+    """input dimensions are (n_models, n_classes, height, width)"""
     im_labels = im_labels.reshape((im_labels.shape[0], -1))
     entropy_arr = parallel_apply_along_axis(pixel_entropy_w_label_counts, 0, im_labels)
     mean_entropy = np.mean(entropy_arr)
@@ -27,6 +29,7 @@ def entropy_w_label_counts(im_labels):
 
 # TODO: refactor to use torch
 def ensemble_variance_ratio(im_labels):
+    """input is a numpy array with dimensions (n_models, n_classes, height, width)"""
     n_members = len(im_labels)
 
     im_labels = np.concatenate(im_labels)
