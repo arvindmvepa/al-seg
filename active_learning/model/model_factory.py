@@ -22,6 +22,10 @@ class ModelFactory:
             sys.path.append("./wsl4mis/code")
             from active_learning.model.strongly_sup_model import StronglySupModel
             model = StronglySupModel(**model_kwargs)
+        elif model_type == "dbm":
+            sys.path.append("./wsl4mis/code")
+            from active_learning.model.deep_bayesian_model import DeepBayesianModel
+            model = DeepBayesianModel(**model_kwargs)
         else:
             raise ValueError(f"There is no model_type {model_type}")
         return model

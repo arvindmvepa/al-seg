@@ -1,0 +1,21 @@
+model:
+  model_type: "dbm"
+  ann_type: "scribble"
+  ensemble_size: 1
+  max_iterations: 600
+  inf_train_output_mode: "combine"
+  scoring_func: "bald"
+  gpus: "mps"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+  uncertainty_kwargs:
+    skip: False
+    delete_preds: True
+  rounds: [[.1, 0], [.1, 0], [.1, 0]]
+model_uncertainty:
+  model_uncertainty_type: ensemble
+  scoring_method: bald_w_entropy
+exp_dir: "DMPLS_w_dmb_bald_test_run"

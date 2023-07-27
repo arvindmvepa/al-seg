@@ -3,6 +3,15 @@ import multiprocessing
 import numpy as np
 
 
+def bald_w_entropy(im_labels):
+    "Calculate BALD with entropy as the scoring function"
+    # Expect an input shape of (256, 256) with each pixel representing the bald score in that pixel
+    im_labels = np.concatenate(im_labels)
+    # Take the average bald score across the image
+    mean_bald_score = np.mean(im_labels.flatten())
+    return mean_bald_score
+
+
 def entropy_w_label_probs(im_labels):
     im_labels = np.concatenate(im_labels)
     # take the average probability for each class and calculate entropy from that
@@ -95,4 +104,5 @@ def unpacking_apply_along_axis(all_args):
 
 scoring_functions = {"entropy_w_label_counts": entropy_w_label_counts,
                      "entropy_w_label_probs": entropy_w_label_probs,
-                     "ensemble_variance_ratio": ensemble_variance_ratio}
+                     "ensemble_variance_ratio": ensemble_variance_ratio,
+                     "bald_w_entropy": bald_w_entropy}

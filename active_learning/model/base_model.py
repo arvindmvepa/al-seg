@@ -61,11 +61,11 @@ class BaseModel(ABC):
     @abstractmethod
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
-
+    
     @abstractmethod
     def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
-
+    
     @abstractmethod
     def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
