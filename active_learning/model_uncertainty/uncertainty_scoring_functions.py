@@ -1,18 +1,21 @@
 from scipy.stats import entropy as entropy_func
 import multiprocessing
 import numpy as np
+import torch
+from active_learning.utils import seg_entropy_score
+
+
+def mean_score(im_labels):
+    """Mean of the image label scores"""
+    mean_score_ = torch.mean(im_labels)
+    return mean_score_
 
 
 def entropy_w_label_probs(im_labels):
-    im_labels = np.concatenate(im_labels)
-    # take the average probability for each class and calculate entropy from that
-    im_labels = np.mean(im_labels, axis=0)
-    # flatten image dimensions
-    im_labels = im_labels.reshape((im_labels.shape[0], -1))
-
-    entropy_arr = parallel_apply_along_axis(pixel_entropy_w_probs, 0, im_labels)
-    mean_entropy = np.mean(entropy_arr)
-    return mean_entropy
+    # calculate average probability per class for all models per pixel
+    mean_labels = torch.mean(im_labels, axis=0)
+    entropy = seg_entropy_score(mean_labels)
+    return entropy
 
 
 def entropy_w_label_counts(im_labels):
@@ -22,6 +25,7 @@ def entropy_w_label_counts(im_labels):
     return mean_entropy
 
 
+# TODO: refactor to use torch
 def ensemble_variance_ratio(im_labels):
     n_members = len(im_labels)
 
@@ -42,9 +46,6 @@ def ensemble_variance_ratio(im_labels):
     average_disperson = np.mean(v)
     return average_disperson
 
-
-def pixel_entropy_w_probs(pixel_probs):
-    return entropy_func(pixel_probs)
 
 def pixel_entropy_w_label_counts(pixel_labels):
     """https://stackoverflow.com/questions/15450192/fastest-way-to-compute-entropy-in-python"""
@@ -95,4 +96,5 @@ def unpacking_apply_along_axis(all_args):
 
 scoring_functions = {"entropy_w_label_counts": entropy_w_label_counts,
                      "entropy_w_label_probs": entropy_w_label_probs,
-                     "ensemble_variance_ratio": ensemble_variance_ratio}
+                     "ensemble_variance_ratio": ensemble_variance_ratio,
+                     "mean_score": mean_score}
