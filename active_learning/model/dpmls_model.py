@@ -13,6 +13,8 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from torch.nn.modules.loss import CrossEntropyLoss
 import torch
+from wsl4mis.code.val_2D import test_single_volume_cct
+
 
 
 class DMPLSModel(WSL4MISModel):
