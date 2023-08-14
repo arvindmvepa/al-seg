@@ -71,7 +71,7 @@ model_params = {
                           "train_logits_path": "train_preds.npz"
                       },
                   },
-    "dbm":            {
+    "db_dpmls":            {
                   "scribble":
                       {
                           "train_file": os.path.join("wsl4mis",

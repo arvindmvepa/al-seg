@@ -161,7 +161,7 @@ class DeepBayesianDMPLSModel(DeepBayesianWSL4MISMixin, DMPLSModel):
 
     @property
     def model_string(self):
-        return "deepbayesian_dpmls"
+        return "db_dpmls"
 
     def __repr__(self):
         mapping = self.__dict__
