@@ -18,7 +18,7 @@ class ModelFactory:
             sys.path.append("./wsl4mis/code")
             from active_learning.model.dpmls_model import DMPLSModel
             model = DMPLSModel(**model_kwargs)
-        elif model_type == "dbdmpls":
+        elif model_type == "db_dmpls":
             sys.path.append("./wsl4mis/code")
             from active_learning.model.dpmls_model import DeepBayesianDMPLSModel
             model = DeepBayesianDMPLSModel(**model_kwargs)

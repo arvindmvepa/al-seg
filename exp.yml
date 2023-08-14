@@ -1,5 +1,5 @@
 model:
-  model_type: "dbdpmls"
+  model_type: "db_dmpls"
   ann_type: "scribble"
   ensemble_size: 1
   gpus: "1"
