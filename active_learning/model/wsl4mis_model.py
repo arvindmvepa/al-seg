@@ -1,5 +1,5 @@
-import sys
 from active_learning.model.base_model import BaseModel, SoftmaxMixin
+from active_learning.model.db_scoring_functions import db_scoring_functions
 import json
 import os
 import numpy as np
@@ -50,7 +50,7 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
             if full_db_train.sample_list[idx] in ann_db_train.sample_list:
                 continue
             slice_basename = os.path.basename(full_db_train.sample_list[idx])
-            outputs = model(volume_batch)[0]
+            outputs = self.model_preds(model, volume_batch)[0]
             outputs_soft = torch.softmax(outputs, dim=1)
             train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
         train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
@@ -166,8 +166,14 @@ class DeepBayesianWSL4MISMixin:
                 outputs, _ = model(volume_batch_repeated)
                 outputs = torch.softmax(outputs, dim=1)
                 avg_outputs = torch.mean(outputs, dim=0).unsqueeze(0)
-                train_preds[slice_basename] = np.float16(avg_outputs.cpu().detach().numpy())
+                db_sores = self.get_db_score(avg_outputs)
+                train_preds[slice_basename] = np.float16(db_sores.cpu().detach().numpy())
 
         train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
         np.savez_compressed(train_preds_path, **train_preds)
+
+    def get_db_score(self, preds):
+        db_score_func = db_scoring_functions[self.db_score_func]
+        return db_score_func(preds)
+
 

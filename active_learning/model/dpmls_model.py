@@ -157,9 +157,10 @@ class DMPLSModel(WSL4MISModel):
 
 class DeepBayesianDMPLSModel(DeepBayesianWSL4MISMixin, DMPLSModel):
 
-    def __init__(self, T=40, *args, **kwargs):
+    def __init__(self, T=40, db_score_func="mean_probs", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.T = T
+        self.db_score_func = db_score_func
 
     @property
     def model_string(self):

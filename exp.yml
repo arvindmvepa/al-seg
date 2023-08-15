@@ -3,6 +3,7 @@ model:
   ann_type: "scribble"
   ensemble_size: 1
   gpus: "cuda:0"
+  db_score_func: "mean_probs"
 policy:
   policy_type: ranked
   seed: 0
@@ -14,5 +15,5 @@ policy:
   rounds: [[.001, 0], [.001, 0], [.001, 0]]
 model_uncertainty:
   model_uncertainty_type: ensemble
-  scoring_method: entropy_w_label_probs
+  score_func: entropy_w_label_probs
 exp_dir: "db_dpmls_w_entropy_test_run"
