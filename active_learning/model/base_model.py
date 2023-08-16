@@ -228,7 +228,8 @@ class SoftmaxMixin:
             ensemble_preds_arr = np.concatenate(ensemble_preds_arr)
             tensor = torch.from_numpy(ensemble_preds_arr)
             tensor = tensor.to(self.gpus)
-            score = score_func(tensor).cpu().detach().numpy()
+            # convert to float32 to avoid rounding to inf
+            score = np.float32(score_func(tensor).cpu().detach().numpy())
             print(f"score: {score}")
             print(f"score.dtype: {score.dtype}")
             f.write(f"{im_file},{np.round(score, 7)}\n")
