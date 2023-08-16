@@ -1,5 +1,5 @@
 import torch
-from utils import seg_entropy_score
+from active_learning.utils import seg_entropy_score
 
 
 def mean_probs(outputs):

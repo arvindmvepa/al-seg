@@ -2,7 +2,7 @@ from scipy.stats import entropy as entropy_func
 import multiprocessing
 import numpy as np
 import torch
-from utils import seg_entropy_score
+from active_learning.utils import seg_entropy_score
 
 
 def mean_score(im_labels):
