@@ -1,4 +1,5 @@
 import torch
+from utils import seg_entropy_score
 
 
 def mean_probs(outputs):
@@ -7,16 +8,13 @@ def mean_probs(outputs):
     return avg_outputs
 
 
-def bald_score(outputs, T):
+def entropy_score(outputs):
     avg_outputs = torch.mean(outputs, dim=0)
-    first_term = -torch.sum(avg_outputs * torch.log(avg_outputs + 1e-10), dim=0)
-    # Compute the second term of the BALD equation
-    second_term = torch.sum(torch.sum(outputs * torch.log(outputs + 1e-10), dim=0), dim=0)/T
-    # Compute the BALD score
-    bald_score = first_term + second_term
-    print(f"bald_score.shape: {bald_score.shape}")
-    return bald_score
+    print(f"avg_outputs.shape: {avg_outputs.shape}")
+    entropy = seg_entropy_score(avg_outputs)
+    print(f"entropy.shape: {entropy.shape}")
+    return entropy
 
 
 db_scoring_functions = {"mean_probs": mean_probs,
-                        "bald_score": bald_score}
+                        "entropy_score": entropy_score}

@@ -7,6 +7,8 @@ import numpy as np
 from glob import glob
 import shutil
 from PIL import Image
+import torch
+
 
 class BaseModel(ABC):
     """Abstract class for model interface
@@ -222,7 +224,10 @@ class SoftmaxMixin:
             for i, result in enumerate(train_results):
                 preds_arr = np.load(result, mmap_mode='r')[im_file]
                 ensemble_preds_arr.append(preds_arr)
-            score = score_func(ensemble_preds_arr)
+            ensemble_preds_arr = np.concatenate(ensemble_preds_arr)
+            tensor = torch.from_numpy(ensemble_preds_arr)
+            tensor = tensor.to(self.gpus)
+            score = score_func(tensor)
             f.write(f"{im_file},{np.round(score, 7)}\n")
             f.flush()
         f.close()
