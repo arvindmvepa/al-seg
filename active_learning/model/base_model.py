@@ -223,6 +223,7 @@ class SoftmaxMixin:
             ensemble_preds_arr = []
             for i, result in enumerate(train_results):
                 preds_arr = np.load(result, mmap_mode='r')[im_file]
+                preds_arr = np.atleast_1d(preds_arr)
                 ensemble_preds_arr.append(preds_arr)
             ensemble_preds_arr = np.concatenate(ensemble_preds_arr)
             tensor = torch.from_numpy(ensemble_preds_arr)
