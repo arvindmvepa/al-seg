@@ -230,7 +230,7 @@ class SoftmaxMixin:
             tensor = tensor.to(self.gpus)
             score = score_func(tensor).cpu().detach().numpy()
             print(f"score: {score}")
-            print(f"type(score): {type(score)}")
+            print(f"score.dtype: {score.dtype}")
             f.write(f"{im_file},{np.round(score, 7)}\n")
             print(f"np.round(score, 7): {np.round(score, 7)}")
             f.flush()
