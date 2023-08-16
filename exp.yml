@@ -9,7 +9,6 @@ policy:
   seed: 0
   ensemble_kwargs:
     skip: False
-    train: False
   uncertainty_kwargs:
     skip: False
     delete_preds: True

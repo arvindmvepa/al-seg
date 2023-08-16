@@ -230,10 +230,7 @@ class SoftmaxMixin:
             tensor = tensor.to(self.gpus)
             # convert to float32 to avoid rounding to inf
             score = np.float32(score_func(tensor).cpu().detach().numpy())
-            print(f"score: {score}")
-            print(f"score.dtype: {score.dtype}")
             f.write(f"{im_file},{np.round(score, 7)}\n")
-            print(f"np.round(score, 7): {np.round(score, 7)}")
             f.flush()
         f.close()
         # after obtaining scores, delete the *.npz files for the round
