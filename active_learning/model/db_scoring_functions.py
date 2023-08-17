@@ -8,7 +8,9 @@ def pass_probs(outputs):
 
 
 def entropy_score(outputs):
+    print(f"outputs.shape: {outputs.shape}")
     entropy = seg_entropy_score(outputs)
+    print(f"entropy: {entropy}")
     return entropy
 
 

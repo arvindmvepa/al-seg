@@ -7,7 +7,9 @@ from active_learning.utils import seg_entropy_score
 
 def mean_score(im_labels):
     """Mean of the image label scores"""
+    print(f"im_labels.shape: {im_labels.shape}")
     mean_score_ = torch.mean(im_labels)
+    print(f"mean_score_: {mean_score_}")
     return mean_score_
 
 
