@@ -1,11 +1,9 @@
 model:
-  model_type: "dbm"
+  model_type: "db_dmpls"
   ann_type: "scribble"
   ensemble_size: 1
-  max_iterations: 600
-  inf_train_output_mode: "combine"
-  scoring_func: "bald"
-  gpus: "mps"
+  gpus: "cuda:0"
+  db_score_func: "entropy_score"
 policy:
   policy_type: ranked
   seed: 0
@@ -14,8 +12,8 @@ policy:
   uncertainty_kwargs:
     skip: False
     delete_preds: True
-  rounds: [[.1, 0], [.1, 0], [.1, 0]]
+  rounds: [[.001, 0], [.001, 0], [.001, 0]]
 model_uncertainty:
   model_uncertainty_type: ensemble
-  scoring_method: bald_w_entropy
-exp_dir: "DMPLS_w_dmb_bald_test_run"
+  score_func: mean_score
+exp_dir: "db_dpmls_w_entropy_test_run"
