@@ -183,7 +183,7 @@ class MajorityVoteMixin:
         for model_result_file in models_result_file:
             arr = np.asarray(Image.open(model_result_file).convert('L'))
             results.append(arr)
-        results_arr = np.stack(results)
+        results_arr = np.stack(results, axis=0)
         # use the first model's pred_file basename because it's the same image
         base_name = os.path.basename(models_result_file[0])
         return results_arr, base_name
@@ -225,7 +225,7 @@ class SoftmaxMixin:
                 preds_arr = np.load(result, mmap_mode='r')[im_file]
                 preds_arr = np.atleast_1d(preds_arr)
                 ensemble_preds_arr.append(preds_arr)
-            ensemble_preds_arr = np.concatenate(ensemble_preds_arr)
+            ensemble_preds_arr = np.stack(ensemble_preds_arr, axis=0)
             tensor = torch.from_numpy(ensemble_preds_arr)
             tensor = tensor.to(self.gpus)
             # convert to float32 to avoid rounding to inf

@@ -10,6 +10,7 @@ policy:
   ensemble_kwargs:
     skip: False
     train: False
+    inf_train: False
   uncertainty_kwargs:
     skip: False
     delete_preds: False
