@@ -11,7 +11,7 @@ policy:
     skip: False
   uncertainty_kwargs:
     skip: False
-    delete_preds: True
+    delete_preds: False
   rounds: [[.001, 0], [.001, 0], [.001, 0]]
 model_uncertainty:
   model_uncertainty_type: ensemble

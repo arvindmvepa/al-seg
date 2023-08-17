@@ -13,8 +13,11 @@ def mean_score(im_labels):
 
 def entropy_w_label_probs(im_labels):
     # calculate average probability per class for all models per pixel
+    print(f"im_labels.shape: {im_labels.shape}")
     mean_labels = torch.mean(im_labels, axis=0)
+    print(f"mean_labels.shape: {mean_labels.shape}")
     entropy = seg_entropy_score(mean_labels)
+    print(f"entropy: {entropy}")
     return entropy
 
 
