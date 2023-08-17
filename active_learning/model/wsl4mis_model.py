@@ -167,7 +167,7 @@ class DeepBayesianWSL4MISMixin:
                 outputs = torch.softmax(outputs, dim=1)
                 avg_outputs = torch.mean(outputs, dim=0)
                 db_scores = self.get_db_score(avg_outputs)
-                train_preds[slice_basename] = np.float16(db_scores.cpu().detach().numpy())
+                train_preds[slice_basename] = np.float32(db_scores.cpu().detach().numpy())
 
         train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
         np.savez_compressed(train_preds_path, **train_preds)
