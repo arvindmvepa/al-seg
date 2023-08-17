@@ -50,7 +50,7 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
             if full_db_train.sample_list[idx] in ann_db_train.sample_list:
                 continue
             slice_basename = os.path.basename(full_db_train.sample_list[idx])
-            outputs = self.model_preds(model, volume_batch)[0]
+            outputs = model(volume_batch)[0]
             outputs_soft = torch.softmax(outputs, dim=1)
             train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
         train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
