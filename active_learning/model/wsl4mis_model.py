@@ -165,7 +165,7 @@ class DeepBayesianWSL4MISMixin:
                 # Use the model to get the repeated outputs
                 outputs, _ = model(volume_batch_repeated)
                 outputs = torch.softmax(outputs, dim=1)
-                avg_outputs = torch.mean(outputs, dim=0).unsqueeze(0)
+                avg_outputs = torch.mean(outputs, dim=0)
                 db_scores = self.get_db_score(avg_outputs)
                 train_preds[slice_basename] = np.float16(db_scores.cpu().detach().numpy())
 
