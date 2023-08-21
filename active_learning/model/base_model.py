@@ -7,6 +7,8 @@ import numpy as np
 from glob import glob
 import shutil
 from PIL import Image
+import torch
+
 
 class BaseModel(ABC):
     """Abstract class for model interface
@@ -61,11 +63,11 @@ class BaseModel(ABC):
     @abstractmethod
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
-
+    
     @abstractmethod
     def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
-
+    
     @abstractmethod
     def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
@@ -181,7 +183,7 @@ class MajorityVoteMixin:
         for model_result_file in models_result_file:
             arr = np.asarray(Image.open(model_result_file).convert('L'))
             results.append(arr)
-        results_arr = np.stack(results)
+        results_arr = np.stack(results, axis=0)
         # use the first model's pred_file basename because it's the same image
         base_name = os.path.basename(models_result_file[0])
         return results_arr, base_name
@@ -221,8 +223,13 @@ class SoftmaxMixin:
             ensemble_preds_arr = []
             for i, result in enumerate(train_results):
                 preds_arr = np.load(result, mmap_mode='r')[im_file]
+                preds_arr = np.atleast_1d(preds_arr)
                 ensemble_preds_arr.append(preds_arr)
-            score = score_func(ensemble_preds_arr)
+            ensemble_preds_arr = np.stack(ensemble_preds_arr, axis=0)
+            tensor = torch.from_numpy(ensemble_preds_arr)
+            tensor = tensor.to(self.gpus)
+            # convert to float32 to avoid rounding to inf
+            score = np.float32(score_func(tensor).cpu().detach().numpy())
             f.write(f"{im_file},{np.round(score, 7)}\n")
             f.flush()
         f.close()

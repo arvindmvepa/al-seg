@@ -16,8 +16,12 @@ class ModelFactory:
             model = SPMLwSoftmax(**model_kwargs)
         elif model_type == "dmpls":
             sys.path.append("./wsl4mis/code")
-            from active_learning.model.wsl4mis_model import DMPLSModel
+            from active_learning.model.dpmls_model import DMPLSModel
             model = DMPLSModel(**model_kwargs)
+        elif model_type == "db_dmpls":
+            sys.path.append("./wsl4mis/code")
+            from active_learning.model.dpmls_model import DeepBayesianDMPLSModel
+            model = DeepBayesianDMPLSModel(**model_kwargs)
         elif model_type == "strong":
             sys.path.append("./wsl4mis/code")
             from active_learning.model.strongly_sup_model import StronglySupModel
