@@ -1,5 +1,6 @@
 from active_learning.model.model_factory import ModelFactory
 from active_learning.model_uncertainty.model_uncertainty_factory import ModelUncertaintyFactory
+from active_learning.data_representativeness.representativeness_factory import RepresentativenessFactory
 from active_learning.policy.policy_factory import PolicyFactory
 import yaml
 import os
@@ -27,6 +28,10 @@ class PolicyBuilder:
     def with_model_uncertainty_params(self, model_uncertainty_params):
         self._model_uncertainty_params = model_uncertainty_params
         return self
+    
+    def with_representiveness_params(self, representativeness):
+        self._representativeness = representativeness
+        return self
 
     def with_policy_params(self, policy_params):
         self._policy_params = policy_params
@@ -38,8 +43,10 @@ class PolicyBuilder:
         model = ModelFactory.create_model(**self._model_params)
         model_uncertainty = ModelUncertaintyFactory.create_model_uncertainty(model=model,
                                                                              **self._model_uncertainty_params)
-        return PolicyFactory.create_policy(model=model, model_uncertainty=model_uncertainty,
-                                             exp_dir=self._exp_dir, **self._policy_params)
+        data_representativeness = RepresentativenessFactory.create_data_representativeness(**self._representativeness)
+        return PolicyFactory.create_policy(model=model, model_uncertainty=model_uncertainty, 
+                                           data_representativeness=data_representativeness, exp_dir=self._exp_dir, 
+                                           **self._policy_params)
 
     def check_params(self, check_params=("_exp_dir", "_model_params", "_model_uncertainty_params", "_policy_params")):
         for params in check_params:
@@ -53,6 +60,7 @@ class PolicyBuilder:
             .make_exp_dir(exp_params['exp_dir'], exp_params_file)\
             .with_model_params(exp_params['model'])\
             .with_model_uncertainty_params(exp_params['model_uncertainty'])\
+            .with_representiveness_params(exp_params['representativeness'])\
             .with_policy_params(exp_params['policy'])\
             .build()
 
