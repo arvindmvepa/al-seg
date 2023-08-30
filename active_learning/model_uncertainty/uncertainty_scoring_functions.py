@@ -5,6 +5,10 @@ import torch
 from active_learning.utils import seg_entropy_score
 
 
+def pass_score(im_labels):
+    return torch.tensor(0).to('mps')
+
+
 def mean_score(im_labels):
     """Mean of the image label scores"""
     mean_score_ = torch.mean(im_labels)
@@ -26,24 +30,44 @@ def entropy_w_label_counts(im_labels):
 
 
 # TODO: refactor to use torch
+# def ensemble_variance_ratio(im_labels):
+#     n_members = len(im_labels)
+
+#     im_labels = im_labels.squeeze(1).cpu()
+
+#     # Convert probabilities to class indices
+#     im_class_labels = im_labels.argmax(axis=1)
+
+#     # Count the number of times each class is the modal class, pixel-wise
+#     # This gives an array of shape (n_members, 256, 256)
+#     fm = np.apply_along_axis(lambda x: np.bincount(x, minlength=n_members).max(), 
+#                              axis=0, 
+#                              arr=im_class_labels)
+
+#     # Compute variance ratio
+#     v = 1 - fm / n_members
+
+#     average_disperson = np.mean(v)
+#     return average_disperson
+
+
+# Refactored to use torch
+# TODO need to rework as the runtime is very slow
 def ensemble_variance_ratio(im_labels):
     n_members = len(im_labels)
 
-    im_labels = np.concatenate(im_labels)
-
+    im_labels_squeezed = im_labels.squeeze(1)
+    
     # Convert probabilities to class indices
-    im_class_labels = im_labels.argmax(axis=1)
-
+    im_labels_squeezed = im_labels_squeezed.argmax(dim=1)
+    
     # Count the number of times each class is the modal class, pixel-wise
-    # This gives an array of shape (n_members, 256, 256)
-    fm = np.apply_along_axis(lambda x: np.bincount(x, minlength=n_members).max(), 
-                             axis=0, 
-                             arr=im_class_labels)
+    fm, _ = torch.mode(im_labels_squeezed.long(), 0)
 
     # Compute variance ratio
     v = 1 - fm / n_members
 
-    average_disperson = np.mean(v)
+    average_disperson = torch.mean(v)
     return average_disperson
 
 
@@ -97,4 +121,5 @@ def unpacking_apply_along_axis(all_args):
 scoring_functions = {"entropy_w_label_counts": entropy_w_label_counts,
                      "entropy_w_label_probs": entropy_w_label_probs,
                      "ensemble_variance_ratio": ensemble_variance_ratio,
-                     "mean_score": mean_score}
+                     "mean_score": mean_score,
+                     "pass": pass_score}
