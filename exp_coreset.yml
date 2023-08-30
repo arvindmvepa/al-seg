@@ -1,7 +1,7 @@
 model:
   model_type: "dmpls"
   ann_type: "scribble"
-  ensemble_size: 3
+  ensemble_size: 1
   gpus: "cuda:0"
 policy:
   policy_type: ranked
@@ -9,11 +9,7 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: False
-  uncertainty_kwargs:
-    skip: False
-    delete_preds: True
   rounds: [[.001, 0], [.001, 0], [.001, 0]]
-model_uncertainty:
-  model_uncertainty_type: ensemble
-  score_func: entropy_w_label_probs
-exp_dir: "dpmls_w_entropy_test_run"
+data_geometry:
+  data_geometry_type: kcenter_greedy
+exp_dir: "DMPLS_w_coreset_test_run"

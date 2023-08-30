@@ -9,7 +9,7 @@ class RankedPolicy(BaseActiveLearningPolicy):
     ----------
     save_im_score_file : str
         Base filename for score file
-    prev_round_im_score_file : str
+    cur_im_score_file : str
         Full path for score file generated in previous round
     rank_type : str
         Rank scores based on "desc" or "asc."
@@ -26,34 +26,42 @@ class RankedPolicy(BaseActiveLearningPolicy):
 
     """
 
-    def __init__(self, model, model_uncertainty=None, ensemble_kwargs=None, uncertainty_kwargs=None,
-                 save_im_score_file="scores.txt", rank_type="desc", rounds=(), exp_dir="test", pseudolabels=False,
+    def __init__(self, model, model_uncertainty=None, data_geometry=None, ensemble_kwargs=None, uncertainty_kwargs=None,
+                 save_im_score_file="scores.txt", rank_type="desc",
+                 rounds=(), exp_dir="test", pseudolabels=False,
                  tag="", seed=0):
         super().__init__(model=model, model_uncertainty=model_uncertainty, ensemble_kwargs=ensemble_kwargs,
-                         uncertainty_kwargs=uncertainty_kwargs, rounds=rounds, pseudolabels=pseudolabels,
+                         uncertainty_kwargs=uncertainty_kwargs, data_geometry=data_geometry,
+                         rounds=rounds, pseudolabels=pseudolabels,
                          exp_dir=exp_dir, tag=tag, seed=seed)
         self.save_im_score_file = save_im_score_file
-        self.prev_round_im_score_file = None
+        self.cur_im_score_file = None
         self.rank_type = rank_type
 
-    def _run_round(self):
+    def _run_round(self):      
         if self._round_num < (self.num_rounds - 1):
-            save_im_score_file = os.path.join(self.round_dir, self.save_im_score_file)
-            ensemble_kwargs = {"inf_train": True}
-            model_uncertainty_kwargs = {"im_score_file": save_im_score_file,
-                                        "ignore_ims_dict": self.cur_oracle_ims,
+            im_score_file = os.path.join(self.round_dir, self.save_im_score_file)
+            ensemble_kwargs = {}
+            model_uncertainty_kwargs = {"ignore_ims_dict": self.cur_oracle_ims,
                                         "round_dir": self.round_dir}
-            self._run_round_models(ensemble_kwargs=ensemble_kwargs, calculate_model_uncertainty=True,
+            self._run_round_models(im_score_file=im_score_file, ensemble_kwargs=ensemble_kwargs,
+                                   calculate_model_uncertainty=self.model_uncertainty is not None,
+                                   calculate_data_geometry=self.data_geometry is not None,
                                    uncertainty_kwargs=model_uncertainty_kwargs)
-            self.prev_round_im_score_file = save_im_score_file
         else:
             self._run_round_models()
 
     def data_split(self):
-        if self._round_num == 0:
-            return self.random_split()
+        if self.cur_im_score_file:
+            if not os.path.exists(self.cur_im_score_file):
+                raise ValueError(f"Score file {self.cur_im_score_file} does not exist!")
+            print("Using ranked split!")
+            split_data = self.ranked_split()
+            self.cur_im_score_file = None
+            return split_data
         else:
-            return self.ranked_split()
+            print("Using random split!")
+            return self.random_split()
 
     def ranked_split(self):
         print("Splitting data using ranked scoring!")
@@ -62,7 +70,7 @@ class RankedPolicy(BaseActiveLearningPolicy):
     def _ranked_sample_unann_indices(self):
         unann_im_dict, num_samples = self._get_unann_train_file_paths(), self._get_unann_num_samples()
         # get the scores per image from the score file in this format: img_name, score
-        im_scores_list = open(self.prev_round_im_score_file).readlines()
+        im_scores_list = open(self.cur_im_score_file).readlines()
         im_scores_list = [im_score.strip().split(",") for im_score in im_scores_list]
         im_scores_list = [(im_score[0], float(im_score[1])) for im_score in im_scores_list]
         if self.rank_type == "desc":
@@ -82,4 +90,6 @@ class RankedPolicy(BaseActiveLearningPolicy):
         # retrieve indices of unann files
         unann_ims = unann_im_dict[self.im_key]
         sampled_unann_indices = [i for i, unann_im in enumerate(unann_ims) for top_im in top_im_list if top_im in unann_im]
+
         return sampled_unann_indices
+

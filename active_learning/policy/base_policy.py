@@ -1,4 +1,3 @@
-from active_learning.model_uncertainty.base_model_uncertainty import NoModelUncertainty
 from random import Random
 import os
 
@@ -54,15 +53,16 @@ class BaseActiveLearningPolicy:
 
     """
 
-    def __init__(self, model, model_uncertainty=None, ensemble_kwargs=None,
-                 uncertainty_kwargs=None, rounds=(), exp_dir="test", pseudolabels=False,
+    def __init__(self, model, model_uncertainty=None, data_geometry=None, ensemble_kwargs=None,
+                 uncertainty_kwargs=None, geometry_kwargs=None, rounds=(),
+                 exp_dir="test", pseudolabels=False,
                  tag="", seed=0):
         self.model = model
         self.model_uncertainty = model_uncertainty
-        if self.model_uncertainty is None:
-            self.model_uncertainty = NoModelUncertainty()
+        self.data_geometry = data_geometry
         self.ensemble_kwargs = ensemble_kwargs if ensemble_kwargs else dict()
         self.uncertainty_kwargs = uncertainty_kwargs if uncertainty_kwargs else dict()
+        self.geometry_kwargs = geometry_kwargs if geometry_kwargs else dict()
         self.num_rounds = len(rounds)
         self.rounds = iter(rounds)
         self._round_num = None
@@ -74,6 +74,7 @@ class BaseActiveLearningPolicy:
         self.random_gen = Random(self.seed)
 
         self.all_train_files_dict = self.model.all_train_files_dict
+        self.data_root = self.model.data_root
         self.file_keys = self.model.file_keys
         self.im_key = self.model.im_key
 
@@ -83,33 +84,15 @@ class BaseActiveLearningPolicy:
         self.cur_oracle_ims = {key: [] for key in self.file_keys}
         self.cur_pseudo_ims = {key: [] for key in self.file_keys}
 
+        self.setup()
+
+    def setup(self):
+        self.setup_data_geometry()
+
     def run(self):
         for _ in range(self.num_rounds):
             self._setup_round()
             self._run_round()
-
-    def _run_round(self):
-        self._run_round_models()
-
-    def _run_round_models(self, calculate_model_uncertainty=False, ensemble_kwargs=None, uncertainty_kwargs=None):
-        if ensemble_kwargs is None:
-            ensemble_kwargs = dict()
-        ensemble_kwargs.update(self.ensemble_kwargs)
-        if uncertainty_kwargs is None:
-            uncertainty_kwargs = dict()
-        uncertainty_kwargs.update(self.uncertainty_kwargs)
-
-        new_ann_ims = self.data_split()
-        for im_type, files in new_ann_ims.items():
-            print(f"-Old length of {im_type} data: {len(self.cur_oracle_ims[im_type])}")
-            print(f"-Added length of {im_type} data: {len(files)}")
-        # add the newly annotated files to our list of annotated files
-        for key in self.file_keys:
-            self.cur_oracle_ims[key] = self.cur_oracle_ims[key] + new_ann_ims[key]
-        self.model.train_ensemble(round_dir=self.round_dir, cur_total_oracle_split=self.cur_total_oracle_split,
-                                  cur_total_pseudo_split=self.cur_total_pseudo_split, **ensemble_kwargs)
-        if calculate_model_uncertainty:
-            self.model_uncertainty.calculate_uncertainty(**uncertainty_kwargs)
 
     def data_split(self):
         return self.random_split()
@@ -117,6 +100,53 @@ class BaseActiveLearningPolicy:
     def random_split(self):
         print("Splitting data randomly!")
         return self._data_split(self._random_sample_unann_files)
+
+    def setup_data_geometry(self):
+        if self.data_geometry:
+            self.data_geometry.setup(self.data_root, self.all_train_files_dict[self.im_key])
+
+    def _run_round(self):
+        self._run_round_models()
+
+    def _run_round_models(self, im_score_file=None, calculate_model_uncertainty=False, calculate_data_geometry=False,
+                          ensemble_kwargs=None, uncertainty_kwargs=None, geometry_kwargs=None):
+        if ensemble_kwargs is None:
+            ensemble_kwargs = dict()
+        ensemble_kwargs.update(self.ensemble_kwargs)
+        if uncertainty_kwargs is None:
+            uncertainty_kwargs = dict()
+        uncertainty_kwargs.update(self.uncertainty_kwargs)
+        if geometry_kwargs is None:
+            geometry_kwargs = dict()
+        geometry_kwargs.update(self.geometry_kwargs)
+
+        assert (not calculate_model_uncertainty) or (not calculate_data_geometry), \
+            "Cannot calculate both model uncertainty and data geometry in the same round"
+
+        assert (im_score_file and (calculate_model_uncertainty or calculate_data_geometry)) or \
+               (not (calculate_model_uncertainty or calculate_data_geometry)), \
+            "Must provide an im_score_file if calculating model uncertainty or data geometry"
+
+        if calculate_data_geometry:
+            self.data_geometry.calculate_representativeness(im_score_file=im_score_file,
+                                                            num_samples=self._get_unann_num_samples(),
+                                                            already_selected=self.cur_oracle_ims[self.im_key],
+                                                            **geometry_kwargs)
+            self.cur_im_score_file = im_score_file
+
+        new_ann_ims = self.data_split()
+        for im_type, files in new_ann_ims.items():
+            print(f"Old length of {im_type} data: {len(self.cur_oracle_ims[im_type])}")
+            print(f"Added length of {im_type} data: {len(files)}")
+        # add the newly annotated files to our list of annotated files
+        for key in self.file_keys:
+            self.cur_oracle_ims[key] = self.cur_oracle_ims[key] + new_ann_ims[key]
+        self.model.train_ensemble(round_dir=self.round_dir, cur_total_oracle_split=self.cur_total_oracle_split,
+                                  cur_total_pseudo_split=self.cur_total_pseudo_split,
+                                  inf_train=calculate_model_uncertainty, **ensemble_kwargs)
+        if calculate_model_uncertainty:
+            self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
+            self.cur_im_score_file = im_score_file
 
     def _data_split(self, splt_func):
         new_train_file_paths = self.model.get_round_train_file_paths(self.round_dir, self.cur_total_oracle_split)

@@ -9,6 +9,7 @@ policy:
   seed: 0
   ensemble_kwargs:
     skip: False
+    inf_test: False
   uncertainty_kwargs:
     skip: False
     delete_preds: True
