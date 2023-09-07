@@ -5,10 +5,6 @@ import torch
 from active_learning.utils import seg_entropy_score
 
 
-def pass_score(im_labels):
-    return torch.tensor(0)
-
-
 def mean_score(im_labels):
     """Mean of the image label scores"""
     mean_score_ = torch.mean(im_labels)
@@ -103,5 +99,4 @@ def unpacking_apply_along_axis(all_args):
 scoring_functions = {"entropy_w_label_counts": entropy_w_label_counts,
                      "entropy_w_label_probs": entropy_w_label_probs,
                      "ensemble_variance_ratio": ensemble_variance_ratio,
-                     "mean_score": mean_score,
-                     "pass": pass_score}
+                     "mean_score": mean_score}
