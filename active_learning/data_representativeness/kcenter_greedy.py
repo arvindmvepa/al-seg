@@ -12,17 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Returns points that minimizes the maximum distance of any point to a center.
-Implements the k-Center-Greedy method in
-Ozan Sener and Silvio Savarese.  A Geometric Approach to Active Learning for
-Convolutional Neural Networks. https://arxiv.org/abs/1708.00489 2017
-Distance metric defaults to l2 distance.  Features used to calculate distance
-are either raw features or if a model has transform method then uses the output
-of model.transform(X).
-Can be extended to a robust k centers algorithm that ignores a certain number of
-outlier datapoints.  Resulting centers are solution to multiple integer program.
-"""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -41,7 +30,6 @@ class SamplingMethod(object):
     @abc.abstractmethod
     def __init__(self, X, y, seed, **kwargs):
         self.X = X
-        self.y = y
         self.seed = seed
 
     def flatten_X(self):
@@ -66,9 +54,18 @@ class SamplingMethod(object):
 
 
 class kCenterGreedy(SamplingMethod):
+    """Returns points that minimizes the maximum distance of any point to a center.
+       Implements the k-Center-Greedy method in
+       Ozan Sener and Silvio Savarese.  A Geometric Approach to Active Learning for
+       Convolutional Neural Networks. https://arxiv.org/abs/1708.00489 2017
+       Distance metric defaults to l2 distance.  Features used to calculate distance
+       are either raw features or if a model has transform method then uses the output
+       of model.transform(X).
+       Can be extended to a robust k centers algorithm that ignores a certain number of
+       outlier datapoints.  Resulting centers are solution to multiple integer program.
+        """
     def __init__(self, X, metric="euclidean"):
         self.X = X
-        # self.y = y
         self.flat_X = self.flatten_X()
         self.name = "kcenter"
         self.features = self.flat_X

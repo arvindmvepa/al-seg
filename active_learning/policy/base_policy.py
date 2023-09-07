@@ -54,15 +54,18 @@ class BaseActiveLearningPolicy:
 
     """
 
-    def __init__(self, model, model_uncertainty=None, ensemble_kwargs=None,
-                 uncertainty_kwargs=None, rounds=(), exp_dir="test", pseudolabels=False,
+    def __init__(self, model, model_uncertainty=None, data_representativeness=None, ensemble_kwargs=None, 
+                 uncertainty_kwargs=None, representativeness_kwargs=None, rounds=(), 
+                 exp_dir="test", pseudolabels=False,
                  tag="", seed=0):
         self.model = model
         self.model_uncertainty = model_uncertainty
+        self.data_representativeness = data_representativeness
         if self.model_uncertainty is None:
             self.model_uncertainty = NoModelUncertainty()
         self.ensemble_kwargs = ensemble_kwargs if ensemble_kwargs else dict()
         self.uncertainty_kwargs = uncertainty_kwargs if uncertainty_kwargs else dict()
+        self.representativeness_kwargs = representativeness_kwargs if representativeness_kwargs else dict()
         self.num_rounds = len(rounds)
         self.rounds = iter(rounds)
         self._round_num = None

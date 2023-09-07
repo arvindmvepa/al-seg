@@ -1,0 +1,17 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 1
+  max_iterations: 60000
+  gpus: "mps"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+  rounds: [[.001, 0], [.001, 0], [.001, 0]]
+model_uncertainty:
+  model_uncertainty_type: pass
+representativeness: 
+  representativeness_type: "kcenter_greedy"
+exp_dir: "DMPLS_w_coreset_test_run"
