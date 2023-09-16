@@ -1,11 +1,10 @@
 import sys
-from active_learning.model.wsl4mis_model import WSL4MISModel
+from active_learning.model.wsl4mis_model import WSL4MISModel, DeepBayesianWSL4MISMixin
 import json
 import os
 import logging
 import numpy as np
 from tqdm import tqdm
-from wsl4mis.code.val_2D import test_single_volume
 from wsl4mis.code.dataloaders.dataset import BaseDataSets, RandomGenerator
 from wsl4mis.code.networks.net_factory import net_factory
 from wsl4mis.code.utils import losses
@@ -14,16 +13,17 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from torch.nn.modules.loss import CrossEntropyLoss
 import torch
+from wsl4mis.code.val_2D import test_single_volume
 
 
-class StronglySupModel(WSL4MISModel):
-    """Strong supervision model for active learning."""
+class DMPLSEntropyMiniModel(WSL4MISModel):
+    """DMPLS Entropy Minimization Model class"""
 
-    def __init__(self, ann_type="label", data_root="wsl4mis_data/ACDC", ensemble_size=1,
+    def __init__(self, ann_type="scribble", data_root="wsl4mis_data/ACDC", ensemble_size=1,
                  seg_model='unet', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
                  patch_size=(256, 256), output_dim=1, seed=0, gpus="0", tag=""):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
-                         tag=tag)
+                         tag=tag, output_dim=output_dim)
         self.seg_model = seg_model
         self.num_classes = num_classes
         self.batch_size = batch_size
@@ -31,11 +31,9 @@ class StronglySupModel(WSL4MISModel):
         self.deterministic = deterministic
         self.base_lr = base_lr
         self.patch_size = patch_size
-        self.output_dim = output_dim
         self.gpus = gpus
 
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
-
         # remove previous logger, if exists.
         # close and remove first handler, but just remove (but don't close) second handler (which is standard output)
         logger = logging.getLogger()
@@ -67,7 +65,6 @@ class StronglySupModel(WSL4MISModel):
         optimizer = optim.SGD(model.parameters(), lr=self.base_lr,
                               momentum=0.9, weight_decay=0.0001)
         ce_loss = CrossEntropyLoss(ignore_index=4)
-        dice_loss = losses.DiceLoss(self.num_classes)
 
         logging.info("{} iterations per epoch".format(len(trainloader)))
 
@@ -87,11 +84,11 @@ class StronglySupModel(WSL4MISModel):
 
                 outputs = model(volume_batch)
                 outputs_soft = torch.softmax(outputs, dim=1)
+                ent_loss = losses.entropy_loss(outputs_soft, C=4, gpus=self.gpus)
 
                 loss_ce = ce_loss(outputs, label_batch[:].long())
-                loss = 0.5 * (loss_ce + dice_loss(outputs_soft,
-                                                  label_batch.unsqueeze(1)))
 
+                loss = loss_ce + 0.1 * ent_loss
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -145,7 +142,7 @@ class StronglySupModel(WSL4MISModel):
                 break
 
         return "Training Finished!"
-
+    
     def inf_eval_model(self, eval_file, model_no, snapshot_dir, round_dir, metrics_file, cur_total_oracle_split=0,
                        cur_total_pseudo_split=0):
         model = self.load_best_model(snapshot_dir).to(self.gpus)
@@ -170,10 +167,27 @@ class StronglySupModel(WSL4MISModel):
 
     @property
     def model_string(self):
-        return "strong"
+        return "dmpls_em"
 
     def __repr__(self):
         mapping = self.__dict__
-        mapping["model_cls"] = "StronglySupModel"
+        mapping["model_cls"] = "DMPLSEntropyMiniModel"
         return json.dumps(mapping)
- 
+
+
+class DeepBayesianDMPLSEntropyMiniModel(DeepBayesianWSL4MISMixin, DMPLSEntropyMiniModel):
+
+    def __init__(self, T=40, db_score_func="mean_probs", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.T = T
+        self.db_score_func = db_score_func
+        self.output_dim = 1
+
+    @property
+    def model_string(self):
+        return "db_dmpls_em"
+
+    def __repr__(self):
+        mapping = self.__dict__
+        mapping["model_cls"] = "DeepBayesianDMPLSEntropyMiniModel"
+        return json.dumps(mapping)

@@ -161,6 +161,7 @@ class DeepBayesianDMPLSModel(DeepBayesianWSL4MISMixin, DMPLSModel):
         super().__init__(*args, **kwargs)
         self.T = T
         self.db_score_func = db_score_func
+        self.output_dim = 2
 
     @property
     def model_string(self):

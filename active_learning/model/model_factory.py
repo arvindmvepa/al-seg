@@ -26,6 +26,30 @@ class ModelFactory:
             sys.path.append("./wsl4mis/code")
             from active_learning.model.strongly_sup_model import StronglySupModel
             model = StronglySupModel(**model_kwargs)
+        elif model_type == "dmpls_em":
+            sys.path.append("./wsl4mis/code")
+            from active_learning.model.dmpls_Entropy_Mini_model import DMPLSEntropyMiniModel
+            model = DMPLSEntropyMiniModel(**model_kwargs)
+        elif model_type == "db_dmpls_em":
+            sys.path.append("./wsl4mis/code")
+            from active_learning.model.dmpls_Entropy_Mini_model import DeepBayesianDMPLSEntropyMiniModel
+            model = DeepBayesianDMPLSEntropyMiniModel(**model_kwargs)
+        elif model_type == "dmpls_mshah":
+            sys.path.append("./wsl4mis/code")
+            from active_learning.model.dmpls_MumfordShah_Loss_model import DMPLSMumfordShahLossModel
+            model = DMPLSMumfordShahLossModel(**model_kwargs)
+        elif model_type == "db_dmpls_mshah":
+            sys.path.append("./wsl4mis/code")
+            from active_learning.model.dmpls_MumfordShah_Loss_model import DeepBayesianDMPLSMumfordShahLossModel
+            model = DeepBayesianDMPLSMumfordShahLossModel(**model_kwargs)
+        elif model_type == "dmpls_s2l":
+            sys.path.append("./wsl4mis/code")
+            from active_learning.model.dmpls_S2L_model import DMPLSS2LModel
+            model = DMPLSS2LModel(**model_kwargs)
+        elif model_type == "db_dmpls_s2l":
+            sys.path.append("./wsl4mis/code")
+            from active_learning.model.dmpls_S2L_model import DeepBayesianDMPLSS2LModel
+            model = DeepBayesianDMPLSS2LModel(**model_kwargs)
         else:
             raise ValueError(f"There is no model_type {model_type}")
         return model

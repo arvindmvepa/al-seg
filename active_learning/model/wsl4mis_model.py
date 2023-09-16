@@ -17,7 +17,7 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
 
     def __init__(self, ann_type="scribble", data_root="wsl4mis_data/ACDC", ensemble_size=1,
                  seg_model='unet_cct', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
-                 patch_size=(256, 256), seed=0, gpus="0", tag=""):
+                 patch_size=(256, 256), output_dim=2, seed=0, gpus="0", tag=""):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
         self.seg_model = seg_model
@@ -27,8 +27,9 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         self.deterministic = deterministic
         self.base_lr = base_lr
         self.patch_size = patch_size
+        self.output_dim = output_dim
         self.gpus = gpus
-
+        
     def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         model = self.load_best_model(snapshot_dir).to(self.gpus)
         model.eval()
@@ -50,7 +51,9 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
             if full_db_train.sample_list[idx] in ann_db_train.sample_list:
                 continue
             slice_basename = os.path.basename(full_db_train.sample_list[idx])
-            outputs = model(volume_batch)[0]
+            # The outputs of model(volume_batch) could be of (outputs, outputs_aux) -> self.output_dim=2, or 
+            # just outputs -> self.output_dim=1
+            outputs = model(volume_batch)[0] if self.output_dim == 2 else model(volume_batch) 
             outputs_soft = torch.softmax(outputs, dim=1)
             train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
         train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
@@ -163,7 +166,7 @@ class DeepBayesianWSL4MISMixin:
                 volume_batch_repeated = volume_batch.repeat_interleave(self.T, dim=0)
 
                 # Use the model to get the repeated outputs
-                outputs, _ = model(volume_batch_repeated)
+                outputs = model(volume_batch_repeated)[0] if self.output_dim == 2 else model(volume_batch_repeated)
                 outputs = torch.softmax(outputs, dim=1)
                 avg_outputs = torch.mean(outputs, dim=0)
                 db_scores = self.get_db_score(avg_outputs)
@@ -175,5 +178,3 @@ class DeepBayesianWSL4MISMixin:
     def get_db_score(self, preds):
         db_score_func = db_scoring_functions[self.db_score_func]
         return db_score_func(preds)
-
-
