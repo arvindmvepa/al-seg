@@ -28,7 +28,6 @@ def entropy_w_label_counts(im_labels):
     return mean_entropy
 
 
-# TODO need to rework as the runtime is very slow
 def ensemble_variance_ratio(im_labels):
     """input is a numpy array with dimensions (n_models, n_classes, height, width)"""
     n_members = len(im_labels)
