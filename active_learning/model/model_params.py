@@ -33,7 +33,7 @@ model_params = {
                           "train_logits_path": os.path.join("stage1", "results", "train+", "logits", "save_preds.npz")
                       },
                   },
-    "dpmls":                  {
+    "dmpls":                  {
                   "scribble":
                       {
                           "train_file": os.path.join("wsl4mis",
@@ -71,7 +71,7 @@ model_params = {
                           "train_logits_path": "train_preds.npz"
                       },
                   },
-    "db_dpmls":            {
+    "db_dmpls":            {
                   "scribble":
                       {
                           "train_file": os.path.join("wsl4mis",
@@ -90,6 +90,120 @@ model_params = {
                           "train_logits_path": "train_preds.npz"
                       },
                   },
+    "dmpls_em":                  {
+                  "scribble":
+                      {
+                          "train_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "train.txt"),
+                          "val_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "val.txt"),
+                          "test_file": os.path.join("wsl4mis",
+                                                   "data",
+                                                   "ACDC",
+                                                   "test.txt"),
+                          "train_results_dir": "",
+                          "train_logits_path": "train_preds.npz"
+                      },
+                  },
+    "db_dmpls_em":                  {
+                  "scribble":
+                      {
+                          "train_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "train.txt"),
+                          "val_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "val.txt"),
+                          "test_file": os.path.join("wsl4mis",
+                                                   "data",
+                                                   "ACDC",
+                                                   "test.txt"),
+                          "train_results_dir": "",
+                          "train_logits_path": "train_preds.npz"
+                      },
+                  },
+    "dmpls_mshah":                  {
+                    "scribble":
+                      {
+                          "train_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "train.txt"),
+                          "val_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "val.txt"),
+                          "test_file": os.path.join("wsl4mis",
+                                                   "data",
+                                                   "ACDC",
+                                                   "test.txt"),
+                          "train_results_dir": "",
+                          "train_logits_path": "train_preds.npz"
+                      },
+                  },
+    "db_dmpls_mshah":                  { 
+                    "scribble":
+                      {
+                          "train_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "train.txt"),
+                          "val_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "val.txt"),
+                          "test_file": os.path.join("wsl4mis",
+                                                   "data",
+                                                   "ACDC",
+                                                   "test.txt"),
+                          "train_results_dir": "",
+                          "train_logits_path": "train_preds.npz"
+                      },
+                  },
+    "dmpls_s2l":                  { 
+                    "scribble":
+                      {
+                          "train_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "train.txt"),
+                          "val_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "val.txt"),
+                          "test_file": os.path.join("wsl4mis",
+                                                   "data",
+                                                   "ACDC",
+                                                   "test.txt"),
+                          "train_results_dir": "",
+                          "train_logits_path": "train_preds.npz"
+                      },
+                  },
+    "db_dmpls_s2l":                  { 
+                    "scribble":
+                      {
+                          "train_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "train.txt"),
+                          "val_file": os.path.join("wsl4mis",
+                                                    "data",
+                                                    "ACDC",
+                                                    "val.txt"),
+                          "test_file": os.path.join("wsl4mis",
+                                                   "data",
+                                                   "ACDC",
+                                                   "test.txt"),
+                          "train_results_dir": "",
+                          "train_logits_path": "train_preds.npz"
+                      },
+                  },    
 
     "a2gnn": {}
 }

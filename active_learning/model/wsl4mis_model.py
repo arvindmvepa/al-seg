@@ -65,7 +65,7 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
         metric_list = 0.0
         for i_batch, sampled_batch in enumerate(evalloader):
-            metric_i = test_single_volume_cct(
+            metric_i = self._test_single_volume()(
                 sampled_batch["image"], sampled_batch["label"],
                 model, classes=self.num_classes, gpus=self.gpus)
             metric_list += np.array(metric_i)
@@ -106,6 +106,10 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
 
     @abstractmethod
     def _extract_model_prediction_channel(self, raw_model_outputs):
+        raise NotImplementedError()
+    
+    @abstractmethod
+    def _test_single_volume(self):
         raise NotImplementedError()
 
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
