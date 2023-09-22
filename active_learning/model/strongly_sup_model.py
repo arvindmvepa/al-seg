@@ -167,6 +167,9 @@ class StronglySupModel(WSL4MISModel):
             json_object = json.dumps(metrics, indent=4)
             outfile.write(json_object)
 
+    def _extract_model_prediction_channel(self, outputs):
+        return outputs
+
     @property
     def model_string(self):
         return "strong"

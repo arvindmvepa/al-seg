@@ -18,6 +18,7 @@ def entropy_w_label_probs(im_labels):
     entropy = seg_entropy_score(mean_labels)
     return entropy
 
+
 # TODO: remove or refactor (unused)
 def entropy_w_label_counts(im_labels):
     """input dimensions are (n_models, n_classes, height, width)"""
@@ -27,13 +28,10 @@ def entropy_w_label_counts(im_labels):
     return mean_entropy
 
 
-# Refactored to use torch
 # TODO need to rework as the runtime is very slow
 def ensemble_variance_ratio(im_labels):
     """input is a numpy array with dimensions (n_models, n_classes, height, width)"""
     n_members = len(im_labels)
-
-    im_labels = im_labels.squeeze(1)
 
     # Convert probabilities to class indices
     im_class_labels = im_labels.argmax(axis=1)

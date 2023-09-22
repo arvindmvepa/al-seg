@@ -145,6 +145,9 @@ class DMPLSModel(WSL4MISModel):
 
         return "Training Finished!"
 
+    def _extract_model_prediction_channel(self, outputs):
+        return outputs[0]
+
     @property
     def model_string(self):
         return "dpmls"

@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from active_learning.model.base_model import BaseModel, SoftmaxMixin
 from active_learning.model.db_scoring_functions import db_scoring_functions
 import json
@@ -16,8 +17,8 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
     """WSL4MIS Model class"""
 
     def __init__(self, ann_type="scribble", data_root="wsl4mis_data/ACDC", ensemble_size=1,
-                 seg_model='unet_cct', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
-                 patch_size=(256, 256), seed=0, gpus="0", tag=""):
+                 seg_model='unet_cct', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000,
+                 deterministic=1, patch_size=(256, 256), seed=0, gpus="0", tag=""):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
         self.seg_model = seg_model
@@ -50,8 +51,8 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
             if full_db_train.sample_list[idx] in ann_db_train.sample_list:
                 continue
             slice_basename = os.path.basename(full_db_train.sample_list[idx])
-            outputs = model(volume_batch)[0]
-            outputs_soft = torch.softmax(outputs, dim=1)
+            outputs = model(volume_batch)
+            outputs_soft = self.extract_model_prediction(outputs)
             train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
         train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
         np.savez_compressed(train_preds_path, **train_preds)
@@ -95,6 +96,17 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         best_model_path = os.path.join(snapshot_dir, '{}_best_model.pth'.format(self.seg_model))
         model.load_state_dict(torch.load(best_model_path))
         return model
+
+    def extract_model_prediction(self, raw_model_outputs, batch_size=1):
+        outputs = self._extract_model_prediction_channel(raw_model_outputs)
+        outputs = torch.softmax(outputs, dim=1)
+        if batch_size == 1:
+            outputs = outputs[0]
+        return outputs
+
+    @abstractmethod
+    def _extract_model_prediction_channel(self, raw_model_outputs):
+        raise NotImplementedError()
 
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         new_train_im_list_file = os.path.join(round_dir,
@@ -163,8 +175,8 @@ class DeepBayesianWSL4MISMixin:
                 volume_batch_repeated = volume_batch.repeat_interleave(self.T, dim=0)
 
                 # Use the model to get the repeated outputs
-                outputs, _ = model(volume_batch_repeated)
-                outputs = torch.softmax(outputs, dim=1)
+                outputs = model(volume_batch_repeated)
+                outputs = self.extract_model_prediction(outputs, batch_size=self.T)
                 db_scores = self.get_db_score(outputs)
                 train_preds[slice_basename] = np.float32(db_scores.cpu().detach().numpy())
 
