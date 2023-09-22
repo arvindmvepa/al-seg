@@ -15,6 +15,7 @@ def random_policy(mocker, file_keys, im_key, train_files_dict, split, ann_base_f
     # mock BaseModel
     mocker.patch.multiple(BaseModel, __abstractmethods__=set())
     mock_base_model = mocker.Mock(spec=BaseModel)
+    mock_base_model.data_root = "."
     mock_base_model.all_train_files_dict = train_files_dict
     mock_base_model.file_keys = file_keys
     mock_base_model.im_key = im_key
@@ -47,6 +48,7 @@ def ranked_policy(mocker, file_keys, im_key, train_files_dict, im_score_file, im
     # mock BaseModel
     mocker.patch.multiple(BaseModel, __abstractmethods__=set())
     mock_base_model = mocker.Mock(spec=BaseModel)
+    mock_base_model.data_root = "."
     mock_base_model.all_train_files_dict = train_files_dict
     mock_base_model.file_keys = file_keys
     mock_base_model.im_key = im_key
@@ -61,7 +63,7 @@ def ranked_policy(mocker, file_keys, im_key, train_files_dict, im_score_file, im
     policy = RankedPolicy(mock_base_model, 
                           mock_base_model_uncertainty)
     policy.cur_total_oracle_split = split
-    policy.prev_round_im_score_file=im_score_file
+    policy.cur_im_score_file=im_score_file
     
     # create score file
     with open(im_score_file, "w") as f:

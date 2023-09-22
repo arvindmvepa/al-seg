@@ -31,8 +31,8 @@ class DMPLSModel(WSL4MISModel):
 
         logging.basicConfig(filename=os.path.join(snapshot_dir, "log.txt"), level=logging.INFO,
                             format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
-        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
         logging.info(str(self.__dict__))
+        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
         model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
         model = model.to(self.gpus)

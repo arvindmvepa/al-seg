@@ -5,4 +5,4 @@
 [submodule "wsl4mis"]
 	path = wsl4mis
 	url = https://github.com/arvindmvepa/WSL4MIS.git
-	branch = dev
+	branch = al-seg
