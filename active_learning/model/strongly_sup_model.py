@@ -153,7 +153,7 @@ class StronglySupModel(WSL4MISModel):
         evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
         metric_list = 0.0
         for i_batch, sampled_batch in enumerate(evalloader):
-            metric_i = test_single_volume(
+            metric_i = self._test_single_volume()(
                 sampled_batch["image"], sampled_batch["label"],
                 model, classes=self.num_classes, gpus=self.gpus)
             metric_list += np.array(metric_i)
@@ -169,6 +169,9 @@ class StronglySupModel(WSL4MISModel):
 
     def _extract_model_prediction_channel(self, outputs):
         return outputs
+    
+    def _test_single_volume(self):
+        return test_single_volume
 
     @property
     def model_string(self):

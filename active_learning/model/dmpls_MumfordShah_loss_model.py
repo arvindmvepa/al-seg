@@ -13,12 +13,25 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from torch.nn.modules.loss import CrossEntropyLoss
 import torch
-from wsl4mis.code.val_2D import test_single_volume_cct
+from wsl4mis.code.val_2D import test_single_volume
 
 
 
-class DMPLSModel(WSL4MISModel):
+class DMPLSMumfordShahLossModel(WSL4MISModel):
     """DMPLS Model class"""
+    def __init__(self, ann_type="scribble", data_root="wsl4mis_data/ACDC", ensemble_size=1,
+                 seg_model='unet', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, 
+                 deterministic=1, patch_size=(256, 256), seed=0, gpus="0", tag=""):
+        super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
+                         tag=tag)
+        self.seg_model = seg_model
+        self.num_classes = num_classes
+        self.batch_size = batch_size
+        self.max_iterations = max_iterations
+        self.deterministic = deterministic
+        self.base_lr = base_lr
+        self.patch_size = patch_size
+        self.gpus = gpus
 
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
 
@@ -53,7 +66,7 @@ class DMPLSModel(WSL4MISModel):
         optimizer = optim.SGD(model.parameters(), lr=self.base_lr,
                               momentum=0.9, weight_decay=0.0001)
         ce_loss = CrossEntropyLoss(ignore_index=4)
-        dice_loss = losses.pDLoss(self.num_classes, ignore_index=4)
+        mumfordshah_loss = losses.MumfordShah_Loss()
 
         logging.info("{} iterations per epoch".format(len(trainloader)))
 
@@ -71,26 +84,14 @@ class DMPLSModel(WSL4MISModel):
 
                 sys.stdout.flush()
 
-                outputs, outputs_aux1 = model(
-                    volume_batch)
-                outputs_soft1 = torch.softmax(outputs, dim=1)
-                outputs_soft2 = torch.softmax(outputs_aux1, dim=1)
+                outputs = model(volume_batch)
+                outputs_soft = torch.softmax(outputs, dim=1)
 
-                loss_ce1 = ce_loss(outputs, label_batch[:].long())
-                loss_ce2 = ce_loss(outputs_aux1, label_batch[:].long())
-                loss_ce = 0.5 * (loss_ce1 + loss_ce2)
+                loss_ce = ce_loss(outputs, label_batch[:].long())
+                loss_mumfordshah = mumfordshah_loss(volume_batch, outputs_soft)
 
-                beta = self.random_gen.random() + 1e-10
-
-                pseudo_supervision = torch.argmax(
-                    (beta * outputs_soft1.detach() + (1.0 - beta) * outputs_soft2.detach()), dim=1, keepdim=False)
-
-                loss_pse_sup = 0.5 * (
-                            dice_loss(outputs_soft1, pseudo_supervision.unsqueeze(1)) + dice_loss(outputs_soft2,
-                                                                                                  pseudo_supervision.unsqueeze(
-                                                                                                      1)))
-
-                loss = loss_ce + 0.5 * loss_pse_sup
+                loss = loss_ce + 1e-6 * loss_mumfordshah
+                
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -103,8 +104,8 @@ class DMPLSModel(WSL4MISModel):
                 iter_num = iter_num + 1
 
                 logging.info(
-                    'iteration %d : loss : %f, loss_ce: %f, loss_pse_sup: %f, alpha: %f' %
-                    (iter_num, loss.item(), loss_ce.item(), loss_pse_sup.item(), alpha))
+                    'iteration %d : loss : %f, loss_ce: %f, loss_mumfordshah: %f, alpha: %f' %
+                    (iter_num, loss.item(), loss_ce.item(), loss_mumfordshah.item(), alpha))
 
                 if iter_num > 0 and (iter_num % 200 == 0 or
                                      iter_num == self.max_iter(cur_total_oracle_split,
@@ -112,7 +113,7 @@ class DMPLSModel(WSL4MISModel):
                     model.eval()
                     metric_list = 0.0
                     for i_batch, sampled_batch in enumerate(valloader):
-                        metric_i = test_single_volume_cct(
+                        metric_i = test_single_volume(
                             sampled_batch["image"], sampled_batch["label"],
                             model, classes=self.num_classes, gpus=self.gpus)
                         metric_list += np.array(metric_i)
@@ -146,22 +147,22 @@ class DMPLSModel(WSL4MISModel):
         return "Training Finished!"
 
     def _extract_model_prediction_channel(self, outputs):
-        return outputs[0]
+        return outputs
     
     def _test_single_volume(self):
-        return test_single_volume_cct
+        return test_single_volume
 
     @property
     def model_string(self):
-        return "dmpls"
+        return "dmpls_mshah"
 
     def __repr__(self):
         mapping = self.__dict__
-        mapping["model_cls"] = "DMPLSModel"
+        mapping["model_cls"] = "DMPLSMumfordShahLossModel"
         return json.dumps(mapping)
 
 
-class DeepBayesianDMPLSModel(DeepBayesianWSL4MISMixin, DMPLSModel):
+class DeepBayesianDMPLSMumfordShahLossModel(DeepBayesianWSL4MISMixin, DMPLSMumfordShahLossModel):
 
     def __init__(self, T=40, db_score_func="mean_probs", *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -170,9 +171,9 @@ class DeepBayesianDMPLSModel(DeepBayesianWSL4MISMixin, DMPLSModel):
 
     @property
     def model_string(self):
-        return "db_dmpls"
+        return "db_dmpls_mshah"
 
     def __repr__(self):
         mapping = self.__dict__
-        mapping["model_cls"] = "DeepBayesianDMPLSModel"
+        mapping["model_cls"] = "DeepBayesianDMPLSMumfordShahLossModel"
         return json.dumps(mapping)
