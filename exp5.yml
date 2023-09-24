@@ -1,5 +1,5 @@
 model:
-  model_type: "dmpls"
+  model_type: "dmpls_mshah"
   ann_type: "scribble"
   ensemble_size: 5
   gpus: "cuda:0"
@@ -8,6 +8,7 @@ policy:
   seed: 0
   ensemble_kwargs:
     skip: False
+    inf_test: True
   uncertainty_kwargs:
     skip: False
     delete_preds: True
@@ -15,4 +16,4 @@ policy:
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: entropy_w_label_probs
-exp_dir: "DMPS_exp_ensemble_entropy"
+exp_dir: "DMPS_MSHAH_exp_ensemble_entropy"
