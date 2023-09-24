@@ -1,5 +1,5 @@
 model:
-  model_type: "db_dmpls_mshah"
+  model_type: "dmpls_s2l"
   ann_type: "scribble"
   ensemble_size: 5
   gpus: "cuda:0"
@@ -16,4 +16,4 @@ policy:
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: ensemble_variance_ratio
-exp_dir: "DMPS_MSHAH_exp_ensemble_var"
+exp_dir: "DMPS_S2l_exp_ensemble_var"

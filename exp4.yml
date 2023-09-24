@@ -1,5 +1,5 @@
 model:
-  model_type: "db_dmpls_mshah"
+  model_type: "db_dmpls_s2l"
   ann_type: "scribble"
   ensemble_size: 1
   gpus: "cuda:0"
@@ -17,4 +17,4 @@ policy:
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: mean_score
-exp_dir: "DMPS_MSHAH_exp_db_bald"
+exp_dir: "DMPS_S2l_exp_db_bald"
