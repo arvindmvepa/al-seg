@@ -1,5 +1,5 @@
 model:
-  model_type: "dmpls"
+  model_type: "dmpls_mshah"
   ann_type: "scribble"
   ensemble_size: 1
   gpus: "cuda:0"
@@ -10,4 +10,4 @@ policy:
     skip: False
     inf_test: True
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
-exp_dir: "DMPLS_exp1_random"
+exp_dir: "DMPLS_MSHAH_exp1_random"

@@ -1,13 +1,20 @@
 model:
-  model_type: "dmpls"
+  model_type: "db_dmpls_mshah"
   ann_type: "scribble"
   ensemble_size: 1
   gpus: "cuda:0"
+  db_score_func: "bald_score"
 policy:
-  policy_type: random
+  policy_type: ranked
   seed: 0
   ensemble_kwargs:
     skip: False
     inf_test: True
+  uncertainty_kwargs:
+    skip: False
+    delete_preds: True
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
-exp_dir: "DMPLS_exp2_random"
+model_uncertainty:
+  model_uncertainty_type: ensemble
+  score_func: mean_score
+exp_dir: "DMPLS_MSHAH_exp2_db_bald"

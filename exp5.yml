@@ -1,15 +1,13 @@
 model:
-  model_type: "strong"
-  ann_type: "label"
+  model_type: "dmpls_mshah"
+  ann_type: "scribble"
   ensemble_size: 1
   gpus: "cuda:0"
 policy:
-  policy_type: ranked
+  policy_type: random
   seed: 0
   ensemble_kwargs:
     skip: False
     inf_test: True
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
-data_geometry:
-  data_geometry_type: kcenter_greedy
-exp_dir: "DMPLS_exp1_strong_coreset"
+exp_dir: "DMPLS_MSHAH_exp2_random"

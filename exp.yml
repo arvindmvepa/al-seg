@@ -1,5 +1,5 @@
 model:
-  model_type: "dmpls"
+  model_type: "dmpls_mshah"
   ann_type: "scribble"
   ensemble_size: 1
   gpus: "cuda:0"
@@ -12,4 +12,4 @@ policy:
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-exp_dir: "DMPLS_exp1_coreset"
+exp_dir: "DMPLS_MSHAH_exp1_coreset"
