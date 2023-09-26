@@ -10,4 +10,4 @@ policy:
     skip: False
     inf_test: True
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
-exp_dir: "DMPLS_exp_random"
+exp_dir: "DMPLS_exp1_random"

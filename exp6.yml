@@ -1,18 +1,15 @@
 model:
   model_type: "dmpls"
   ann_type: "scribble"
-  ensemble_size: 5
+  ensemble_size: 1
   gpus: "cuda:0"
 policy:
   policy_type: ranked
   seed: 0
   ensemble_kwargs:
     skip: False
-  uncertainty_kwargs:
-    skip: False
-    delete_preds: True
+    inf_test: True
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
-model_uncertainty:
-  model_uncertainty_type: ensemble
-  score_func: ensemble_variance_ratio
-exp_dir: "DMPS_exp_ensemble_var"
+data_geometry:
+  data_geometry_type: kcenter_greedy
+exp_dir: "DMPLS_exp2_coreset"

@@ -1,6 +1,6 @@
 model:
-  model_type: "dmpls"
-  ann_type: "scribble"
+  model_type: "strong"
+  ann_type: "label"
   ensemble_size: 1
   gpus: "cuda:0"
 policy:
@@ -12,4 +12,4 @@ policy:
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-exp_dir: "DMPLS_exp1_coreset"
+exp_dir: "DMPLS_exp2_strong_coreset"
