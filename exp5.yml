@@ -5,11 +5,11 @@ model:
   gpus: "cuda:0"
 policy:
   policy_type: ranked
-  seed: 0
+  seed: 1
   ensemble_kwargs:
     skip: False
     inf_test: True
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
-data_geometry:
+data_geometry:1
   data_geometry_type: kcenter_greedy
 exp_dir: "DMPLS_exp1_strong_coreset"
