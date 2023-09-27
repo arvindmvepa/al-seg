@@ -6,7 +6,7 @@ model:
   db_score_func: "entropy_score"
 policy:
   policy_type: ranked
-  seed: 0
+  seed: 1
   ensemble_kwargs:
     skip: False
     inf_test: True

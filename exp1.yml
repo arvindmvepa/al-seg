@@ -5,7 +5,7 @@ model:
   gpus: "cuda:0"
 policy:
   policy_type: random
-  seed: 0
+  seed: 1
   ensemble_kwargs:
     skip: False
     inf_test: True
