@@ -17,4 +17,4 @@ policy:
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: mean_score
-exp_dir: "C:\Users\Arvind\Documents\al-seg-arvind\DMPLS_exp3_db_bald"
+exp_dir: "C:\\Users\\Arvind\\Documents\\al-seg-arvind\\DMPLS_exp3_db_bald"

@@ -12,4 +12,4 @@ policy:
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-exp_dir: "C:\Users\Arvind\Documents\al-seg-arvind\DMPLS_exp3_coreset"
+exp_dir: "C:\\Users\\Arvind\\Documents\\al-seg-arvind\\DMPLS_exp3_coreset"
