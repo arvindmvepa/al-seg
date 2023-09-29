@@ -5,9 +5,9 @@ model:
   gpus: "cuda:0"
 policy:
   policy_type: random
-  seed: 1
+  seed: 3
   ensemble_kwargs:
     skip: False
     inf_test: True
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
-exp_dir: "DMPLS_exp2_random"
+exp_dir: "C:\Users\Arvind\Documents\al-seg-arvind\DMPLS_exp3_random"
