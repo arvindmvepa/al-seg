@@ -5,9 +5,9 @@ model:
   gpus: "cuda:0"
 policy:
   policy_type: random
-  seed: 1
+  seed: 2
   ensemble_kwargs:
     skip: False
     inf_test: True
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
-exp_dir: "DMPLS_MSHAH_exp1_random"
+exp_dir: "DMPLS_MSHAH_exp2_random"

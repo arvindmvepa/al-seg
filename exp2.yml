@@ -6,7 +6,7 @@ model:
   db_score_func: "entropy_score"
 policy:
   policy_type: ranked
-  seed: 1
+  seed: 2
   ensemble_kwargs:
     skip: False
     inf_test: True
@@ -17,4 +17,4 @@ policy:
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: mean_score
-exp_dir: "DMPLS_MSHAH_exp1_db_entropy"
+exp_dir: "DMPLS_MSHAH_exp2_db_entropy"
