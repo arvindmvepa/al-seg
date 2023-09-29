@@ -1,13 +1,13 @@
 model:
-  model_type: "dmpls"
-  ann_type: "scribble"
+  model_type: "strong"
+  ann_type: "label"
   ensemble_size: 1
   gpus: "cuda:0"
 policy:
   policy_type: random
-  seed: 3
+  seed: 5
   ensemble_kwargs:
     skip: False
     inf_test: True
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
-exp_dir: "C:\\Users\\Arvind\\Documents\\al-seg-arvind\\DMPLS_exp3_random"
+exp_dir: "C:\\Users\\Arvind\\Documents\\al-seg-arvind\\DMPLS_exp5_strong"

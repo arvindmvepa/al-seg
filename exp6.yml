@@ -4,12 +4,10 @@ model:
   ensemble_size: 1
   gpus: "cuda:0"
 policy:
-  policy_type: ranked
-  seed: 4
+  policy_type: random
+  seed: 5
   ensemble_kwargs:
     skip: False
     inf_test: True
   rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
-data_geometry:
-  data_geometry_type: kcenter_greedy
-exp_dir: "C:\\Users\\Arvind\\Documents\\al-seg-arvind\\DMPLS_exp4_coreset"
+exp_dir: "C:\\Users\\Arvind\\Documents\\al-seg-arvind\\DMPLS_exp5_random"
