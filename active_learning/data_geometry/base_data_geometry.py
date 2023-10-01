@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class BaseDataGeometry(ABC):
-    """Abstract class for Coreset sampling"""
+    """Abstract class for sampling using Data Geometry"""
 
     @abstractmethod
     def calculate_representativeness(self, im_score_file, num_samples, already_selected=[], skip=False, **kwargs):

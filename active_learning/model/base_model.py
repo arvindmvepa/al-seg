@@ -44,7 +44,7 @@ class BaseModel(ABC):
 
     """
 
-    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, gpus="0", tag=""):
+    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, gpus="cuda:0", tag=""):
         self.model_params = model_params[self.model_string][ann_type]
         self.ann_type = ann_type
         self.data_root = data_root
