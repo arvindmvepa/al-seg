@@ -55,19 +55,20 @@ class BaseActiveLearningPolicy:
 
     def __init__(self, model, model_uncertainty=None, data_geometry=None, ensemble_kwargs=None,
                  uncertainty_kwargs=None, geometry_kwargs=None, rounds=(),
-                 exp_dir="test", pseudolabels=False,
+                 exp_dir="test", save_im_score_file="scores.txt", pseudolabels=False,
                  tag="", seed=0):
         self.model = model
         self.model_uncertainty = model_uncertainty
         self.data_geometry = data_geometry
-        self.ensemble_kwargs = ensemble_kwargs if ensemble_kwargs else dict()
-        self.uncertainty_kwargs = uncertainty_kwargs if uncertainty_kwargs else dict()
-        self.geometry_kwargs = geometry_kwargs if geometry_kwargs else dict()
+        self.ensemble_kwargs = ensemble_kwargs if isinstance(ensemble_kwargs, dict) else dict()
+        self.uncertainty_kwargs = uncertainty_kwargs if isinstance(uncertainty_kwargs, dict) else dict()
+        self.geometry_kwargs = geometry_kwargs if isinstance(geometry_kwargs, dict) else dict()
         self.num_rounds = len(rounds)
         self.rounds = iter(rounds)
         self._round_num = None
         self.round_dir = None
         self.exp_dir = exp_dir
+        self.save_im_score_file = save_im_score_file
         self.pseudolabels = pseudolabels
         self.tag = tag
         self.seed = seed
@@ -106,19 +107,17 @@ class BaseActiveLearningPolicy:
             self.data_geometry.setup(self.data_root, self.all_train_files_dict[self.im_key])
 
     def _run_round(self):
-        self._run_round_models()
+        im_score_file = os.path.join(self.round_dir, self.save_im_score_file)
+        ensemble_kwargs = {}
+        model_uncertainty_kwargs = {"ignore_ims_dict": self.cur_oracle_ims,
+                                    "round_dir": self.round_dir}
+        self._run_round_models(im_score_file=im_score_file, ensemble_kwargs=ensemble_kwargs,
+                               calculate_model_uncertainty=self.model_uncertainty is not None,
+                               calculate_data_geometry=self.data_geometry is not None,
+                               uncertainty_kwargs=model_uncertainty_kwargs)
 
     def _run_round_models(self, im_score_file=None, calculate_model_uncertainty=False, calculate_data_geometry=False,
                           ensemble_kwargs=None, uncertainty_kwargs=None, geometry_kwargs=None):
-        if ensemble_kwargs is None:
-            ensemble_kwargs = dict()
-        ensemble_kwargs.update(self.ensemble_kwargs)
-        if uncertainty_kwargs is None:
-            uncertainty_kwargs = dict()
-        uncertainty_kwargs.update(self.uncertainty_kwargs)
-        if geometry_kwargs is None:
-            geometry_kwargs = dict()
-        geometry_kwargs.update(self.geometry_kwargs)
 
         assert (not calculate_model_uncertainty) or (not calculate_data_geometry), \
             "Cannot calculate both model uncertainty and data geometry in the same round"
@@ -127,12 +126,21 @@ class BaseActiveLearningPolicy:
                (not (calculate_model_uncertainty or calculate_data_geometry)), \
             "Must provide an im_score_file if calculating model uncertainty or data geometry"
 
+        if geometry_kwargs is None:
+            geometry_kwargs = dict()
+        geometry_kwargs.update(self.geometry_kwargs)
+        # calculate data geoemtry
         if calculate_data_geometry:
             self.data_geometry.calculate_representativeness(im_score_file=im_score_file,
                                                             num_samples=self._get_unann_num_samples(),
                                                             already_selected=self.cur_oracle_ims[self.im_key],
+                                                            prev_round_dir=self.prev_round_dir,
+                                                            train_logits_path=self.model.model_params['train_logits_path'],
                                                             **geometry_kwargs)
             self.cur_im_score_file = im_score_file
+            inf_train = self.data_geometry.use_model_features
+        else:
+            inf_train = calculate_model_uncertainty
 
         new_ann_ims = self.data_split()
         for im_type, files in new_ann_ims.items():
@@ -141,10 +149,18 @@ class BaseActiveLearningPolicy:
         # add the newly annotated files to our list of annotated files
         for key in self.file_keys:
             self.cur_oracle_ims[key] = self.cur_oracle_ims[key] + new_ann_ims[key]
+        if ensemble_kwargs is None:
+            ensemble_kwargs = dict()
+        ensemble_kwargs["inf_train"] = inf_train
+        ensemble_kwargs.update(self.ensemble_kwargs)
+        # train ensemble
         self.model.train_ensemble(round_dir=self.round_dir, cur_total_oracle_split=self.cur_total_oracle_split,
-                                  cur_total_pseudo_split=self.cur_total_pseudo_split,
-                                  inf_train=calculate_model_uncertainty, **ensemble_kwargs)
-        if calculate_model_uncertainty:
+                                  cur_total_pseudo_split=self.cur_total_pseudo_split, **ensemble_kwargs)
+        if uncertainty_kwargs is None:
+            uncertainty_kwargs = dict()
+        uncertainty_kwargs.update(self.uncertainty_kwargs)
+        # calculate model uncertainty
+        if calculate_model_uncertainty and (self._round_num < (self.num_rounds - 1)):
             self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
             self.cur_im_score_file = im_score_file
 
@@ -202,6 +218,7 @@ class BaseActiveLearningPolicy:
         print(f"Round {self._round_num}, round params: {round_params}")
 
     def _create_round_dir(self):
+        self.prev_round_dir = self.round_dir
         self.round_dir = os.path.join(self.exp_dir, f"round_{self._round_num}")
         if not os.path.exists(self.round_dir):
             os.makedirs(self.round_dir)

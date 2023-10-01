@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 from sklearn.metrics import pairwise_distances
+from numpy.random import RandomState
 
 import abc
 import numpy as np
@@ -48,9 +49,10 @@ class kCenterGreedy(SamplingMethod):
        Can be extended to a robust k centers algorithm that ignores a certain number of
        outlier datapoints.  Resulting centers are solution to multiple integer program.
         """
-    def __init__(self, X, metric="euclidean"):
+    def __init__(self, X, metric="euclidean", seed=None):
         self.X = X
         self.flat_X = self.flatten_X()
+        self.random_state = RandomState(seed=seed)
         self.name = "kcenter"
         self.features = self.flat_X
         self.metric = metric
@@ -115,7 +117,7 @@ class kCenterGreedy(SamplingMethod):
         for _ in range(N):
             if self.already_selected is None:
                 # Initialize centers with a randomly selected datapoint
-                ind = np.random.choice(np.arange(self.n_obs))
+                ind = self.random_state.choice(np.arange(self.n_obs))
             else:
                 ind = np.argmax(self.min_distances)
             # New examples should not be in already selected since those points
