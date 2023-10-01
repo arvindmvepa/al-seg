@@ -48,9 +48,10 @@ class kCenterGreedy(SamplingMethod):
        Can be extended to a robust k centers algorithm that ignores a certain number of
        outlier datapoints.  Resulting centers are solution to multiple integer program.
         """
-    def __init__(self, X, metric="euclidean"):
+    def __init__(self, X, random_state, metric="euclidean"):
         self.X = X
         self.flat_X = self.flatten_X()
+        self.random_state = random_state
         self.name = "kcenter"
         self.features = self.flat_X
         self.metric = metric
@@ -115,7 +116,7 @@ class kCenterGreedy(SamplingMethod):
         for _ in range(N):
             if self.already_selected is None:
                 # Initialize centers with a randomly selected datapoint
-                ind = np.random.choice(np.arange(self.n_obs))
+                ind = self.random_state.choice(np.arange(self.n_obs))
             else:
                 ind = np.argmax(self.min_distances)
             # New examples should not be in already selected since those points
