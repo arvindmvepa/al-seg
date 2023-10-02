@@ -39,6 +39,7 @@ class CoreGCN(BaseCoreset):
         all_indices = np.arange(len(self.all_train_im_files))
         already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
         unlabeled_indices = np.setdiff1d(all_indices, already_selected_indices)
+        print(f"len(unlabeled_indices): {len(unlabeled_indices)}")
         subset = self.random_state.choice(unlabeled_indices, num_samples, replace=False)
         print(f"len(self.dataset): {len(self.dataset)}")
         print(f"len(batch_size): {self.batch_size}")
