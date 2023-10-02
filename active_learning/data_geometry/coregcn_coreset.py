@@ -31,12 +31,12 @@ class CoreGCN(BaseCoreset):
             raise ValueError(f"Unknown feature model: {self.feature_model}")
         self.s_margin = s_margin
         
-    def calculate_representativeness(self, im_score_file, num_samples, round, already_selected=[], skip=False,
+    def calculate_representativeness(self, im_score_file, num_samples, round_num, already_selected=[], skip=False,
                                      **kwargs):
         if skip:
             print("Skipping Calculating CoreGCN!")
             return
-        if  round == 0:
+        if  round_num == 0:
             print("Calculating KCenterGreedyCoreset for first round...")
             already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
             coreset_inst = self.coreset_alg(self.all_processed_train_data, self.random_state)
