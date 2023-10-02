@@ -16,8 +16,8 @@ class BaseCoreset(BaseDataGeometry):
         super().__init__()
         self.alg_string = alg_string
         self.patch_size = patch_size
-        self.random_state = RandomState(seed=seed)
         self.seed = seed
+        self.random_state = RandomState(seed=self.seed)
         self.coreset_alg = None
         self.data_root = None
         self.all_train_im_files = None
@@ -50,11 +50,15 @@ class BaseCoreset(BaseDataGeometry):
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
         self.all_processed_train_data = self._get_data()
+        self.setup_alg()
+
+    def setup_alg(self):
         if self.alg_string in coreset_algs:
-            self.coreset_alg = coreset_algs[self.alg_string]
+            self.coreset_alg = coreset_algs[self.alg_string](self.all_processed_train_data, self.seed)
         else:
             print(f"No coreset alg found for {self.alg_string}")
             self.coreset_alg = None
+
 
 
 class CoresetDatasetWrapper(Dataset):

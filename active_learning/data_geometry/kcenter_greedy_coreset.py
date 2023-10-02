@@ -5,11 +5,8 @@ class KCenterGreedyCoreset(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
     def __init__(self, patch_size=(256, 256), **kwargs):
-        super().__init__(alg_string="kcenter_greedy", patch_size=patch_size)
-        self.setup_coreset_alg()
-
-    def setup_coreset_alg(self):
-        self.coreset_alg = self.coreset_alg(self.all_processed_train_data, self.random_state)
+        super().__init__(alg_string="kcenter_greedy", patch_size=patch_size, **kwargs)
+        self.setup_alg()
         
     def calculate_representativeness(self, im_score_file, num_samples, already_selected=[], skip=False, **kwargs):
         if skip:

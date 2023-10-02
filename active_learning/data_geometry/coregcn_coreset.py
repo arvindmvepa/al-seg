@@ -7,6 +7,7 @@ import torch.optim as optim
 from torchvision.models import resnet50
 from active_learning.data_geometry.base_coreset import BaseCoreset, CoresetDatasetWrapper
 from active_learning.data_geometry.gcn import GCN
+from active_learning.data_geometry import coreset_algs
 
 
 class CoreGCN(BaseCoreset):
@@ -39,7 +40,7 @@ class CoreGCN(BaseCoreset):
         if  round_num == 0:
             print("Calculating KCenterGreedyCoreset for first round...")
             already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
-            coreset_inst = self.coreset_alg(self.all_processed_train_data, self.random_state)
+            coreset_inst = self.coreset_cls(self.all_processed_train_data, seed=self.seed)
             sample_indices = coreset_inst.select_batch_(already_selected=already_selected_indices, N=num_samples)
         else:
             print("Calculating CoreGCN..")
@@ -87,9 +88,9 @@ class CoreGCN(BaseCoreset):
                 labels = binary_labels.to(self.gpus)
                 scores, _, feat = models['gcn_module'](inputs, adj)
 
-                if self.coreset_alg is not None:
+                if self.coreset_cls is not None:
                     feat = feat.detach().cpu().numpy()
-                    coreset_inst = self.coreset_alg(feat, self.random_state)
+                    coreset_inst = self.coreset_cls(feat, self.random_state)
                     sample_indices = coreset_inst.select_batch_(already_selected_indices, num_samples)
                 else:
                     scores_median = np.squeeze(torch.abs(scores[:num_samples] - self.s_margin).detach().cpu().numpy())
@@ -122,6 +123,13 @@ class CoreGCN(BaseCoreset):
     def setup(self, data_root, all_train_im_files):
         super().setup(data_root, all_train_im_files)
         self.dataset = CoresetDatasetWrapper(self.all_processed_train_data, transform=T.ToTensor())
+
+    def setup_alg(self):
+        if self.alg_string in coreset_algs:
+            self.coreset_cls = coreset_algs[self.alg_string]
+        else:
+            print(f"No coreset alg found for {self.alg_string}")
+            self.coreset_cls = None
 
     def get_features(self, data_loader):
         features = torch.tensor([]).to(self.gpus)
