@@ -119,6 +119,7 @@ class CoreGCN(BaseCoreset):
         with torch.no_grad():
             for inputs in data_loader:
                 inputs = inputs.to(self.gpus)
+                print(inputs.shape)
                 features_batch = self.feature_model(inputs)
                 features = torch.cat((features, features_batch), 0)
             feat = features
