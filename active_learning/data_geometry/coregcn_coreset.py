@@ -44,6 +44,7 @@ class CoreGCN(BaseCoreset):
                                  sampler=SubsetSequentialSampler(subset+already_selected_indices), pin_memory=True)
         binary_labels = torch.cat((torch.zeros([num_samples, 1]),
                                    (torch.ones([len(already_selected_indices), 1]))), 0)
+        print(f"len(data_loader): {len(data_loader)}")
         features = self.get_features(data_loader)
         print(f"fetures shape: {features.shape}")
         features = nn.functional.normalize(features)
