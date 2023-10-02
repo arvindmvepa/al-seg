@@ -13,7 +13,7 @@ from active_learning.data_geometry import coreset_algs
 class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
-    def __init__(self, patch_size=(256, 256), batch_size=128, subset_size=291, hidden_units=128, dropout_rate=0.3,
+    def __init__(self, patch_size=(256, 256), batch_size=128, subset_size="all", hidden_units=128, dropout_rate=0.3,
                  lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2, feature_model='resnet50', alg_string="kcenter_greedy",
                  s_margin=0.1, gpus="cuda:0",  **kwargs):
         super().__init__(alg_string=alg_string, patch_size=patch_size)
@@ -48,10 +48,14 @@ class CoreGCN(BaseCoreset):
             all_indices = np.arange(len(self.all_train_im_files))
             already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
             unlabeled_indices = np.setdiff1d(all_indices, already_selected_indices)
-            subset = self.random_state.choice(unlabeled_indices, self.subset_size, replace=False).tolist()
+            if self.subset_size == "all":
+                subset_size = len(unlabeled_indices)
+            else:
+                subset_size = self.subset_size
+            subset = self.random_state.choice(unlabeled_indices, subset_size, replace=False).tolist()
             data_loader = DataLoader(self.dataset, batch_size=self.batch_size,
                                      sampler=SubsetSequentialSampler(subset+already_selected_indices), pin_memory=True)
-            binary_labels = torch.cat((torch.zeros([self.subset_size, 1]),
+            binary_labels = torch.cat((torch.zeros([subset_size, 1]),
                                        (torch.ones([len(already_selected_indices), 1]))), 0)
             features = self.get_features(data_loader)
             features = nn.functional.normalize(features)
@@ -67,8 +71,8 @@ class CoreGCN(BaseCoreset):
             optim_backbone = optim.Adam(models['gcn_module'].parameters(), lr=self.lr_gcn, weight_decay=self.wdecay)
             optimizers = {'gcn_module': optim_backbone}
 
-            nlbl = np.arange(0, self.subset_size, 1)
-            lbl = np.arange(self.subset_size, self.subset_size + len(already_selected_indices), 1)
+            nlbl = np.arange(0, subset_size, 1)
+            lbl = np.arange(subset_size, subset_size + len(already_selected_indices), 1)
 
             ############
             print("Training GCN..")
@@ -100,9 +104,9 @@ class CoreGCN(BaseCoreset):
                 print("Max confidence value: ", torch.max(scores.data).item())
                 print("Mean confidence value: ", torch.mean(scores.data).item())
                 preds = torch.round(scores)
-                correct_labeled = (preds[self.subset_size:, 0] == labels[self.subset_size:, 0]).sum().item() / len(already_selected_indices)
-                correct_unlabeled = (preds[:self.subset_size, 0] == labels[:self.subset_size, 0]).sum().item() / self.subset_size
-                correct = (preds[:, 0] == labels[:, 0]).sum().item() / (self.subset_size + len(already_selected_indices))
+                correct_labeled = (preds[subset_size:, 0] == labels[subset_size:, 0]).sum().item() / len(already_selected_indices)
+                correct_unlabeled = (preds[:subset_size, 0] == labels[:subset_size, 0]).sum().item() / subset_size
+                correct = (preds[:, 0] == labels[:, 0]).sum().item() / (subset_size + len(already_selected_indices))
                 print("Labeled classified %: ", correct_labeled)
                 print("Unlabeled classified %: ", correct_unlabeled)
                 print("Total correctly classified %: ", correct)
