@@ -40,17 +40,11 @@ class CoreGCN(BaseCoreset):
         already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
         unlabeled_indices = np.setdiff1d(all_indices, already_selected_indices)
         subset = self.random_state.choice(unlabeled_indices, num_samples, replace=False).tolist()
-        print(f"len(subset): {len(subset)}")
-        print(f"len(self.dataset): {len(self.dataset)}")
-        print(f"len(batch_size): {self.batch_size}")
-        print(f"len(subset+already_selected_indices): {len(subset+already_selected_indices)}")
         data_loader = DataLoader(self.dataset, batch_size=self.batch_size,
                                  sampler=SubsetSequentialSampler(subset+already_selected_indices), pin_memory=True)
         binary_labels = torch.cat((torch.zeros([num_samples, 1]),
                                    (torch.ones([len(already_selected_indices), 1]))), 0)
-        print(f"len(data_loader): {len(data_loader)}")
         features = self.get_features(data_loader)
-        print(f"fetures shape: {features.shape}")
         features = nn.functional.normalize(features)
         adj = self.aff_to_adj(features)
 
@@ -123,7 +117,7 @@ class CoreGCN(BaseCoreset):
     def get_features(self, data_loader):
         features = torch.tensor([]).to(self.gpus)
         with torch.no_grad():
-            for inputs, _, _ in data_loader:
+            for inputs in data_loader:
                 inputs = inputs.to(self.gpus)
                 features_batch = self.feature_model(inputs)
                 features = torch.cat((features, features_batch), 0)
