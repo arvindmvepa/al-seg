@@ -40,6 +40,7 @@ class CoreGCN(BaseCoreset):
         already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
         unlabeled_indices = np.setdiff1d(all_indices, already_selected_indices)
         subset = self.random_state.choice(unlabeled_indices, num_samples, replace=False)
+        print(f"len(self.dataset): {len(self.dataset)}")
         data_loader = DataLoader(self.dataset, batch_size=self.batch_size,
                                  sampler=SubsetSequentialSampler(subset+already_selected_indices), pin_memory=True)
         binary_labels = torch.cat((torch.zeros([num_samples, 1]),
