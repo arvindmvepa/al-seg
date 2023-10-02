@@ -9,8 +9,8 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: False
-  rounds: [[.005, 0], [.005, 0], [.005, 0]]
+  rounds: [[.20, 0], [.20, 0], [.20, 0], [.20, 0], [.20, 0]]
 data_geometry:
   data_geometry_type: coregcn
   gpus: "cuda:0"
-exp_dir: "DMPLS_w_coregcn_test_run"
+exp_dir: "DMPLS_exp_coregcn"
