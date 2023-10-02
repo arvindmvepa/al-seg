@@ -64,6 +64,9 @@ class CoreGCN(BaseCoreset):
 
         ############
         print("Training GCN..")
+        print("features.shape: ", features.shape)
+        print("adj.shape: ", adj.shape)
+        print("features[0]: ", features[0])
         for i in range(200):
             optimizers['gcn_module'].zero_grad()
             outputs, _, _ = models['gcn_module'](features, adj)
