@@ -64,9 +64,7 @@ class CoreGCN(BaseCoreset):
 
         ############
         print("Training GCN..")
-        print("features.shape: ", features.shape)
         print("adj.shape: ", adj.shape)
-        print("features[0]: ", features[0])
         for i in range(200):
             optimizers['gcn_module'].zero_grad()
             outputs, _, _ = models['gcn_module'](features, adj)
@@ -135,11 +133,17 @@ class CoreGCN(BaseCoreset):
     def aff_to_adj(self, x, y=None, eps=1e-10):
         x = x.detach().cpu().numpy()
         adj = np.matmul(x, x.transpose())
+        print("1, adj: ", adj)
         adj += -1.0 * np.eye(adj.shape[0])
+        print("2, adj: ", adj)
         adj_diag = np.sum(adj, axis=0)  # rowise sum
+        print("3, adj_diag: ", adj_diag)
         adj = np.matmul(adj, np.diag(1 / (adj_diag + eps)))
+        print("4, adj: ", adj)
         adj = adj + np.eye(adj.shape[0])
-        adj = torch.Tensor(adj).cuda()
+        print("5, adj: ", adj)
+        adj = torch.Tensor(adj).to(self.gpus)
+        print("6, adj: ", adj)
 
         return adj
 
