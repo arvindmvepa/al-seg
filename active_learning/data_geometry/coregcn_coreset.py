@@ -92,7 +92,7 @@ class CoreGCN(BaseCoreset):
             if self.coreset_cls is not None:
                 feat = feat.detach().cpu().numpy()
                 coreset_inst = self.coreset_cls(feat, seed=self.seed)
-                sample_indices = coreset_inst.select_batch_(already_selected_indices, num_samples)
+                sample_indices = coreset_inst.select_batch_(lbl, num_samples)
             else:
                 scores_median = np.squeeze(torch.abs(scores[:num_samples] - self.s_margin).detach().cpu().numpy())
                 sample_indices = np.argsort(-(scores_median))
