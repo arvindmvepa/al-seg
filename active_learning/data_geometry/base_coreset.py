@@ -51,7 +51,7 @@ class BaseCoreset(BaseDataGeometry):
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
         self.all_processed_train_data = self._get_data()
         if self.alg_string in coreset_algs:
-            self.coreset_alg = coreset_algs[self.alg_string](self.all_processed_train_data, self.random_state)
+            self.coreset_alg = coreset_algs[self.alg_string]
         else:
             print(f"No coreset alg found for {self.alg_string}")
             self.coreset_alg = None

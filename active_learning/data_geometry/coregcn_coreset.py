@@ -79,7 +79,7 @@ class CoreGCN(BaseCoreset):
             labels = binary_labels.to(self.gpus)
             scores, _, feat = models['gcn_module'](inputs, adj)
 
-            if self.alg_string == "kcenter_greedy":
+            if self.coreset_alg is not None
                 feat = feat.detach().cpu().numpy()
                 coreset_inst = self.coreset_alg(feat, self.random_state)
                 sample_indices = coreset_inst.select_batch_(already_selected_indices, num_samples)
@@ -127,12 +127,12 @@ class CoreGCN(BaseCoreset):
             feat = features
         return feat
 
-    def aff_to_adj(self, x, y=None):
+    def aff_to_adj(self, x, y=None, eps=1e-10):
         x = x.detach().cpu().numpy()
         adj = np.matmul(x, x.transpose())
         adj += -1.0 * np.eye(adj.shape[0])
         adj_diag = np.sum(adj, axis=0)  # rowise sum
-        adj = np.matmul(adj, np.diag(1 / adj_diag))
+        adj = np.matmul(adj, np.diag(1 / (adj_diag + eps)))
         adj = adj + np.eye(adj.shape[0])
         adj = torch.Tensor(adj).cuda()
 
