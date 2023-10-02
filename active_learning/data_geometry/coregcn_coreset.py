@@ -80,7 +80,7 @@ class CoreGCN(BaseCoreset):
             loss.backward()
             optimizers['gcn_module'].step()
             if i % 50 == 0:
-                print("GCN, Epoch: ", i, "Loss: ", loss)
+                print("GCN, Epoch: ", i, "Loss: ", loss.item())
 
         models['gcn_module'].eval()
         print("Getting GCN features...")
@@ -91,7 +91,7 @@ class CoreGCN(BaseCoreset):
 
             if self.coreset_cls is not None:
                 feat = feat.detach().cpu().numpy()
-                coreset_inst = self.coreset_cls(feat, self.random_state)
+                coreset_inst = self.coreset_cls(feat, seed=self.seed)
                 sample_indices = coreset_inst.select_batch_(already_selected_indices, num_samples)
             else:
                 scores_median = np.squeeze(torch.abs(scores[:num_samples] - self.s_margin).detach().cpu().numpy())
