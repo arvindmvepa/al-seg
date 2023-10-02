@@ -13,12 +13,13 @@ from active_learning.data_geometry import coreset_algs
 class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
-    def __init__(self, patch_size=(256, 256), batch_size=128, hidden_units=128, dropout_rate=0.3, lr_gcn=1e-3,
-                 wdecay=5e-4, lambda_loss=1.2, feature_model='resnet50', alg_string="kcenter_greedy", s_margin=0.1,
-                 gpus="cuda:0",  **kwargs):
+    def __init__(self, patch_size=(256, 256), batch_size=128, subset_size=291, hidden_units=128, dropout_rate=0.3,
+                 lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2, feature_model='resnet50', alg_string="kcenter_greedy",
+                 s_margin=0.1, gpus="cuda:0",  **kwargs):
         super().__init__(alg_string=alg_string, patch_size=patch_size)
         self.gpus = gpus
         self.batch_size = batch_size
+        self.subset_size = subset_size
         self.hidden_units = hidden_units
         self.dropout_rate = dropout_rate
         self.lr_gcn = lr_gcn
@@ -48,10 +49,10 @@ class CoreGCN(BaseCoreset):
         already_selected_indices = self.random_state.choice(all_indices, 10, replace=False).tolist()
         #already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
         unlabeled_indices = np.setdiff1d(all_indices, already_selected_indices)
-        subset = self.random_state.choice(unlabeled_indices, num_samples, replace=False).tolist()
+        subset = self.random_state.choice(unlabeled_indices, self.subset_size, replace=False).tolist()
         data_loader = DataLoader(self.dataset, batch_size=self.batch_size,
                                  sampler=SubsetSequentialSampler(subset+already_selected_indices), pin_memory=True)
-        binary_labels = torch.cat((torch.zeros([num_samples, 1]),
+        binary_labels = torch.cat((torch.zeros([self.subset_size, 1]),
                                    (torch.ones([len(already_selected_indices), 1]))), 0)
         features = self.get_features(data_loader)
         features = nn.functional.normalize(features)
@@ -67,8 +68,8 @@ class CoreGCN(BaseCoreset):
         optim_backbone = optim.Adam(models['gcn_module'].parameters(), lr=self.lr_gcn, weight_decay=self.wdecay)
         optimizers = {'gcn_module': optim_backbone}
 
-        nlbl = np.arange(0, num_samples, 1)
-        lbl = np.arange(num_samples, num_samples + len(already_selected_indices), 1)
+        nlbl = np.arange(0, self.subset_size, 1)
+        lbl = np.arange(self.subset_size, self.subset_size + len(already_selected_indices), 1)
 
         ############
         print("Training GCN..")
