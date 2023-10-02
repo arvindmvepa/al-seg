@@ -13,4 +13,5 @@ policy:
 data_geometry:
   data_geometry_type: coregcn
   gpus: "cuda:0"
+  seed: 0
 exp_dir: "DMPLS_exp_coregcn"
