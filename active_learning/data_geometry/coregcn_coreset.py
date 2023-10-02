@@ -38,75 +38,74 @@ class CoreGCN(BaseCoreset):
         if skip:
             print("Skipping Calculating CoreGCN!")
             return
-        #if  round_num == 0:
-        #    print("Calculating KCenterGreedyCoreset for first round...")
-        #    already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
-        #    coreset_inst = self.coreset_cls(self.all_processed_train_data, seed=self.seed)
-        #    sample_indices = coreset_inst.select_batch_(already_selected=already_selected_indices, N=num_samples)
-        #else:
-        print("Calculating CoreGCN..")
-        all_indices = np.arange(len(self.all_train_im_files))
-        already_selected_indices = self.random_state.choice(all_indices, 10, replace=False).tolist()
-        #already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
-        unlabeled_indices = np.setdiff1d(all_indices, already_selected_indices)
-        subset = self.random_state.choice(unlabeled_indices, self.subset_size, replace=False).tolist()
-        data_loader = DataLoader(self.dataset, batch_size=self.batch_size,
-                                 sampler=SubsetSequentialSampler(subset+already_selected_indices), pin_memory=True)
-        binary_labels = torch.cat((torch.zeros([self.subset_size, 1]),
-                                   (torch.ones([len(already_selected_indices), 1]))), 0)
-        features = self.get_features(data_loader)
-        features = nn.functional.normalize(features)
-        adj = self.aff_to_adj(features)
+        if  round_num == 0:
+            print("Calculating KCenterGreedyCoreset for first round...")
+            already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
+            coreset_inst = self.coreset_cls(self.all_processed_train_data, seed=self.seed)
+            sample_indices = coreset_inst.select_batch_(already_selected=already_selected_indices, N=num_samples)
+        else:
+            print("Calculating CoreGCN..")
+            all_indices = np.arange(len(self.all_train_im_files))
+            already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
+            unlabeled_indices = np.setdiff1d(all_indices, already_selected_indices)
+            subset = self.random_state.choice(unlabeled_indices, self.subset_size, replace=False).tolist()
+            data_loader = DataLoader(self.dataset, batch_size=self.batch_size,
+                                     sampler=SubsetSequentialSampler(subset+already_selected_indices), pin_memory=True)
+            binary_labels = torch.cat((torch.zeros([self.subset_size, 1]),
+                                       (torch.ones([len(already_selected_indices), 1]))), 0)
+            features = self.get_features(data_loader)
+            features = nn.functional.normalize(features)
+            adj = self.aff_to_adj(features)
 
-        gcn_module = GCN(nfeat=features.shape[1],
-                         nhid=self.hidden_units,
-                         nclass=1,
-                         dropout=self.dropout_rate).to(self.gpus)
+            gcn_module = GCN(nfeat=features.shape[1],
+                             nhid=self.hidden_units,
+                             nclass=1,
+                             dropout=self.dropout_rate).to(self.gpus)
 
-        models = {'gcn_module': gcn_module}
+            models = {'gcn_module': gcn_module}
 
-        optim_backbone = optim.Adam(models['gcn_module'].parameters(), lr=self.lr_gcn, weight_decay=self.wdecay)
-        optimizers = {'gcn_module': optim_backbone}
+            optim_backbone = optim.Adam(models['gcn_module'].parameters(), lr=self.lr_gcn, weight_decay=self.wdecay)
+            optimizers = {'gcn_module': optim_backbone}
 
-        nlbl = np.arange(0, self.subset_size, 1)
-        lbl = np.arange(self.subset_size, self.subset_size + len(already_selected_indices), 1)
+            nlbl = np.arange(0, self.subset_size, 1)
+            lbl = np.arange(self.subset_size, self.subset_size + len(already_selected_indices), 1)
 
-        ############
-        print("Training GCN..")
-        for i in range(200):
-            optimizers['gcn_module'].zero_grad()
-            outputs, _, _ = models['gcn_module'](features, adj)
-            lamda = self.lambda_loss
-            loss = self.BCEAdjLoss(outputs, lbl, nlbl, lamda)
-            loss.backward()
-            optimizers['gcn_module'].step()
-            if i % 50 == 0:
-                print("GCN, Epoch: ", i, "Loss: ", loss.item())
+            ############
+            print("Training GCN..")
+            for i in range(200):
+                optimizers['gcn_module'].zero_grad()
+                outputs, _, _ = models['gcn_module'](features, adj)
+                lamda = self.lambda_loss
+                loss = self.BCEAdjLoss(outputs, lbl, nlbl, lamda)
+                loss.backward()
+                optimizers['gcn_module'].step()
+                if i % 50 == 0:
+                    print("GCN, Epoch: ", i, "Loss: ", loss.item())
 
-        models['gcn_module'].eval()
-        print("Getting GCN features...")
-        with torch.no_grad():
-            inputs = features.to(self.gpus)
-            labels = binary_labels.to(self.gpus)
-            scores, _, feat = models['gcn_module'](inputs, adj)
+            models['gcn_module'].eval()
+            print("Getting GCN features...")
+            with torch.no_grad():
+                inputs = features.to(self.gpus)
+                labels = binary_labels.to(self.gpus)
+                scores, _, feat = models['gcn_module'](inputs, adj)
 
-            if self.coreset_cls is not None:
-                feat = feat.detach().cpu().numpy()
-                coreset_inst = self.coreset_cls(feat, seed=self.seed)
-                sample_indices = coreset_inst.select_batch_(lbl, num_samples)
-            else:
-                scores_median = np.squeeze(torch.abs(scores[:num_samples] - self.s_margin).detach().cpu().numpy())
-                sample_indices = np.argsort(-(scores_median))
+                if self.coreset_cls is not None:
+                    feat = feat.detach().cpu().numpy()
+                    coreset_inst = self.coreset_cls(feat, seed=self.seed)
+                    sample_indices = coreset_inst.select_batch_(lbl, num_samples)
+                else:
+                    scores_median = np.squeeze(torch.abs(scores[:num_samples] - self.s_margin).detach().cpu().numpy())
+                    sample_indices = np.argsort(-(scores_median))
 
-            print("Max confidence value: ", torch.max(scores.data).item())
-            print("Mean confidence value: ", torch.mean(scores.data).item())
-            preds = torch.round(scores)
-            correct_labeled = (preds[self.subset_size:, 0] == labels[self.subset_size:, 0]).sum().item() / len(already_selected_indices)
-            correct_unlabeled = (preds[:self.subset_size, 0] == labels[:self.subset_size, 0]).sum().item() / self.subset_size
-            correct = (preds[:, 0] == labels[:, 0]).sum().item() / (self.subset_size + len(already_selected_indices))
-            print("Labeled classified %: ", correct_labeled)
-            print("Unlabeled classified %: ", correct_unlabeled)
-            print("Total correctly classified %: ", correct)
+                print("Max confidence value: ", torch.max(scores.data).item())
+                print("Mean confidence value: ", torch.mean(scores.data).item())
+                preds = torch.round(scores)
+                correct_labeled = (preds[self.subset_size:, 0] == labels[self.subset_size:, 0]).sum().item() / len(already_selected_indices)
+                correct_unlabeled = (preds[:self.subset_size, 0] == labels[:self.subset_size, 0]).sum().item() / self.subset_size
+                correct = (preds[:, 0] == labels[:, 0]).sum().item() / (self.subset_size + len(already_selected_indices))
+                print("Labeled classified %: ", correct_labeled)
+                print("Unlabeled classified %: ", correct_unlabeled)
+                print("Total correctly classified %: ", correct)
 
 
         # write score file
