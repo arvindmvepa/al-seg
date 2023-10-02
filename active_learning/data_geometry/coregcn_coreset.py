@@ -45,6 +45,7 @@ class CoreGCN(BaseCoreset):
         binary_labels = torch.cat((torch.zeros([num_samples, 1]),
                                    (torch.ones([len(already_selected_indices), 1]))), 0)
         features = self.get_features(data_loader)
+        print(f"fetures shape: {features.shape}")
         features = nn.functional.normalize(features)
         adj = self.aff_to_adj(features)
 
