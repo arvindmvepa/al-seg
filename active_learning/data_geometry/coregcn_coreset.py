@@ -45,8 +45,8 @@ class CoreGCN(BaseCoreset):
         #else:
         print("Calculating CoreGCN..")
         all_indices = np.arange(len(self.all_train_im_files))
-        already_selected = self.random_state.choice(all_indices, 10, replace=False).tolist()
-        already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
+        already_selected_indices = self.random_state.choice(all_indices, 10, replace=False).tolist()
+        #already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
         unlabeled_indices = np.setdiff1d(all_indices, already_selected_indices)
         subset = self.random_state.choice(unlabeled_indices, num_samples, replace=False).tolist()
         data_loader = DataLoader(self.dataset, batch_size=self.batch_size,
