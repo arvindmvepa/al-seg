@@ -132,6 +132,9 @@ class CoreGCN(BaseCoreset):
 
     def aff_to_adj(self, x, y=None, eps=1e-10):
         x = x.detach().cpu().numpy()
+        print("0, x: ", x)
+        print("0, x**2: ", x**2)
+        print("0, np.sum(x**2): ", np.sum(x ** 2))
         adj = np.matmul(x, x.transpose())
         print("1, adj: ", adj)
         adj += -1.0 * np.eye(adj.shape[0])
