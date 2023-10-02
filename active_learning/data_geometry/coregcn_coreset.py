@@ -143,7 +143,9 @@ class CoreGCN(BaseCoreset):
 
     def BCEAdjLoss(self, scores, lbl, nlbl, l_adj, eps=1e-10):
         lnl = torch.log(scores[lbl] + eps)
+        print("lnl: ", lnl)
         lnu = torch.log(1 - scores[nlbl] + eps)
+        print("lnu: ", lnu)
         labeled_score = torch.mean(lnl)
         unlabeled_score = torch.mean(lnu)
         bce_adj_loss = -labeled_score - l_adj*unlabeled_score
