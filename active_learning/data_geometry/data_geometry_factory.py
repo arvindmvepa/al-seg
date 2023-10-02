@@ -1,6 +1,6 @@
 from active_learning.data_geometry.base_data_geometry import NoDataGeometry
 from active_learning.data_geometry.kcenter_greedy_coreset import KCenterGreedyCoreset
-from active_learning.data_geometry.coreGCN import CoreGCN
+from active_learning.data_geometry.coregcn_coreset import CoreGCN
 
 
 class DataGeometryFactory:

@@ -9,7 +9,7 @@ from active_learning.data_geometry.base_coreset import BaseCoreset, CoresetDatas
 from active_learning.data_geometry.gcn import GCN
 
 
-class CoreGCNCoreset(BaseCoreset):
+class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
     def __init__(self, patch_size=(256, 256), batch_size=128, hidden_units=128, dropout_rate=0.3, lr_gcn=1e-3,
