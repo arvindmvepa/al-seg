@@ -121,8 +121,7 @@ class CoreGCN(BaseCoreset):
                 inputs = inputs.to(self.gpus)
                 # convert from grayscale to color, hard-coded for pretrained resnet
                 print(inputs.shape)
-                inputs.squeeze(1)
-                inputs = inputs.repeat(3, 1, 1)
+                inputs = torch.cat([inputs, inputs, inputs], dim=1)
                 print(inputs.shape)
                 features_batch = self.feature_model(inputs)
                 features = torch.cat((features, features_batch), 0)
