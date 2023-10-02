@@ -91,8 +91,6 @@ class BaseActiveLearningPolicy:
 
     def run(self):
         for i in range(self.num_rounds):
-            if i == 0:
-                continue
             self._setup_round()
             self._run_round()
 
