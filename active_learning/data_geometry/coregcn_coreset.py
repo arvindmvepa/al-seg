@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import torchvision.transforms as T
 import torch
 import torch.optim as optim
-from torchvision.models import resnet50, ResNet50_Weights
+from torchvision.models import resnet50
 from active_learning.data_geometry.base_coreset import BaseCoreset, CoresetDatasetWrapper
 from active_learning.data_geometry.gcn import GCN
 
@@ -23,7 +23,7 @@ class CoreGCN(BaseCoreset):
         self.wdecay = wdecay
         self.lambda_loss = lambda_loss
         if feature_model == 'resnet50':
-            self.feature_model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+            self.feature_model = resnet50(pretrained=True)
             self.feature_model.eval()
         else:
             raise ValueError(f"Unknown feature model: {feature_model}")
