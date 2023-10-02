@@ -64,7 +64,6 @@ class CoreGCN(BaseCoreset):
 
         ############
         print("Training GCN..")
-        print("adj.shape: ", adj.shape)
         for i in range(200):
             optimizers['gcn_module'].zero_grad()
             outputs, _, _ = models['gcn_module'](features, adj)
@@ -73,6 +72,7 @@ class CoreGCN(BaseCoreset):
             loss.backward()
             optimizers['gcn_module'].step()
             if i % 50 == 0:
+                print("outputs: ", outputs)
                 print("GCN, Epoch: ", i, "Loss: ", loss.item())
 
         models['gcn_module'].eval()
@@ -132,27 +132,18 @@ class CoreGCN(BaseCoreset):
 
     def aff_to_adj(self, x, y=None, eps=1e-10):
         x = x.detach().cpu().numpy()
-        print("0, x: ", x)
-        print("0, x**2: ", x**2)
-        print("0, np.sum(x**2): ", np.sum(x ** 2))
         adj = np.matmul(x, x.transpose())
-        print("1, adj: ", adj)
         adj += -1.0 * np.eye(adj.shape[0])
-        print("2, adj: ", adj)
         adj_diag = np.sum(adj, axis=0)  # rowise sum
-        print("3, adj_diag: ", adj_diag)
         adj = np.matmul(adj, np.diag(1 / (adj_diag + eps)))
-        print("4, adj: ", adj)
         adj = adj + np.eye(adj.shape[0])
-        print("5, adj: ", adj)
         adj = torch.Tensor(adj).to(self.gpus)
-        print("6, adj: ", adj)
 
         return adj
 
-    def BCEAdjLoss(self, scores, lbl, nlbl, l_adj):
-        lnl = torch.log(scores[lbl])
-        lnu = torch.log(1 - scores[nlbl])
+    def BCEAdjLoss(self, scores, lbl, nlbl, l_adj, eps=1e-10):
+        lnl = torch.log(scores[lbl] + eps)
+        lnu = torch.log(1 - scores[nlbl] + eps)
         labeled_score = torch.mean(lnl)
         unlabeled_score = torch.mean(lnu)
         bce_adj_loss = -labeled_score - l_adj*unlabeled_score
