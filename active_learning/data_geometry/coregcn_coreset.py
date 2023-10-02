@@ -41,7 +41,7 @@ class CoreGCN(BaseCoreset):
         unlabeled_indices = np.setdiff1d(all_indices, already_selected_indices)
         print(f"len(unlabeled_indices): {len(unlabeled_indices)}")
         print(f"len(num_samples): {num_samples}")
-        subset_ = self.numpy.random.choice(unlabeled_indices, num_samples, replace=False)
+        subset_ = np.random.choice(unlabeled_indices, num_samples, replace=False)
         print(f"len(subset_): {len(subset_)}")
         subset = self.random_state.choice(unlabeled_indices, num_samples, replace=False)
         print(f"len(subset): {len(subset)}")
