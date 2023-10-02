@@ -24,6 +24,7 @@ class CoreGCN(BaseCoreset):
         self.lambda_loss = lambda_loss
         if feature_model == 'resnet50':
             self.feature_model = resnet50(pretrained=True)
+            self.feature_model.to(self.gpus)
             self.feature_model.eval()
         else:
             raise ValueError(f"Unknown feature model: {feature_model}")
@@ -120,9 +121,7 @@ class CoreGCN(BaseCoreset):
             for inputs in data_loader:
                 inputs = inputs.to(self.gpus)
                 # convert from grayscale to color, hard-coded for pretrained resnet
-                print(inputs.shape)
                 inputs = torch.cat([inputs, inputs, inputs], dim=1)
-                print(inputs.shape)
                 features_batch = self.feature_model(inputs)
                 features = torch.cat((features, features_batch), 0)
             feat = features
