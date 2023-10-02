@@ -98,15 +98,16 @@ class CoreGCN(BaseCoreset):
                 scores_median = np.squeeze(torch.abs(scores[:num_samples] - self.s_margin).detach().cpu().numpy())
                 sample_indices = np.argsort(-(scores_median))
 
-            print("Max confidence value: ", torch.max(scores.data))
-            print("Mean confidence value: ", torch.mean(scores.data))
+            print("Max confidence value: ", torch.max(scores.data).item())
+            print("Mean confidence value: ", torch.mean(scores.data).item())
             preds = torch.round(scores)
-            correct_labeled = (preds[num_samples:, 0] == labels[num_samples:, 0]).sum().item() / len(already_selected_indices)
-            correct_unlabeled = (preds[:num_samples, 0] == labels[:num_samples, 0]).sum().item() / num_samples
-            correct = (preds[:, 0] == labels[:, 0]).sum().item() / (num_samples + len(already_selected_indices))
+            correct_labeled = (preds[self.subset_size:, 0] == labels[self.subset_size:, 0]).sum().item() / len(already_selected_indices)
+            correct_unlabeled = (preds[:self.subset_size, 0] == labels[:self.subset_size, 0]).sum().item() / self.subset_size
+            correct = (preds[:, 0] == labels[:, 0]).sum().item() / (self.subset_size + len(already_selected_indices))
+            print("Total samples: ", self.subset_size + len(already_selected_indices))
             print("Labeled classified: ", correct_labeled)
             print("Unlabeled classified: ", correct_unlabeled)
-            print("Total classified: ", correct)
+            print("Total correctly classified: ", correct)
 
 
         # write score file
