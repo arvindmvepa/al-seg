@@ -104,10 +104,9 @@ class CoreGCN(BaseCoreset):
             correct_labeled = (preds[self.subset_size:, 0] == labels[self.subset_size:, 0]).sum().item() / len(already_selected_indices)
             correct_unlabeled = (preds[:self.subset_size, 0] == labels[:self.subset_size, 0]).sum().item() / self.subset_size
             correct = (preds[:, 0] == labels[:, 0]).sum().item() / (self.subset_size + len(already_selected_indices))
-            print("Total samples: ", self.subset_size + len(already_selected_indices))
-            print("Labeled classified: ", correct_labeled)
-            print("Unlabeled classified: ", correct_unlabeled)
-            print("Total correctly classified: ", correct)
+            print("Labeled classified %: ", correct_labeled)
+            print("Unlabeled classified %: ", correct_unlabeled)
+            print("Total correctly classified %: ", correct)
 
 
         # write score file
