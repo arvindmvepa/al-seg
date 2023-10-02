@@ -16,6 +16,7 @@ class CoreGCN(BaseCoreset):
                  wdecay=5e-4, lambda_loss=1.2, feature_model='resnet50', alg_string="kcenter_greedy", s_margin=0.1,
                  gpus="cuda:0",  **kwargs):
         super().__init__(alg_string=alg_string, patch_size=patch_size)
+        self.gpus = gpus
         self.batch_size = batch_size
         self.hidden_units = hidden_units
         self.dropout_rate = dropout_rate
@@ -29,7 +30,6 @@ class CoreGCN(BaseCoreset):
         else:
             raise ValueError(f"Unknown feature model: {feature_model}")
         self.s_margin = s_margin
-        self.gpus = gpus
         
     def calculate_representativeness(self, im_score_file, num_samples, already_selected=[], skip=False, **kwargs):
         if skip:
