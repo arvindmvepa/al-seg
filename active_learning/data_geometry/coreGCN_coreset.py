@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader
 import torchvision.transforms as T
 import torch
 import torch.optim as optim
+from torchvision.models import resnet50, ResNet50_Weights
 from active_learning.data_geometry.base_coreset import BaseCoreset, CoresetDatasetWrapper
 from active_learning.data_geometry.gcn import GCN
 
@@ -12,15 +13,21 @@ class CoreGCNCoreset(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
     def __init__(self, patch_size=(256, 256), batch_size=128, hidden_units=128, dropout_rate=0.3, lr_gcn=1e-3,
-                 wdecay=5e-4, lambda_loss=1.2, gpus="cuda:0",
-                 **kwargs):
-        super().__init__(alg_string="kcenter_greedy", patch_size=patch_size)
+                 wdecay=5e-4, lambda_loss=1.2, feature_model='resnet50', alg_string="kcenter_greedy", s_margin=0.1,
+                 gpus="cuda:0",  **kwargs):
+        super().__init__(alg_string=alg_string, patch_size=patch_size)
         self.batch_size = batch_size
         self.hidden_units = hidden_units
         self.dropout_rate = dropout_rate
         self.lr_gcn = lr_gcn
         self.wdecay = wdecay
         self.lambda_loss = lambda_loss
+        if feature_model == 'resnet50':
+            self.feature_model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+            self.feature_model.eval()
+        else:
+            raise ValueError(f"Unknown feature model: {feature_model}")
+        self.s_margin = s_margin
         self.gpus = gpus
         
     def calculate_representativeness(self, im_score_file, num_samples, already_selected=[], skip=False, **kwargs):
@@ -69,27 +76,20 @@ class CoreGCNCoreset(BaseCoreset):
             labels = binary_labels.to(self.gpus)
             scores, _, feat = models['gcn_module'](inputs, adj)
 
-            # TODO: stopped here - continue here.
-            if method == "CoreGCN":
+            if self.alg_string == "kcenter_greedy":
                 feat = feat.detach().cpu().numpy()
-                new_av_idx = np.arange(SUBSET, (SUBSET + (cycle + 1) * ADDENDUM))
-                sampling2 = kCenterGreedy(feat)
-                batch2 = sampling2.select_batch_(new_av_idx, ADDENDUM)
-                other_idx = [x for x in range(SUBSET) if x not in batch2]
-                arg = other_idx + batch2
-
+                coreset_inst = self.coreset_alg(feat, self.random_state)
+                sample_indices = coreset_inst.select_batch_(already_selected_indices, num_samples)
             else:
-
-                s_margin = args.s_margin
-                scores_median = np.squeeze(torch.abs(scores[:SUBSET] - s_margin).detach().cpu().numpy())
-                arg = np.argsort(-(scores_median))
+                scores_median = np.squeeze(torch.abs(scores[:num_samples] - self.s_margin).detach().cpu().numpy())
+                sample_indices = np.argsort(-(scores_median))
 
             print("Max confidence value: ", torch.max(scores.data))
             print("Mean confidence value: ", torch.mean(scores.data))
             preds = torch.round(scores)
-            correct_labeled = (preds[SUBSET:, 0] == labels[SUBSET:, 0]).sum().item() / ((cycle + 1) * ADDENDUM)
-            correct_unlabeled = (preds[:SUBSET, 0] == labels[:SUBSET, 0]).sum().item() / SUBSET
-            correct = (preds[:, 0] == labels[:, 0]).sum().item() / (SUBSET + (cycle + 1) * ADDENDUM)
+            correct_labeled = (preds[num_samples:, 0] == labels[num_samples:, 0]).sum().item() / len(already_selected_indices)
+            correct_unlabeled = (preds[:num_samples, 0] == labels[:num_samples, 0]).sum().item() / num_samples
+            correct = (preds[:, 0] == labels[:, 0]).sum().item() / (num_samples + len(already_selected_indices))
             print("Labeled classified: ", correct_labeled)
             print("Unlabeled classified: ", correct_unlabeled)
             print("Total classified: ", correct)
@@ -98,27 +98,27 @@ class CoreGCNCoreset(BaseCoreset):
         # write score file
         with open(im_score_file, "w") as f:
             # higher score for earlier added images
-            scores = [score for score in range(len(core_set_indices), 0, -1)]
+            scores = [score for score in range(len(sample_indices), 0, -1)]
             for i, im_file in enumerate(self.all_train_im_files):
-                if i in core_set_indices:
-                    score = scores[core_set_indices.index(i)]
+                if i in sample_indices:
+                    score = scores[sample_indices.index(i)]
                 else:
                     score = 0
                 f.write(f"{im_file},{score}\n")
 
-        return [self.all_train_im_files[i] for i in core_set_indices]
+        return [self.all_train_im_files[i] for i in sample_indices]
 
     def setup(self, data_root, all_train_im_files):
         super().setup(data_root, all_train_im_files)
         self.dataset = CoresetDatasetWrapper(self.all_processed_train_data, transform=T.ToTensor())
 
     def get_features(self, data_loader):
-        """For now just a pass through, not using models"""
         features = torch.tensor([]).to(self.gpus)
         with torch.no_grad():
             for inputs, _, _ in data_loader:
                 inputs = inputs.to(self.gpus)
-                features = torch.cat((features, inputs), 0)
+                features_batch = self.feature_model(inputs)
+                features = torch.cat((features, features_batch), 0)
             feat = features
         return feat
 
