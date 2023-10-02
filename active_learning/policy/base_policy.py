@@ -106,7 +106,14 @@ class BaseActiveLearningPolicy:
             self.data_geometry.setup(self.data_root, self.all_train_files_dict[self.im_key])
 
     def _run_round(self):
-        self._run_round_models()
+        im_score_file = os.path.join(self.round_dir, self.save_im_score_file)
+        ensemble_kwargs = {}
+        model_uncertainty_kwargs = {"ignore_ims_dict": self.cur_oracle_ims,
+                                    "round_dir": self.round_dir}
+        self._run_round_models(im_score_file=im_score_file, ensemble_kwargs=ensemble_kwargs,
+                               calculate_model_uncertainty=self.model_uncertainty is not None,
+                               calculate_data_geometry=self.data_geometry is not None,
+                               uncertainty_kwargs=model_uncertainty_kwargs)
 
     def _run_round_models(self, im_score_file=None, calculate_model_uncertainty=False, calculate_data_geometry=False,
                           ensemble_kwargs=None, uncertainty_kwargs=None, geometry_kwargs=None):
