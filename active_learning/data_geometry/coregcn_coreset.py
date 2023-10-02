@@ -73,7 +73,7 @@ class CoreGCN(BaseCoreset):
             optimizers['gcn_module'].step()
             if i % 50 == 0:
                 print("outputs: ", outputs)
-                print("GCN, Epoch: ", i, "Loss: ", loss.item())
+                print("GCN, Epoch: ", i, "Loss: ", loss)
 
         models['gcn_module'].eval()
         print("Getting GCN features...")
@@ -143,12 +143,11 @@ class CoreGCN(BaseCoreset):
 
     def BCEAdjLoss(self, scores, lbl, nlbl, l_adj, eps=1e-10):
         lnl = torch.log(scores[lbl] + eps)
-        print("lnl: ", lnl)
         lnu = torch.log(1 - scores[nlbl] + eps)
-        print("lnu: ", lnu)
         labeled_score = torch.mean(lnl)
         unlabeled_score = torch.mean(lnu)
         bce_adj_loss = -labeled_score - l_adj*unlabeled_score
+        print(f"lnl: {lnl}, lnl: {lnu}, labeled_score: {labeled_score}, unlabeled_score: {unlabeled_score}, bce_adj_loss: {bce_adj_loss}")
         return bce_adj_loss
 
 
