@@ -90,7 +90,7 @@ class BaseActiveLearningPolicy:
         self.setup_data_geometry()
 
     def run(self):
-        for i in range(self.num_rounds):
+        for _ in range(self.num_rounds):
             self._setup_round()
             self._run_round()
 
@@ -145,7 +145,7 @@ class BaseActiveLearningPolicy:
         self.model.train_ensemble(round_dir=self.round_dir, cur_total_oracle_split=self.cur_total_oracle_split,
                                   cur_total_pseudo_split=self.cur_total_pseudo_split,
                                   inf_train=calculate_model_uncertainty, **ensemble_kwargs)
-        if calculate_model_uncertainty:
+        if calculate_model_uncertainty and (self._round_num < (self.num_rounds - 1)):
             self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
             self.cur_im_score_file = im_score_file
 
