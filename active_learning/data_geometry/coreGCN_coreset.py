@@ -62,6 +62,7 @@ class CoreGCNCoreset(BaseCoreset):
         lbl = np.arange(num_samples, num_samples + len(already_selected_indices), 1)
 
         ############
+        print("Training GCN..")
         for _ in range(200):
             optimizers['gcn_module'].zero_grad()
             outputs, _, _ = models['gcn_module'](features, adj)
@@ -71,6 +72,7 @@ class CoreGCNCoreset(BaseCoreset):
             optimizers['gcn_module'].step()
 
         models['gcn_module'].eval()
+        print("Getting GCN features...")
         with torch.no_grad():
             inputs = features.to(self.gpus)
             labels = binary_labels.to(self.gpus)
