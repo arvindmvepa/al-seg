@@ -64,13 +64,15 @@ class CoreGCN(BaseCoreset):
 
         ############
         print("Training GCN..")
-        for _ in range(200):
+        for i in range(200):
             optimizers['gcn_module'].zero_grad()
             outputs, _, _ = models['gcn_module'](features, adj)
             lamda = self.lambda_loss
             loss = self.BCEAdjLoss(outputs, lbl, nlbl, lamda)
             loss.backward()
             optimizers['gcn_module'].step()
+            if i % 50 == 0:
+                print("GCN, Epoch: ", i, "Loss: ", loss.item())
 
         models['gcn_module'].eval()
         print("Getting GCN features...")
@@ -79,7 +81,7 @@ class CoreGCN(BaseCoreset):
             labels = binary_labels.to(self.gpus)
             scores, _, feat = models['gcn_module'](inputs, adj)
 
-            if self.coreset_alg is not None
+            if self.coreset_alg is not None:
                 feat = feat.detach().cpu().numpy()
                 coreset_inst = self.coreset_alg(feat, self.random_state)
                 sample_indices = coreset_inst.select_batch_(already_selected_indices, num_samples)
