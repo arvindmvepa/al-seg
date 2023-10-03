@@ -11,6 +11,6 @@ policy:
     inf_test: False
   rounds: [[.05, 0], [.1, 0], [.15, 0], [.2, 0], [.4, 0]]
 data_geometry:
-  data_geometry_type: kcenter_greedy
+  data_geometry_type: coregcn
   seed: 1
-exp_dir: "DMPLS_exp1_coreset"
+exp_dir: "DMPLS_exp1_coregcn"
