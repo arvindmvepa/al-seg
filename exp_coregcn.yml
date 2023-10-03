@@ -12,5 +12,4 @@ policy:
   rounds: [[.005, 0], [.005, 0], [.005, 0]]
 data_geometry:
   data_geometry_type: coregcn
-  gpus: "cuda:0"
 exp_dir: "DMPLS_w_coregcn_test_run"

@@ -10,10 +10,9 @@ from active_learning.data_geometry.gcn import GCN
 class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
-    def __init__(self, patch_size=(256, 256), subset_size="all", hidden_units=128, dropout_rate=0.3,
-                 lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2, alg_string="kcenter_greedy",
-                 s_margin=0.1,  **kwargs):
-        super().__init__(alg_string=alg_string, patch_size=patch_size, **kwargs)
+    def __init__(self, subset_size="all", hidden_units=128, dropout_rate=0.3, lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2,
+                 feature_model="resnet18", s_margin=0.1,  **kwargs):
+        super().__init__(feature_model=feature_model, **kwargs)
         assert hasattr(self, "feature_model"), "Feature_model must be defined for CoreGCN"
         self.subset_size = subset_size
         self.hidden_units = hidden_units
