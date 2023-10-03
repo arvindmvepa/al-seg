@@ -21,7 +21,7 @@ class BaseCoreset(BaseDataGeometry):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
-        print(f"Using the metric {self.metric} in Coreset sampling...")
+        print(f"Using the {self.metric} metric in Coreset sampling...")
         self.patch_size = patch_size
         if feature_model == 'resnet18':
             print("Using Resnet18 for feature extraction...")
@@ -68,6 +68,7 @@ class BaseCoreset(BaseDataGeometry):
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
+        print(f" data_root: {self.data_root}, all_train_im_files: {self.all_train_im_files}")
         self.all_processed_train_data = self._get_data()
         if self.feature_model is not None:
             print("Extracting features for all training data using self.feature_model...")
