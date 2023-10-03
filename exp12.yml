@@ -8,7 +8,7 @@ policy:
   seed: 2
   ensemble_kwargs:
     skip: False
-    inf_test: False
+    inf_test: True
   rounds: [[.05, 0], [.1, 0], [.15, 0], [.2, 0], [.4, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
