@@ -83,7 +83,7 @@ class CoreGCN(BaseCoreset):
                 scores, _, feat = models['gcn_module'](inputs, adj)
 
                 feat = feat.detach().cpu().numpy()
-                coreset_inst = self.coreset_cls(feat, seed=self.seed)
+                coreset_inst = self.create_coreset_inst(feat)
                 sample_indices = coreset_inst.select_batch_(lbl, num_samples)
 
                 print("Max confidence value: ", torch.max(scores.data).item())
