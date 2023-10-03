@@ -6,7 +6,6 @@ class KCenterGreedyCoreset(BaseCoreset):
 
     def __init__(self, patch_size=(256, 256), **kwargs):
         super().__init__(alg_string="kcenter_greedy", patch_size=patch_size, **kwargs)
-        self.setup_alg()
         
     def calculate_representativeness(self, im_score_file, num_samples, already_selected=[], skip=False, **kwargs):
         if skip:

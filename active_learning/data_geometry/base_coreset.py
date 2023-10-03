@@ -68,7 +68,6 @@ class BaseCoreset(BaseDataGeometry):
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
-        print(f" data_root: {self.data_root}, all_train_im_files: {self.all_train_im_files}")
         self.all_processed_train_data = self._get_data()
         if self.feature_model is not None:
             print("Extracting features for all training data using self.feature_model...")
