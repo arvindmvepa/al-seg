@@ -17,7 +17,7 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string, metric='euclidean', patch_size=(256, 256), feature_model=None,
-                 feature_model_batch_size=128, seed=0, **kwargs):
+                 feature_model_batch_size=128, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -36,6 +36,7 @@ class BaseCoreset(BaseDataGeometry):
             self.feature_model.eval()
         self.feature_model_batch_size = feature_model_batch_size
         self.seed = seed
+        self.gpus = gpus
         self.random_state = RandomState(seed=self.seed)
         self.basic_coreset_alg = None
         self.data_root = None

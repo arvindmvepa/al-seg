@@ -12,8 +12,8 @@ class CoreGCN(BaseCoreset):
 
     def __init__(self, patch_size=(256, 256), subset_size="all", hidden_units=128, dropout_rate=0.3,
                  lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2, alg_string="kcenter_greedy",
-                 s_margin=0.1, gpus="cuda:0",  **kwargs):
-        super().__init__(alg_string=alg_string, patch_size=patch_size)
+                 s_margin=0.1,  **kwargs):
+        super().__init__(alg_string=alg_string, patch_size=patch_size, **kwargs)
         assert hasattr(self, "feature_model"), "Feature_model must be defined for CoreGCN"
         self.gpus = gpus
         self.subset_size = subset_size
