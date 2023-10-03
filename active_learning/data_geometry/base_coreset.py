@@ -73,7 +73,8 @@ class BaseCoreset(BaseDataGeometry):
         if self.feature_model is not None:
             print("Extracting features for all training data using self.feature_model...")
             self.dataset = CoresetDatasetWrapper(self.all_processed_train_data, transform=T.ToTensor())
-            alL_data_dataloader = DataLoader(self.dataset, batch_size=self.batch_size,shuffle=False,pin_memory=True)
+            alL_data_dataloader = DataLoader(self.dataset, batch_size=self.feature_model_batch_size,
+                                             shuffle=False, pin_memory=True)
             self.all_processed_train_data = self.get_features(alL_data_dataloader)
         self.setup_alg()
 
