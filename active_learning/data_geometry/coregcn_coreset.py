@@ -36,6 +36,8 @@ class CoreGCN(BaseCoreset):
             sample_indices += self.basic_coreset_alg.select_batch_(already_selected=already_selected_indices,
                                                                    N=num_samples_coreset)
             num_samples = num_samples - num_samples_coreset
+            # add the just labeled samples to already_selected
+            already_selected += [self.all_train_im_files[i] for i in sample_indices]
         if num_samples > 0:
             print("Calculating CoreGCN..")
             all_indices = np.arange(len(self.all_train_im_files))
