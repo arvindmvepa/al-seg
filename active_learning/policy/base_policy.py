@@ -55,7 +55,7 @@ class BaseActiveLearningPolicy:
 
     def __init__(self, model, model_uncertainty=None, data_geometry=None, ensemble_kwargs=None,
                  uncertainty_kwargs=None, geometry_kwargs=None, rounds=(),
-                 exp_dir="test", pseudolabels=False,
+                 exp_dir="test", save_im_score_file="scores.txt", pseudolabels=False,
                  tag="", seed=0):
         self.model = model
         self.model_uncertainty = model_uncertainty
@@ -68,6 +68,7 @@ class BaseActiveLearningPolicy:
         self._round_num = None
         self.round_dir = None
         self.exp_dir = exp_dir
+        self.save_im_score_file = save_im_score_file
         self.pseudolabels = pseudolabels
         self.tag = tag
         self.seed = seed
