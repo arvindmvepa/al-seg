@@ -16,7 +16,7 @@ from active_learning.data_geometry import coreset_algs
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string, metric='euclidean', patch_size=(256, 256), feature_model=None,
+    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', patch_size=(256, 256), feature_model=None,
                  feature_model_batch_size=128, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
