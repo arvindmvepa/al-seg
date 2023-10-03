@@ -23,6 +23,10 @@ class BaseCoreset(BaseDataGeometry):
         self.metric = metric
         print(f"Using the {self.metric} metric in Coreset sampling...")
         self.patch_size = patch_size
+        self.feature_model_batch_size = feature_model_batch_size
+        self.seed = seed
+        self.gpus = gpus
+        self.random_state = RandomState(seed=self.seed)
         if feature_model == 'resnet18':
             print("Using Resnet18 for feature extraction...")
             self.feature_model = resnet18(pretrained=True)
@@ -34,10 +38,6 @@ class BaseCoreset(BaseDataGeometry):
         if self.feature_model is not None:
             self.feature_model.to(self.gpus)
             self.feature_model.eval()
-        self.feature_model_batch_size = feature_model_batch_size
-        self.seed = seed
-        self.gpus = gpus
-        self.random_state = RandomState(seed=self.seed)
         self.basic_coreset_alg = None
         self.data_root = None
         self.all_train_im_files = None
