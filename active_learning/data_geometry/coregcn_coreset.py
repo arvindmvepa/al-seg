@@ -11,7 +11,7 @@ class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
     def __init__(self, subset_size="all", hidden_units=128, dropout_rate=0.3, lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2,
-                 feature_model="resnet18", s_margin=0.1,  **kwargs):
+                 feature_model="resnet18", s_margin=0.1, starting_sample=5, **kwargs):
         super().__init__(feature_model=feature_model, **kwargs)
         assert hasattr(self, "feature_model"), "Feature_model must be defined for CoreGCN"
         self.subset_size = subset_size
@@ -21,17 +21,22 @@ class CoreGCN(BaseCoreset):
         self.wdecay = wdecay
         self.lambda_loss = lambda_loss
         self.s_margin = s_margin
+        self.starting_sample = starting_sample
         
     def calculate_representativeness(self, im_score_file, num_samples, round_num, already_selected=[], skip=False,
                                      **kwargs):
         if skip:
             print("Skipping Calculating CoreGCN!")
             return
-        if  round_num == 0:
-            print("Calculating KCenterGreedyCoreset for first round...")
+        sample_indices = []
+        if len(already_selected) < self.starting_sample:
+            print(f"Calculating KCenterGreedyCoreset until we obtain {self.starting_sample} samples..")
             already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
-            sample_indices = self.basic_coreset_alg.select_batch_(already_selected=already_selected_indices, N=num_samples)
-        else:
+            num_samples_coreset = min(self.starting_sample - len(already_selected), num_samples)
+            sample_indices += self.basic_coreset_alg.select_batch_(already_selected=already_selected_indices,
+                                                                   N=num_samples_coreset)
+            num_samples = num_samples - num_samples_coreset
+        if num_samples > 0:
             print("Calculating CoreGCN..")
             all_indices = np.arange(len(self.all_train_im_files))
             already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
@@ -40,6 +45,7 @@ class CoreGCN(BaseCoreset):
                 subset_size = len(unlabeled_indices)
             else:
                 subset_size = self.subset_size
+            assert subset_size <= len(unlabeled_indices), "subset_size must be less than the number of unlabeled indices"
             subset = self.random_state.choice(unlabeled_indices, subset_size, replace=False).tolist()
             data_loader = DataLoader(self.dataset, batch_size=self.feature_model_batch_size,
                                      sampler=SubsetSequentialSampler(subset+already_selected_indices), pin_memory=True)
@@ -83,7 +89,7 @@ class CoreGCN(BaseCoreset):
 
                 feat = feat.detach().cpu().numpy()
                 coreset_inst = self.create_coreset_inst(feat)
-                sample_indices = coreset_inst.select_batch_(lbl, num_samples)
+                sample_indices += coreset_inst.select_batch_(lbl, num_samples)
 
                 print("Max confidence value: ", torch.max(scores.data).item())
                 print("Mean confidence value: ", torch.mean(scores.data).item())
@@ -94,7 +100,6 @@ class CoreGCN(BaseCoreset):
                 print("Labeled classified %: ", correct_labeled)
                 print("Unlabeled classified %: ", correct_unlabeled)
                 print("Total correctly classified %: ", correct)
-
 
         # write score file
         with open(im_score_file, "w") as f:
