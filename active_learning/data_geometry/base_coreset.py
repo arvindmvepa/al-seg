@@ -80,8 +80,8 @@ class BaseCoreset(BaseDataGeometry):
         if self.alg_string in coreset_algs:
             self.coreset_cls = coreset_algs[self.alg_string]
             self.basic_coreset_alg = coreset_algs[self.alg_string](self.all_processed_train_data,
-                                                                   model=self.feature_model, metric=self.metric,
-                                                                   seed=self.seed, )
+                                                                   metric=self.metric,
+                                                                   seed=self.seed)
         else:
             print(f"No coreset alg found for {self.alg_string}")
             self.coreset_cls = None
