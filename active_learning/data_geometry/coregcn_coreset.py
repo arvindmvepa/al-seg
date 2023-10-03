@@ -1,36 +1,27 @@
 import numpy as np
 import torch.nn as nn
 from torch.utils.data import DataLoader
-import torchvision.transforms as T
 import torch
 import torch.optim as optim
-from torchvision.models import resnet50
-from active_learning.data_geometry.base_coreset import BaseCoreset, CoresetDatasetWrapper
+from active_learning.data_geometry.base_coreset import BaseCoreset, SubsetSequentialSampler
 from active_learning.data_geometry.gcn import GCN
-from active_learning.data_geometry import coreset_algs
 
 
 class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
-    def __init__(self, patch_size=(256, 256), batch_size=128, subset_size="all", hidden_units=128, dropout_rate=0.3,
-                 lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2, feature_model='resnet50', alg_string="kcenter_greedy",
+    def __init__(self, patch_size=(256, 256), subset_size="all", hidden_units=128, dropout_rate=0.3,
+                 lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2, alg_string="kcenter_greedy",
                  s_margin=0.1, gpus="cuda:0",  **kwargs):
         super().__init__(alg_string=alg_string, patch_size=patch_size)
+        assert hasattr(self, "feature_model"), "Feature_model must be defined for CoreGCN"
         self.gpus = gpus
-        self.batch_size = batch_size
         self.subset_size = subset_size
         self.hidden_units = hidden_units
         self.dropout_rate = dropout_rate
         self.lr_gcn = lr_gcn
         self.wdecay = wdecay
         self.lambda_loss = lambda_loss
-        if feature_model == 'resnet50':
-            self.feature_model = resnet50(pretrained=True)
-            self.feature_model.to(self.gpus)
-            self.feature_model.eval()
-        else:
-            raise ValueError(f"Unknown feature model: {self.feature_model}")
         self.s_margin = s_margin
         
     def calculate_representativeness(self, im_score_file, num_samples, round_num, already_selected=[], skip=False,
@@ -41,8 +32,7 @@ class CoreGCN(BaseCoreset):
         if  round_num == 0:
             print("Calculating KCenterGreedyCoreset for first round...")
             already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
-            coreset_inst = self.coreset_cls(self.all_processed_train_data, seed=self.seed)
-            sample_indices = coreset_inst.select_batch_(already_selected=already_selected_indices, N=num_samples)
+            sample_indices = self.basic_coreset_alg.select_batch_(already_selected=already_selected_indices, N=num_samples)
         else:
             print("Calculating CoreGCN..")
             all_indices = np.arange(len(self.all_train_im_files))
@@ -53,7 +43,7 @@ class CoreGCN(BaseCoreset):
             else:
                 subset_size = self.subset_size
             subset = self.random_state.choice(unlabeled_indices, subset_size, replace=False).tolist()
-            data_loader = DataLoader(self.dataset, batch_size=self.batch_size,
+            data_loader = DataLoader(self.dataset, batch_size=self.feature_model_batch_size,
                                      sampler=SubsetSequentialSampler(subset+already_selected_indices), pin_memory=True)
             binary_labels = torch.cat((torch.zeros([subset_size, 1]),
                                        (torch.ones([len(already_selected_indices), 1]))), 0)
@@ -93,13 +83,9 @@ class CoreGCN(BaseCoreset):
                 labels = binary_labels.to(self.gpus)
                 scores, _, feat = models['gcn_module'](inputs, adj)
 
-                if self.coreset_cls is not None:
-                    feat = feat.detach().cpu().numpy()
-                    coreset_inst = self.coreset_cls(feat, seed=self.seed)
-                    sample_indices = coreset_inst.select_batch_(lbl, num_samples)
-                else:
-                    scores_median = np.squeeze(torch.abs(scores[:num_samples] - self.s_margin).detach().cpu().numpy())
-                    sample_indices = np.argsort(-(scores_median))
+                feat = feat.detach().cpu().numpy()
+                coreset_inst = self.coreset_cls(feat, seed=self.seed)
+                sample_indices = coreset_inst.select_batch_(lbl, num_samples)
 
                 print("Max confidence value: ", torch.max(scores.data).item())
                 print("Mean confidence value: ", torch.mean(scores.data).item())
@@ -125,29 +111,6 @@ class CoreGCN(BaseCoreset):
 
         return [self.all_train_im_files[i] for i in sample_indices]
 
-    def setup(self, data_root, all_train_im_files):
-        super().setup(data_root, all_train_im_files)
-        self.dataset = CoresetDatasetWrapper(self.all_processed_train_data, transform=T.ToTensor())
-
-    def setup_alg(self):
-        if self.alg_string in coreset_algs:
-            self.coreset_cls = coreset_algs[self.alg_string]
-        else:
-            print(f"No coreset alg found for {self.alg_string}")
-            self.coreset_cls = None
-
-    def get_features(self, data_loader):
-        features = torch.tensor([]).to(self.gpus)
-        with torch.no_grad():
-            for inputs in data_loader:
-                inputs = inputs.to(self.gpus)
-                # convert from grayscale to color, hard-coded for pretrained resnet
-                inputs = torch.cat([inputs, inputs, inputs], dim=1)
-                features_batch = self.feature_model(inputs)
-                features = torch.cat((features, features_batch), 0)
-            feat = features
-        return feat
-
     def aff_to_adj(self, x, y=None, eps=1e-10):
         x = x.detach().cpu().numpy()
         adj = np.matmul(x, x.transpose())
@@ -166,20 +129,3 @@ class CoreGCN(BaseCoreset):
         unlabeled_score = torch.mean(lnu)
         bce_adj_loss = -labeled_score - l_adj*unlabeled_score
         return bce_adj_loss
-
-
-class SubsetSequentialSampler(torch.utils.data.Sampler):
-    r"""Samples elements sequentially from a given list of indices, without replacement.
-
-    Arguments:
-        indices (sequence): a sequence of indices
-    """
-
-    def __init__(self, indices):
-        self.indices = indices
-
-    def __iter__(self):
-        return (self.indices[i] for i in range(len(self.indices)))
-
-    def __len__(self):
-        return len(self.indices)

@@ -3,8 +3,12 @@ from scipy.ndimage.interpolation import zoom
 import numpy as np
 from tqdm import tqdm
 from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
+import torchvision.transforms as T
+import torch
 from numpy.random import RandomState
 import os
+from torchvision.models import resnet18, resnet50
 from active_learning.data_geometry.base_data_geometry import BaseDataGeometry
 from active_learning.data_geometry import coreset_algs
 
@@ -12,13 +16,27 @@ from active_learning.data_geometry import coreset_algs
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string, patch_size=(256, 256), seed=0, **kwargs):
+    def __init__(self, alg_string, metric='euclidean', patch_size=(256, 256), feature_model=None,
+                 feature_model_batch_size=128, seed=0, **kwargs):
         super().__init__()
         self.alg_string = alg_string
+        self.metric = metric
         self.patch_size = patch_size
+        if feature_model == 'resnet18':
+            print("Using Resnet18 for feature extraction...")
+            self.feature_model = resnet18(pretrained=True)
+        elif feature_model == 'resnet50':
+            print("Using Resnet50 for feature extraction...")
+            self.feature_model = resnet50(pretrained=True)
+        else:
+            self.feature_model = None
+        if self.feature_model is not None:
+            self.feature_model.to(self.gpus)
+            self.feature_model.eval()
+        self.feature_model_batch_size = feature_model_batch_size
         self.seed = seed
         self.random_state = RandomState(seed=self.seed)
-        self.coreset_alg = None
+        self.basic_coreset_alg = None
         self.data_root = None
         self.all_train_im_files = None
         self.all_train_full_im_paths = None
@@ -50,15 +68,35 @@ class BaseCoreset(BaseDataGeometry):
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
         self.all_processed_train_data = self._get_data()
+        if self.feature_model is not None:
+            print("Extracting features for all training data using self.feature_model...")
+            self.dataset = CoresetDatasetWrapper(self.all_processed_train_data, transform=T.ToTensor())
+            alL_data_dataloader = DataLoader(self.dataset, batch_size=self.batch_size,shuffle=False,pin_memory=True)
+            self.all_processed_train_data = self.get_features(alL_data_dataloader)
         self.setup_alg()
 
     def setup_alg(self):
         if self.alg_string in coreset_algs:
-            self.coreset_alg = coreset_algs[self.alg_string](self.all_processed_train_data, self.seed)
+            self.coreset_cls = coreset_algs[self.alg_string]
+            self.basic_coreset_alg = coreset_algs[self.alg_string](self.all_processed_train_data,
+                                                                   model=self.feature_model, metric=self.metric,
+                                                                   seed=self.seed, )
         else:
             print(f"No coreset alg found for {self.alg_string}")
-            self.coreset_alg = None
+            self.coreset_cls = None
+            self.basic_coreset_alg = None
 
+    def get_features(self, data_loader):
+        features = torch.tensor([]).to(self.gpus)
+        with torch.no_grad():
+            for inputs in data_loader:
+                inputs = inputs.to(self.gpus)
+                # convert from grayscale to color, hard-coded for pretrained resnet
+                inputs = torch.cat([inputs, inputs, inputs], dim=1)
+                features_batch = self.feature_model(inputs)
+                features = torch.cat((features, features_batch), 0)
+            feat = features
+        return feat
 
 
 class CoresetDatasetWrapper(Dataset):
@@ -77,3 +115,20 @@ class CoresetDatasetWrapper(Dataset):
             sample = self.transform(sample)
 
         return sample
+
+
+class SubsetSequentialSampler(torch.utils.data.Sampler):
+    r"""Samples elements sequentially from a given list of indices, without replacement.
+
+    Arguments:
+        indices (sequence): a sequence of indices
+    """
+
+    def __init__(self, indices):
+        self.indices = indices
+
+    def __iter__(self):
+        return (self.indices[i] for i in range(len(self.indices)))
+
+    def __len__(self):
+        return len(self.indices)

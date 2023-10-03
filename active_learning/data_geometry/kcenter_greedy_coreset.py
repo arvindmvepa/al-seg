@@ -15,7 +15,7 @@ class KCenterGreedyCoreset(BaseCoreset):
 
         print("Calculating KCenterGreedyCoreset..")
         already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
-        core_set_indices = self.coreset_alg.select_batch_(already_selected=already_selected_indices, N=num_samples)
+        core_set_indices = self.basic_coreset_alg.select_batch_(already_selected=already_selected_indices, N=num_samples)
 
         # write score file
         with open(im_score_file, "w") as f:
