@@ -15,7 +15,6 @@ class CoreGCN(BaseCoreset):
                  s_margin=0.1,  **kwargs):
         super().__init__(alg_string=alg_string, patch_size=patch_size, **kwargs)
         assert hasattr(self, "feature_model"), "Feature_model must be defined for CoreGCN"
-        self.gpus = gpus
         self.subset_size = subset_size
         self.hidden_units = hidden_units
         self.dropout_rate = dropout_rate
