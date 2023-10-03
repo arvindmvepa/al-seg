@@ -21,6 +21,7 @@ class BaseCoreset(BaseDataGeometry):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
+        print(f"Using the metric {self.metric} in Coreset sampling...")
         self.patch_size = patch_size
         if feature_model == 'resnet18':
             print("Using Resnet18 for feature extraction...")
