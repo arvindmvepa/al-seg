@@ -29,6 +29,7 @@ class CoreGCN(BaseCoreset):
             print("Skipping Calculating CoreGCN!")
             return
         sample_indices = []
+        already_selected = already_selected.copy()
         if len(already_selected) < self.starting_sample:
             print(f"Calculating KCenterGreedyCoreset until we obtain {self.starting_sample} samples..")
             already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
