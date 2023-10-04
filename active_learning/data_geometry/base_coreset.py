@@ -77,7 +77,7 @@ class BaseCoreset(BaseDataGeometry):
             self.dataset = CoresetDatasetWrapper(self.all_processed_train_data, transform=T.ToTensor())
             alL_data_dataloader = DataLoader(self.dataset, batch_size=self.feature_model_batch_size,
                                              shuffle=False, pin_memory=True)
-            self.all_processed_train_data = self.get_features(alL_data_dataloader).detach().cpu().numpy()
+            self.all_processed_train_data = self.get_eval_features(alL_data_dataloader).detach().cpu().numpy()
         self.setup_alg()
 
     def setup_alg(self):
