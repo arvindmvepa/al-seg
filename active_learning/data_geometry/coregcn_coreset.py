@@ -11,7 +11,7 @@ class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
     def __init__(self, subset_size="all", hidden_units=128, dropout_rate=0.3, lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2,
-                 num_gcn_epochs=200, feature_model="resnet18",  =False, train_feature_layer_index=-2,
+                 num_gcn_epochs=200, feature_model="resnet18",  train_feature_model=False, train_feature_layer_index=-2,
                  lr_feature_model=1e-5, s_margin=0.1, starting_sample=5, **kwargs):
         super().__init__(feature_model=feature_model, **kwargs)
         assert hasattr(self, "feature_model"), "Feature_model must be defined for CoreGCN"
