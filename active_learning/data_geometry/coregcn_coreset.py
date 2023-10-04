@@ -59,6 +59,7 @@ class CoreGCN(BaseCoreset):
                                        (torch.ones([len(already_selected_indices), 1]))), 0)
             features = self.get_features(data_loader)
             features = nn.functional.normalize(features)
+            print(f"Features shape: {features.shape}")
             adj = self.aff_to_adj(features)
             if self.train_feature_model:
                 print("Combining GCN with feature model...")
@@ -90,6 +91,7 @@ class CoreGCN(BaseCoreset):
                     for inputs in data_loader:
                         inputs = inputs.to(self.gpus)
                         inputs = torch.cat([inputs, inputs, inputs], dim=1)
+                        print(f"Inputs shape: {inputs.shape}")
                         outputs_batch, _, _ = models['gcn_module'](inputs, adj)
                         outputs = torch.cat((outputs, outputs_batch), 0)
                 else:
