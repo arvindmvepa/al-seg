@@ -14,4 +14,4 @@ data_geometry:
   data_geometry_type: kcenter_greedy
   feature_model: resnet18
   seed: 1
-exp_dir: "DMPLS_exp1_coreset_model_resnet18"
+exp_dir: "DMPLS_exp1_coreset_model_resnet18_bugfix"

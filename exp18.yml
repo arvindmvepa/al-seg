@@ -13,4 +13,4 @@ policy:
 data_geometry:
   data_geometry_type: coregcn
   seed: 3
-exp_dir: "DMPLS_exp3_coregcn"
+exp_dir: "DMPLS_exp3_coregcn_bugfix"
