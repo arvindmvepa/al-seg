@@ -58,9 +58,8 @@ class CoreGCN(BaseCoreset):
                                      sampler=SubsetSequentialSampler(subset+already_selected_indices), pin_memory=True)
             binary_labels = torch.cat((torch.zeros([subset_size, 1]),
                                        (torch.ones([len(already_selected_indices), 1]))), 0)
-            features = self.get_features(data_loader)
+            features = self.get_eval_features(data_loader)
             features = nn.functional.normalize(features)
-            print(f"Features shape: {features.shape}")
             adj = self.aff_to_adj(features)
             gcn_module = GCN(nfeat=features.shape[1],
                              nhid=self.hidden_units,

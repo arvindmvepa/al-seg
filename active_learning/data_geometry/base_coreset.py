@@ -94,7 +94,7 @@ class BaseCoreset(BaseDataGeometry):
     def create_coreset_inst(self, processed_data):
         return self.coreset_cls(processed_data, metric=self.metric, seed=self.seed)
 
-    def get_features(self, data_loader):
+    def get_eval_features(self, data_loader):
         self.feature_model.eval()
         features = torch.tensor([]).to(self.gpus)
         with torch.no_grad():
