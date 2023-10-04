@@ -40,7 +40,6 @@ class BaseCoreset(BaseDataGeometry):
             # only layers before feature_model_ignore_layer will be used for feature extraction
             self.feature_model = nn.Sequential(*list(self.feature_model.children())[:feature_model_ignore_layer])
             self.feature_model.to(self.gpus)
-            self.feature_model.eval()
         self.basic_coreset_alg = None
         self.data_root = None
         self.all_train_im_files = None
@@ -96,6 +95,7 @@ class BaseCoreset(BaseDataGeometry):
         return self.coreset_cls(processed_data, metric=self.metric, seed=self.seed)
 
     def get_features(self, data_loader):
+        self.feature_model.eval()
         features = torch.tensor([]).to(self.gpus)
         with torch.no_grad():
             for inputs in data_loader:

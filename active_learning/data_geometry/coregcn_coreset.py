@@ -4,22 +4,25 @@ from torch.utils.data import DataLoader
 import torch
 import torch.optim as optim
 from active_learning.data_geometry.base_coreset import BaseCoreset, SubsetSequentialSampler
-from active_learning.data_geometry.gcn import GCN
+from active_learning.data_geometry.gcn import GCN, GCN_E
 
 
 class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
     def __init__(self, subset_size="all", hidden_units=128, dropout_rate=0.3, lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2,
-                 feature_model="resnet18", s_margin=0.1, starting_sample=5, **kwargs):
+                 num_gcn_epochs=200, feature_model="resnet18", train_feature_model=False, s_margin=0.1,
+                 starting_sample=5, **kwargs):
         super().__init__(feature_model=feature_model, **kwargs)
         assert hasattr(self, "feature_model"), "Feature_model must be defined for CoreGCN"
+        self.train_feature_model = train_feature_model
         self.subset_size = subset_size
         self.hidden_units = hidden_units
         self.dropout_rate = dropout_rate
         self.lr_gcn = lr_gcn
         self.wdecay = wdecay
         self.lambda_loss = lambda_loss
+        self.num_gcn_epochs = num_gcn_epochs
         self.s_margin = s_margin
         self.starting_sample = starting_sample
         
@@ -57,14 +60,20 @@ class CoreGCN(BaseCoreset):
             features = self.get_features(data_loader)
             features = nn.functional.normalize(features)
             adj = self.aff_to_adj(features)
-
-            gcn_module = GCN(nfeat=features.shape[1],
-                             nhid=self.hidden_units,
-                             nclass=1,
-                             dropout=self.dropout_rate).to(self.gpus)
+            if self.train_feature_model:
+                self.feature_model.train()
+                gcn_module = GCN_E(feature_model=self.feature_model,
+                                   nfeat=features.shape[1],
+                                   nhid=self.hidden_units,
+                                   nclass=1,
+                                   dropout=self.dropout_rate).to(self.gpus)
+            else:
+                gcn_module = GCN(nfeat=features.shape[1],
+                                 nhid=self.hidden_units,
+                                 nclass=1,
+                                 dropout=self.dropout_rate).to(self.gpus)
 
             models = {'gcn_module': gcn_module}
-
             optim_backbone = optim.Adam(models['gcn_module'].parameters(), lr=self.lr_gcn, weight_decay=self.wdecay)
             optimizers = {'gcn_module': optim_backbone}
 
@@ -73,9 +82,16 @@ class CoreGCN(BaseCoreset):
 
             ############
             print("Training GCN..")
-            for i in range(200):
+            for i in range(self.num_gcn_epochs):
                 optimizers['gcn_module'].zero_grad()
-                outputs, _, _ = models['gcn_module'](features, adj)
+                if self.train_feature_model:
+                    outputs = torch.tensor([]).to(self.gpus)
+                    for inputs in data_loader:
+                        inputs = inputs.to(self.gpus)
+                        outputs_batch, _, _ = models['gcn_module'](inputs, adj)
+                        outputs = torch.cat((outputs, outputs_batch), 0)
+                else:
+                    outputs, _, _ = models['gcn_module'](features, adj)
                 lamda = self.lambda_loss
                 loss = self.BCEAdjLoss(outputs, lbl, nlbl, lamda)
                 loss.backward()
@@ -135,3 +151,4 @@ class CoreGCN(BaseCoreset):
         unlabeled_score = torch.mean(lnu)
         bce_adj_loss = -labeled_score - l_adj*unlabeled_score
         return bce_adj_loss
+
