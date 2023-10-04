@@ -12,4 +12,5 @@ policy:
   rounds: [[.005, 0], [.005, 0], [.005, 0]]
 data_geometry:
   data_geometry_type: coregcn
+  train_feature_model: True
 exp_dir: "DMPLS_w_coregcn_test_run"

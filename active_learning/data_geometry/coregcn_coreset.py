@@ -11,8 +11,8 @@ class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
     def __init__(self, subset_size="all", hidden_units=128, dropout_rate=0.3, lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2,
-                 num_gcn_epochs=200, feature_model="resnet18", train_feature_model=False, lr_feature_model=1e-4,
-                 s_margin=0.1, starting_sample=5, **kwargs):
+                 num_gcn_epochs=200, feature_model="resnet18",  =False, train_feature_layer_index=-2,
+                 lr_feature_model=1e-5, s_margin=0.1, starting_sample=5, **kwargs):
         super().__init__(feature_model=feature_model, **kwargs)
         assert hasattr(self, "feature_model"), "Feature_model must be defined for CoreGCN"
         self.subset_size = subset_size
@@ -23,6 +23,7 @@ class CoreGCN(BaseCoreset):
         self.lambda_loss = lambda_loss
         self.num_gcn_epochs = num_gcn_epochs
         self.train_feature_model = train_feature_model
+        self.train_feature_layer_index = train_feature_layer_index
         self.lr_feature_model = lr_feature_model
         self.s_margin = s_margin
         self.starting_sample = starting_sample
@@ -72,7 +73,8 @@ class CoreGCN(BaseCoreset):
                 print("Training feature model..")
                 self.feature_model.train()
                 models.update({'feature_model': self.feature_model})
-                optim_feature_model = optim.Adam(models['feature_model'].parameters(), lr=self.lr_feature_model)
+                optim_feature_model = optim.Adam(models['feature_model'].children()[self.train_feature_layer_index].parameters(),
+                                                 lr=self.lr_feature_model)
                 optimizers.update({'feature_model': optim_feature_model})
             nlbl = np.arange(0, subset_size, 1)
             lbl = np.arange(subset_size, subset_size + len(already_selected_indices), 1)
