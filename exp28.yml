@@ -15,4 +15,5 @@ data_geometry:
   feature_model: resnet50
   starting_sample: 20
   subset_size: 291
+  num_epochs_gcn: 300
 exp_dir: "DMPLS_exp3_coregcn_resnet50_update_config_v3"
