@@ -102,7 +102,8 @@ class BaseCoreset(BaseDataGeometry):
                 inputs = inputs.to(self.gpus)
                 # convert from grayscale to color, hard-coded for pretrained resnet
                 inputs = torch.cat([inputs, inputs, inputs], dim=1)
-                features_batch = self.feature_model(inputs)
+                # flatten the feature map (but not the batch dim)
+                features_batch = self.feature_model(inputs).flatten(1)
                 features = torch.cat((features, features_batch), 0)
             feat = features
         return feat
