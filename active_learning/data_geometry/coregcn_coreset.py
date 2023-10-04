@@ -73,7 +73,7 @@ class CoreGCN(BaseCoreset):
                 print("Training feature model..")
                 self.feature_model.train()
                 models.update({'feature_model': self.feature_model})
-                optim_feature_model = optim.Adam(models['feature_model'].children()[self.train_feature_layer_index].parameters(),
+                optim_feature_model = optim.Adam(list(models['feature_model'].children())[self.train_feature_layer_index].parameters(),
                                                  lr=self.lr_feature_model)
                 optimizers.update({'feature_model': optim_feature_model})
             nlbl = np.arange(0, subset_size, 1)
