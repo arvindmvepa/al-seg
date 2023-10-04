@@ -66,13 +66,3 @@ class View(nn.Module):
 
     def forward(self, tensor):
         return tensor.view(self.size)
-
-class GCN_E(nn.Module):
-    def __init__(self, feature_model, nfeat, nhid, nclass, dropout):
-        super(GCN_E, self).__init__()
-        self.feature_model = feature_model
-        self.gcn = GCN(nfeat, nhid, nclass, dropout)
-
-    def forward(self, x, adj):
-        x = self.feature_model(x)
-        return self.gcn(x, adj)
