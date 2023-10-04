@@ -18,7 +18,7 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', patch_size=(256, 256), feature_model=None,
-                 feature_model_batch_size=128, seed=0, gpus="cuda:0", **kwargs):
+                 feature_model_ignore_layer=-1, feature_model_batch_size=128, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -37,8 +37,8 @@ class BaseCoreset(BaseDataGeometry):
         else:
             self.feature_model = None
         if self.feature_model is not None:
-            # make sure to use the feature layers only (disinclude the last fc and adaptive pooling layer)
-            self.feature_model = nn.Sequential(*list(self.feature_model.children())[:-2])
+            # only layers before feature_model_ignore_layer will be used for feature extraction
+            self.feature_model = nn.Sequential(*list(self.feature_model.children())[:feature_model_ignore_layer])
             self.feature_model.to(self.gpus)
             self.feature_model.eval()
         self.basic_coreset_alg = None
