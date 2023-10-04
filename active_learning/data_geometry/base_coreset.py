@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import torchvision.transforms as T
 import torch
+import torch.nn as nn
 from numpy.random import RandomState
 import os
 from torchvision.models import resnet18, resnet50
@@ -36,6 +37,8 @@ class BaseCoreset(BaseDataGeometry):
         else:
             self.feature_model = None
         if self.feature_model is not None:
+            # make sure to use the feature layers only (disinclude the last fc and adaptive pooling layer)
+            self.feature_model = nn.Sequential(*list(self.feature_model.children())[:-2])
             self.feature_model.to(self.gpus)
             self.feature_model.eval()
         self.basic_coreset_alg = None
