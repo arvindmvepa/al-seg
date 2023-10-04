@@ -9,9 +9,9 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: True
-  rounds: [[.05, 0], [.1, 0], [.15, 0], [.2, 0], [.4, 0]]
+  rounds: [[.01, 0], [.04, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  feature_model: resnet18
+  feature_model: resnet50
   seed: 2
-exp_dir: "DMPLS_exp2_coreset_model_resnet18_bugfix"
+exp_dir: "DMPLS_exp2_coreset_model_resnet50_v3"
