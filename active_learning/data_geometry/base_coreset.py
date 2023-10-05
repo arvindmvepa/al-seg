@@ -62,7 +62,7 @@ class BaseCoreset(BaseDataGeometry):
             dataset = CoresetDatasetWrapper(self.image_features, transform=T.ToTensor())
             alL_data_dataloader = DataLoader(dataset, batch_size=self.feature_model_batch_size,
                                              shuffle=False, pin_memory=True)
-            self.image_features = self.get_nn_features(alL_data_dataloader).detach().cpu().numpy()
+            self.image_features = self.get_nn_features(alL_data_dataloader)
 
     def setup_alg(self):
         if self.alg_string in coreset_algs:
@@ -89,7 +89,7 @@ class BaseCoreset(BaseDataGeometry):
                 features_batch = self.feature_model(inputs).flatten(1)
                 features = torch.cat((features, features_batch), 0)
             feat = features
-        return feat
+        return feat.detach().cpu().numpy()
 
     @staticmethod
     def _patch_im(im, patch_size):

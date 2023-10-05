@@ -52,7 +52,10 @@ class CoreGCN(BaseCoreset):
             subset = self.random_state.choice(unlabeled_indices, subset_size, replace=False).tolist()
             binary_labels = torch.cat((torch.zeros([subset_size, 1]),
                                        (torch.ones([len(already_selected_indices), 1]))), 0)
-            features = self.image_features[subset+already_selected_indices].to(self.gpus)
+            if isinstance(self.image_features, np.ndarray):
+                features = torch.from_numpy(self.image_features[subset + already_selected_indices]).float().to(self.gpus)
+            else:
+                raise ValueError("self.image_features must be a numpy array")
             features = nn.functional.normalize(features)
             adj = self.aff_to_adj(features)
 
