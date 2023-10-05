@@ -39,52 +39,35 @@ class BaseCoreset(BaseDataGeometry):
         if self.feature_model is not None:
             # only layers before feature_model_ignore_layer will be used for feature extraction
             self.feature_model = nn.Sequential(*list(self.feature_model.children())[:feature_model_ignore_layer])
-            self.feature_model.to(self.gpus)
+            self.feature_model = self.feature_model.to(self.gpus)
             self.feature_model.eval()
         self.basic_coreset_alg = None
         self.data_root = None
         self.all_train_im_files = None
         self.all_train_full_im_paths = None
-        self.all_processed_train_data = None
-
-    @staticmethod
-    def _patch_im(im, patch_size):
-        x, y = im.shape
-        image = zoom(im, (patch_size[0] / x, patch_size[1] / y), order=0)
-        return image 
-
-    def _load_image(self, case):
-        h5f = h5py.File(case, 'r')
-        image = h5f['image'][:]
-        patched_image = self._patch_im(image, self.patch_size)
-        return patched_image[np.newaxis,]
-
-    def _get_data(self):
-        cases = []
-        for im_path in tqdm(self.all_train_full_im_paths):
-            image = self._load_image(im_path)
-            cases.append(image)
-        cases_arr = np.concatenate(cases, axis=0)
-        return cases_arr 
+        self.image_features = None
     
     def setup(self, data_root, all_train_im_files):
+        self.setup_data(data_root, all_train_im_files)
+        self.setup_alg()
+
+    def setup_data(self, data_root, all_train_im_files):
         print("Initializing Training pool X for coreset sampling!")
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
-        self.all_processed_train_data = self._get_data()
+        self.image_features =  self._get_data()
         if self.feature_model is not None:
-            print("Extracting features for all training data using self.feature_model...")
-            self.dataset = CoresetDatasetWrapper(self.all_processed_train_data, transform=T.ToTensor())
-            alL_data_dataloader = DataLoader(self.dataset, batch_size=self.feature_model_batch_size,
+            print("Extracting features for all training data using feature_model...")
+            dataset = CoresetDatasetWrapper(self.image_features, transform=T.ToTensor())
+            alL_data_dataloader = DataLoader(dataset, batch_size=self.feature_model_batch_size,
                                              shuffle=False, pin_memory=True)
-            self.all_processed_train_data = self.get_features(alL_data_dataloader).detach().cpu().numpy()
-        self.setup_alg()
+            self.image_features = self.get_nn_features(alL_data_dataloader).detach().cpu().numpy()
 
     def setup_alg(self):
         if self.alg_string in coreset_algs:
             self.coreset_cls = coreset_algs[self.alg_string]
-            self.basic_coreset_alg = coreset_algs[self.alg_string](self.all_processed_train_data,
+            self.basic_coreset_alg = coreset_algs[self.alg_string](self.image_features,
                                                                    metric=self.metric,
                                                                    seed=self.seed)
         else:
@@ -95,7 +78,7 @@ class BaseCoreset(BaseDataGeometry):
     def create_coreset_inst(self, processed_data):
         return self.coreset_cls(processed_data, metric=self.metric, seed=self.seed)
 
-    def get_features(self, data_loader):
+    def get_nn_features(self, data_loader):
         features = torch.tensor([]).to(self.gpus)
         with torch.no_grad():
             for inputs in data_loader:
@@ -108,37 +91,40 @@ class BaseCoreset(BaseDataGeometry):
             feat = features
         return feat
 
+    @staticmethod
+    def _patch_im(im, patch_size):
+        x, y = im.shape
+        image = zoom(im, (patch_size[0] / x, patch_size[1] / y), order=0)
+        return image
+
+    def _load_image(self, case):
+        h5f = h5py.File(case, 'r')
+        image = h5f['image'][:]
+        patched_image = self._patch_im(image, self.patch_size)
+        return patched_image[np.newaxis,]
+
+    def _get_data(self):
+        cases = []
+        for im_path in tqdm(self.all_train_full_im_paths):
+            image = self._load_image(im_path)
+            cases.append(image)
+        cases_arr = np.concatenate(cases, axis=0).flatten(1)
+        return cases_arr
+
 
 class CoresetDatasetWrapper(Dataset):
 
-    def __init__(self, processed_train_data, transform=None):
-        self.processed_data = processed_train_data
+    def __init__(self, image_features, transform=None):
+        self.image_features = image_features
         self.transform = transform
 
     def __len__(self):
-        return len(self.processed_data)
+        return len(self.image_features)
 
     def __getitem__(self, idx):
-        sample = self.processed_data[idx]
+        sample = self.image_features[idx]
 
         if self.transform:
             sample = self.transform(sample)
 
         return sample
-
-
-class SubsetSequentialSampler(torch.utils.data.Sampler):
-    r"""Samples elements sequentially from a given list of indices, without replacement.
-
-    Arguments:
-        indices (sequence): a sequence of indices
-    """
-
-    def __init__(self, indices):
-        self.indices = indices
-
-    def __iter__(self):
-        return (self.indices[i] for i in range(len(self.indices)))
-
-    def __len__(self):
-        return len(self.indices)

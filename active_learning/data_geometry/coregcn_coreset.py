@@ -1,9 +1,8 @@
 import numpy as np
 import torch.nn as nn
-from torch.utils.data import DataLoader
 import torch
 import torch.optim as optim
-from active_learning.data_geometry.base_coreset import BaseCoreset, SubsetSequentialSampler
+from active_learning.data_geometry.base_coreset import BaseCoreset
 from active_learning.data_geometry.gcn import GCN
 
 
@@ -51,11 +50,9 @@ class CoreGCN(BaseCoreset):
                 subset_size = self.subset_size
             assert subset_size <= len(unlabeled_indices), "subset_size must be less than the number of unlabeled indices"
             subset = self.random_state.choice(unlabeled_indices, subset_size, replace=False).tolist()
-            data_loader = DataLoader(self.dataset, batch_size=self.feature_model_batch_size,
-                                     sampler=SubsetSequentialSampler(subset+already_selected_indices), pin_memory=True)
             binary_labels = torch.cat((torch.zeros([subset_size, 1]),
                                        (torch.ones([len(already_selected_indices), 1]))), 0)
-            features = self.get_features(data_loader)
+            features = self.image_features[subset+already_selected_indices].to(self.gpus)
             features = nn.functional.normalize(features)
             adj = self.aff_to_adj(features)
 
