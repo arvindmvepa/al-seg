@@ -108,7 +108,9 @@ class BaseCoreset(BaseDataGeometry):
         for im_path in tqdm(self.all_train_full_im_paths):
             image = self._load_image(im_path)
             cases.append(image)
-        cases_arr = np.concatenate(cases, axis=0).flatten(1)
+        cases_arr = np.concatenate(cases, axis=0)
+        # flatten array except for first dim
+        cases_arr = cases_arr.reshape(cases_arr.shape[0], -1)
         return cases_arr
 
 
