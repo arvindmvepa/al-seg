@@ -16,5 +16,5 @@ data_geometry:
   starting_sample: 20
   subset_size: 291
   num_epochs_gcn: 800
-  lambda_loss: 1.0
+  lambda_loss: 0.3
 exp_dir: "DMPLS_exp_coregcn_resnet18_update_config_v3"
