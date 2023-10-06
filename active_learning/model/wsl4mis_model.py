@@ -18,7 +18,8 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
 
     def __init__(self, ann_type="scribble", data_root="wsl4mis_data/ACDC", ensemble_size=1,
                  seg_model='unet_cct', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000,
-                 deterministic=1, patch_size=(256, 256), seed=0, gpus="0", tag=""):
+                 deterministic=1, patch_size=(256, 256), inf_train_type="preds", feature_decoder_index=5, seed=0,
+                 gpus="0", tag=""):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
         self.seg_model = seg_model
@@ -28,10 +29,16 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         self.deterministic = deterministic
         self.base_lr = base_lr
         self.patch_size = patch_size
+        self.inf_train_type = inf_train_type
+        self.feature_decoder_index = feature_decoder_index
         self.gpus = gpus
 
     def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         model = self.load_best_model(snapshot_dir).to(self.gpus)
+        if self.inf_train_type == "features":
+            model = model.encoder
+        elif self.inf_train_type != "preds":
+            raise ValueError(f"self.inf_train_type {self.inf_train_type } is not recognized. ust be either 'features' or 'preds'")
         model.eval()
         full_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
                                      sup_type=self.ann_type, train_file=self.orig_train_im_list_file,
@@ -52,8 +59,8 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
                 continue
             slice_basename = os.path.basename(full_db_train.sample_list[idx])
             outputs = model(volume_batch)
-            outputs_soft = self.extract_model_prediction(outputs)
-            train_preds[slice_basename] = np.float16(outputs_soft.cpu().detach().numpy())
+            outputs_ = self.extract_train_features(outputs)
+            train_preds[slice_basename] = np.float16(outputs_.cpu().detach().numpy())
         train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
         np.savez_compressed(train_preds_path, **train_preds)
 
@@ -103,6 +110,12 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         if batch_size == 1:
             outputs = outputs[0]
         return outputs
+
+    def extract_train_features(self, raw_model_outputs, batch_size=1):
+        if self.inf_train_type == "features":
+            return raw_model_outputs[self.feature_decoder_index]
+        else:
+            return self.extract_model_prediction(raw_model_outputs, batch_size=batch_size)
 
     @abstractmethod
     def _extract_model_prediction_channel(self, raw_model_outputs):
