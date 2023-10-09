@@ -1,0 +1,18 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 1
+  gpus: "cuda:0"
+  inf_train_type: "features"
+policy:
+  policy_type: ranked
+  seed: 3
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.05, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  data_geometry_type: coregcn
+  use_model_features: True
+  seed: 3
+exp_dir: "DMPLS_exp3_coregcn_mdl_ft_v3"
