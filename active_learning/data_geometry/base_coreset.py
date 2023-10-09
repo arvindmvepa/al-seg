@@ -108,12 +108,15 @@ class BaseCoreset(BaseDataGeometry):
         return feat.detach().cpu().numpy()
 
     @staticmethod
-    def get_model_features(round_dir, train_logits_path, delete_preds=True):
-        train_logits_path = os.path.join(round_dir, "*", train_logits_path)
+    def get_model_features(prev_round_dir, train_logits_path, delete_preds=True):
+        if prev_round_dir is None:
+            print("No model features for first round!")
+            return None
+        train_logits_path = os.path.join(prev_round_dir, "*", train_logits_path)
+        print(f"Looking for model features in {train_logits_path}")
         train_results = sorted(list(glob(train_logits_path)))
         if len(train_results) == 0:
-            print("No model features found!")
-            return None
+            raise ValueError("No model features found!")
         if len(train_results) > 1:
             raise ValueError(f"More than one prediction file found: {train_results}")
         train_results = train_results[0]
