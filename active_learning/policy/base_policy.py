@@ -153,7 +153,7 @@ class BaseActiveLearningPolicy:
             self.cur_oracle_ims[key] = self.cur_oracle_ims[key] + new_ann_ims[key]
         self.model.train_ensemble(round_dir=self.round_dir, cur_total_oracle_split=self.cur_total_oracle_split,
                                   cur_total_pseudo_split=self.cur_total_pseudo_split,
-                                  inf_train=(calculate_model_uncertainty or self.data_ƒgeometry.use_model_features),
+                                  inf_train=(calculate_model_uncertainty or self.data_geometry.use_model_features),
                                   **ensemble_kwargs)
         if calculate_model_uncertainty and (self._round_num < (self.num_rounds - 1)):
             self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
