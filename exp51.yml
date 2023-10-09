@@ -14,5 +14,6 @@ policy:
 data_geometry:
   data_geometry_type: coregcn
   use_model_features: True
+  feature_model: resnet50
   seed: 1
 exp_dir: "DMPLS_exp1_coregcn_mdl_ft_v3"
