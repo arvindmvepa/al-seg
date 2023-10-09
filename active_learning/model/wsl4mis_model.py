@@ -112,6 +112,7 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         return outputs
 
     def extract_train_features(self, raw_model_outputs, batch_size=1):
+        print(f"len(raw_model_outputs): {len(raw_model_outputs)}")
         if self.inf_train_type == "features":
             return raw_model_outputs[self.feature_decoder_index]
         else:
