@@ -3,13 +3,14 @@ model:
   ann_type: "scribble"
   ensemble_size: 1
   gpus: "cuda:0"
+  inf_train_type: "features"
 policy:
   policy_type: ranked
   seed: 0
   ensemble_kwargs:
     skip: False
     inf_test: False
-  rounds: [[.001, 0], [.001, 0], [.001, 0]]
+  rounds: [[.005, 0], [.005, 0], [.005, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
   use_model_features: True
