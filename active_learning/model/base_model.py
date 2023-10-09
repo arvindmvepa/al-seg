@@ -137,14 +137,13 @@ class BaseModel(ABC):
         self.all_train_files_dict = self._sort_files_dict(self.all_train_files_dict)
 
     def _sort_files_dict(self, files_dict):
-        file_keys = self.file_keys
         im_files = files_dict[self.im_key]
         files_info_tuples = []
         for im_index, im_file in enumerate(im_files):
-            files_info_tuples.append(tuple(im_file + [files_dict[key][im_index] for key in file_keys if key != self.im_key]))
+            files_info_tuples.append(tuple([im_file] + [files_dict[key][im_index] for key in self.file_keys if key != self.im_key]))
         sorted_files_info_tuples = sorted(files_info_tuples, key=lambda x: x[0])
         updated_files_dict = {}
-        for key_index, key in enumerate(file_keys):
+        for key_index, key in enumerate(self.file_keys):
             updated_files_dict[key] = [tup[key_index] for tup in sorted_files_info_tuples]
         return updated_files_dict
 
