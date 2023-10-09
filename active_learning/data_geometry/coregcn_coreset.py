@@ -23,18 +23,20 @@ class CoreGCN(BaseCoreset):
         self.s_margin = s_margin
         self.starting_sample = starting_sample
         
-    def calculate_representativeness(self, im_score_file, num_samples, round_num, already_selected=[], skip=False,
-                                     **kwargs):
+    def calculate_representativeness(self, im_score_file, num_samples, round_dir, train_logits_path,
+                                     already_selected=[], skip=False,  delete_preds=True, **kwargs):
         if skip:
             print("Skipping Calculating CoreGCN!")
             return
+        coreset_inst, feat = self.get_coreset_inst_and_features_for_round(round_dir, train_logits_path,
+                                                                          delete_preds=delete_preds)
         sample_indices = []
         already_selected = already_selected.copy()
         if len(already_selected) < self.starting_sample:
             print(f"Calculating KCenterGreedyCoreset until we obtain {self.starting_sample} samples..")
             already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
             num_samples_coreset = min(self.starting_sample - len(already_selected), num_samples)
-            sample_indices += self.basic_coreset_alg.select_batch_(already_selected=already_selected_indices,
+            sample_indices += coreset_inst.select_batch_(already_selected=already_selected_indices,
                                                                    N=num_samples_coreset)
             num_samples = num_samples - num_samples_coreset
             # add the just labeled samples to already_selected
@@ -52,10 +54,10 @@ class CoreGCN(BaseCoreset):
             subset = self.random_state.choice(unlabeled_indices, subset_size, replace=False).tolist()
             binary_labels = torch.cat((torch.zeros([subset_size, 1]),
                                        (torch.ones([len(already_selected_indices), 1]))), 0)
-            if isinstance(self.image_features, np.ndarray):
-                features = torch.from_numpy(self.image_features[subset + already_selected_indices]).float().to(self.gpus)
+            if isinstance(feat, np.ndarray):
+                features = torch.from_numpy(feat[subset + already_selected_indices]).float().to(self.gpus)
             else:
-                raise ValueError("self.image_features must be a numpy array")
+                raise ValueError("feat must be a numpy array")
             features = nn.functional.normalize(features)
             adj = self.aff_to_adj(features)
 

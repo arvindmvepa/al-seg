@@ -1,0 +1,16 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 1
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: False
+  rounds: [[.005, 0], [.005, 0], [.005, 0]]
+data_geometry:
+  data_geometry_type: coregcn
+  use_model_features: True
+exp_dir: "DMPLS_w_coregcn_mdl_ft_test_run"

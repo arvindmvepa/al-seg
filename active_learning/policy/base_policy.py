@@ -138,8 +138,9 @@ class BaseActiveLearningPolicy:
         if calculate_data_geometry:
             self.data_geometry.calculate_representativeness(im_score_file=im_score_file,
                                                             num_samples=self._get_unann_num_samples(),
-                                                            round_num=self._round_num,
                                                             already_selected=self.cur_oracle_ims[self.im_key],
+                                                            round_dir=self.round_dir,
+                                                            train_logits_path=self.model.train_logits_path,
                                                             **geometry_kwargs)
             self.cur_im_score_file = im_score_file
 

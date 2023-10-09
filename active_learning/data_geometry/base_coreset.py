@@ -1,4 +1,5 @@
 import h5py
+from glob import glob
 from scipy.ndimage.interpolation import zoom
 import numpy as np
 from tqdm import tqdm
@@ -18,13 +19,15 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', patch_size=(256, 256), feature_model=None,
-                 feature_model_ignore_layer=-1, feature_model_batch_size=128, seed=0, gpus="cuda:0", **kwargs):
+                 feature_model_ignore_layer=-1, feature_model_batch_size=128, use_model_features=False, seed=0,
+                 gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
         print(f"Using the {self.metric} metric in Coreset sampling...")
         self.patch_size = patch_size
         self.feature_model_batch_size = feature_model_batch_size
+        self.use_model_features = use_model_features
         self.seed = seed
         self.gpus = gpus
         self.random_state = RandomState(seed=self.seed)
@@ -78,6 +81,19 @@ class BaseCoreset(BaseDataGeometry):
     def create_coreset_inst(self, processed_data):
         return self.coreset_cls(processed_data, metric=self.metric, seed=self.seed)
 
+    def get_coreset_inst_and_features_for_round(self, round_dir, train_logits_path, delete_preds=True):
+        if self.use_model_features:
+            print("Using Model Features")
+            feat = self.get_model_features(round_dir, train_logits_path, delete_preds=delete_preds)
+            if feat is None:
+                print("Model features not found. Using image features instead")
+                feat = self.image_features
+            coreset_inst = self.create_coreset_inst(feat)
+        else:
+            coreset_inst = self.basic_coreset_alg
+            feat = self.image_features
+        return coreset_inst, feat
+
     def get_nn_features(self, data_loader):
         features = torch.tensor([]).to(self.gpus)
         with torch.no_grad():
@@ -90,6 +106,33 @@ class BaseCoreset(BaseDataGeometry):
                 features = torch.cat((features, features_batch), 0)
             feat = features
         return feat.detach().cpu().numpy()
+
+    @staticmethod
+    def get_model_features(round_dir, train_logits_path, delete_preds=True):
+        train_logits_path = os.path.join(round_dir, "*", train_logits_path)
+        train_results = sorted(list(glob(train_logits_path)))
+        if len(train_results) == 0:
+            print("No model features found!")
+            return None
+        if len(train_results) > 1:
+            raise ValueError(f"More than one prediction file found: {train_results}")
+        train_results = train_results[0]
+        im_files = sorted(np.load(train_results, mmap_mode='r').files)
+        # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
+        preds_arrs = []
+        for im_file in tqdm(im_files):
+            preds_arr = np.load(train_results, mmap_mode='r')[im_file]
+            preds_arrs.append(preds_arr)
+        preds_arrs = np.concatenate(preds_arrs, axis=0)
+        # flatten array except for first dim
+        preds_arrs = preds_arrs.reshape(preds_arrs.shape[0], -1)
+
+        # after obtaining features, delete the *.npz files for the round
+        if delete_preds:
+            os.remove(train_results)
+
+        return preds_arrs
+
 
     @staticmethod
     def _patch_im(im, patch_size):
