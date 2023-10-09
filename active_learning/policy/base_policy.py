@@ -139,7 +139,7 @@ class BaseActiveLearningPolicy:
             self.data_geometry.calculate_representativeness(im_score_file=im_score_file,
                                                             num_samples=self._get_unann_num_samples(),
                                                             already_selected=self.cur_oracle_ims[self.im_key],
-                                                            round_dir=self.round_dir,
+                                                            prev_round_dir=self.prev_round_dir,
                                                             train_logits_path=self.model.model_params['train_logits_path'],
                                                             **geometry_kwargs)
             self.cur_im_score_file = im_score_file
@@ -153,7 +153,7 @@ class BaseActiveLearningPolicy:
             self.cur_oracle_ims[key] = self.cur_oracle_ims[key] + new_ann_ims[key]
         self.model.train_ensemble(round_dir=self.round_dir, cur_total_oracle_split=self.cur_total_oracle_split,
                                   cur_total_pseudo_split=self.cur_total_pseudo_split,
-                                  inf_train=(calculate_model_uncertainty or self.data_geometry.use_model_features),
+                                  inf_train=(calculate_model_uncertainty or self.data_ƒgeometry.use_model_features),
                                   **ensemble_kwargs)
         if calculate_model_uncertainty and (self._round_num < (self.num_rounds - 1)):
             self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
@@ -213,6 +213,7 @@ class BaseActiveLearningPolicy:
         print(f"Round {self._round_num}, round params: {round_params}")
 
     def _create_round_dir(self):
+        self.prev_round_dir = self.round_dir
         self.round_dir = os.path.join(self.exp_dir, f"round_{self._round_num}")
         if not os.path.exists(self.round_dir):
             os.makedirs(self.round_dir)

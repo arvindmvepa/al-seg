@@ -23,12 +23,12 @@ class CoreGCN(BaseCoreset):
         self.s_margin = s_margin
         self.starting_sample = starting_sample
         
-    def calculate_representativeness(self, im_score_file, num_samples, round_dir, train_logits_path,
-                                     already_selected=[], skip=False,  delete_preds=True, **kwargs):
+    def calculate_representativeness(self, im_score_file, num_samples, prev_round_dir, train_logits_path,
+                                     already_selected=[], skip=False, delete_preds=True, **kwargs):
         if skip:
             print("Skipping Calculating CoreGCN!")
             return
-        coreset_inst, feat = self.get_coreset_inst_and_features_for_round(round_dir, train_logits_path,
+        coreset_inst, feat = self.get_coreset_inst_and_features_for_round(prev_round_dir, train_logits_path,
                                                                           delete_preds=delete_preds)
         sample_indices = []
         already_selected = already_selected.copy()
