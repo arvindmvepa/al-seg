@@ -59,13 +59,16 @@ class BaseCoreset(BaseDataGeometry):
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
-        self.image_features =  self._get_data()
+        image_data =  self._get_data()
         if self.feature_model is not None:
             print("Extracting features for all training data using feature_model...")
-            dataset = CoresetDatasetWrapper(self.image_features, transform=T.ToTensor())
-            alL_data_dataloader = DataLoader(dataset, batch_size=self.feature_model_batch_size,
+            dataset = CoresetDatasetWrapper(image_data, transform=T.ToTensor())
+            all_data_dataloader = DataLoader(dataset, batch_size=self.feature_model_batch_size,
                                              shuffle=False, pin_memory=True)
-            self.image_features = self.get_nn_features(alL_data_dataloader)
+            self.image_features = self.get_nn_features(all_data_dataloader)
+        else:
+            # flatten array except for first dim
+            self.image_features = image_data.reshape(image_data.shape[0], -1)
 
     def setup_alg(self):
         if self.alg_string in coreset_algs:
@@ -155,8 +158,6 @@ class BaseCoreset(BaseDataGeometry):
             image = self._load_image(im_path)
             cases.append(image)
         cases_arr = np.concatenate(cases, axis=0)
-        # flatten array except for first dim
-        cases_arr = cases_arr.reshape(cases_arr.shape[0], -1)
         return cases_arr
 
 
