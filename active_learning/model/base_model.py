@@ -57,6 +57,7 @@ class BaseModel(ABC):
             raise ValueError(f"file_keys needs at least one key")
         self.all_train_files_dict = None
         self._init_train_file_info()
+        self._sort_train_files_dict()
         self._init_val_file_info()
         self._init_test_file_info()
 
@@ -131,6 +132,22 @@ class BaseModel(ABC):
 
     def _init_test_file_info(self):
         pass
+
+    def _sort_train_files_dict(self):
+        self.all_train_files_dict = self._sort_files_dict(self.all_train_files_dict)
+
+    def _sort_files_dict(self, files_dict):
+        file_keys = self.file_keys
+        im_files = files_dict[self.im_key]
+        files_info_tuples = []
+        for im_index, im_file in enumerate(im_files):
+            files_info_tuples.append(tuple(im_file + [files_dict[key][im_index] for key in file_keys if key != self.im_key]))
+        sorted_files_info_tuples = sorted(files_info_tuples, key=lambda x: x[0])
+        updated_files_dict = {}
+        for key_index, key in enumerate(file_keys):
+            updated_files_dict[key] = [tup[key_index] for tup in sorted_files_info_tuples]
+        return updated_files_dict
+
 
     @abstractmethod
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):

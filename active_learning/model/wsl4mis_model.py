@@ -43,20 +43,11 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         full_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
                                      sup_type=self.ann_type, train_file=self.orig_train_im_list_file,
                                      data_root=self.data_root)
-        full_trainloader = DataLoader(full_db_train, batch_size=1, shuffle=True, num_workers=8, pin_memory=True)
-        train_file = self.get_round_train_file_paths(round_dir=round_dir,
-                                                     cur_total_oracle_split=cur_total_oracle_split,
-                                                     cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[0]]
-
-        ann_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
-                                    sup_type=self.ann_type, train_file=train_file, data_root=self.data_root)
+        full_trainloader = DataLoader(full_db_train, batch_size=1, shuffle=False, num_workers=8, pin_memory=True)
         train_preds = {}
         for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
             volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
             volume_batch, label_batch, idx = volume_batch.to(self.gpus), label_batch.to(self.gpus), idx.cpu()[0]
-            # skip images that are already annotated
-            if full_db_train.sample_list[idx] in ann_db_train.sample_list:
-                continue
             slice_basename = os.path.basename(full_db_train.sample_list[idx])
             outputs = model(volume_batch)
             outputs_ = self.extract_train_features(outputs)

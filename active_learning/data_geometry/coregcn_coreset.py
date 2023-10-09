@@ -54,9 +54,6 @@ class CoreGCN(BaseCoreset):
             binary_labels = torch.cat((torch.zeros([subset_size, 1]),
                                        (torch.ones([len(already_selected_indices), 1]))), 0)
             if isinstance(feat, np.ndarray):
-                print(f"len(all_indices): {len(all_indices)}")
-                print(f"subset: {subset}")
-                print(f"already_selected_indices: {already_selected_indices}")
                 features = torch.from_numpy(feat[subset + already_selected_indices]).float().to(self.gpus)
             else:
                 raise ValueError("feat must be a numpy array")
