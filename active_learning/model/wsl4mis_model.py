@@ -18,7 +18,7 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
 
     def __init__(self, ann_type="scribble", data_root="wsl4mis_data/ACDC", ensemble_size=1,
                  seg_model='unet_cct', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000,
-                 deterministic=1, patch_size=(256, 256), inf_train_type="preds", feature_decoder_index=5, seed=0,
+                 deterministic=1, patch_size=(256, 256), inf_train_type="preds", feature_decoder_index=0, seed=0,
                  gpus="0", tag=""):
         super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
@@ -112,7 +112,6 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         return outputs
 
     def extract_train_features(self, raw_model_outputs, batch_size=1):
-        print(f"len(raw_model_outputs): {len(raw_model_outputs)}")
         if self.inf_train_type == "features":
             return raw_model_outputs[self.feature_decoder_index]
         else:
