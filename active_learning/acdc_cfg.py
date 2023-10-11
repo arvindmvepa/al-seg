@@ -14,5 +14,5 @@ def save_train_cfg(data_dir, save_dir):
 
 if __name__ == "__main__":
     data_dir = r"C:\Users\Arvind\Downloads\Resources"
-    save_dir = r"C:\Users\Arvind\Documents\al-seg-arvind\wsl4mis_data\ACDC_training_cfgs"
+    save_dir = r"C:\Users\Arvind\Documents\al-seg-arvind\wsl4mis_data\ACDC\ACDC_training_cfgs"
     save_train_cfg(data_dir, save_dir)
