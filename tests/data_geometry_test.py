@@ -27,7 +27,7 @@ def data_geometry(mocker, data_geometry_type, geometry_kwargs, im_score_file, al
     mock_kcenter_greedy_alg.select_batch_.side_effect = partial(mock_select_batch_, mock_kcenter_greedy_alg)
 
     # assign coreset alg to data_geometry
-    data_geometry.coreset_alg = mock_kcenter_greedy_alg
+    data_geometry.basic_coreset_alg = mock_kcenter_greedy_alg
 
     yield data_geometry
 

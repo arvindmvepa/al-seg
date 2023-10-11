@@ -38,19 +38,6 @@ class RankedPolicy(BaseActiveLearningPolicy):
         self.cur_im_score_file = None
         self.rank_type = rank_type
 
-    def _run_round(self):      
-        if self._round_num < (self.num_rounds - 1):
-            im_score_file = os.path.join(self.round_dir, self.save_im_score_file)
-            ensemble_kwargs = {}
-            model_uncertainty_kwargs = {"ignore_ims_dict": self.cur_oracle_ims,
-                                        "round_dir": self.round_dir}
-            self._run_round_models(im_score_file=im_score_file, ensemble_kwargs=ensemble_kwargs,
-                                   calculate_model_uncertainty=self.model_uncertainty is not None,
-                                   calculate_data_geometry=self.data_geometry is not None,
-                                   uncertainty_kwargs=model_uncertainty_kwargs)
-        else:
-            self._run_round_models()
-
     def data_split(self):
         if self.cur_im_score_file:
             if not os.path.exists(self.cur_im_score_file):

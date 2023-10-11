@@ -5,14 +5,14 @@ class BaseDataGeometry(ABC):
     """Abstract class for Coreset sampling"""
 
     @abstractmethod
-    def calculate_representativeness(self, im_score_file, num_samples, already_selected=[], skip=False, **kwargs):
+    def calculate_representativeness(self, im_score_file, num_samples, prev_round_dir, train_logits_path,
+                                     already_selected=[], skip=False, delete_preds=True, **kwargs):
         raise NotImplementedError()
 
     @abstractmethod
     def setup(self, data_root, all_train_im_files):
         raise NotImplementedError()
 
-    
 
 class NoDataGeometry(BaseDataGeometry):
     """Placeholder class for no data geometry"""
@@ -23,5 +23,6 @@ class NoDataGeometry(BaseDataGeometry):
     def setup(self, data_root, all_train_im_files):
         pass
 
-    def calculate_representativeness(self, im_score_file, num_samples, already_selected=[], skip=False, **kwargs):
+    def calculate_representativeness(self, im_score_file, num_samples, prev_round_dir, train_logits_path,
+                                     already_selected=[], skip=False, delete_preds=True, **kwargs):
         pass
