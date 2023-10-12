@@ -18,13 +18,19 @@ from active_learning.data_geometry import coreset_algs
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', extra_feature_weight=1.0, patch_size=(256, 256),
+    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', extra_feature_weight=1.0, phase_weight=1.0,
+                 group_weight=1.0, height_weight=1.0, weight_weight=1.0, slice_pos_weight=1.0, patch_size=(256, 256),
                  feature_model=None, feature_model_ignore_layer=-1, feature_model_batch_size=128,
                  use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
         self.extra_feature_weight = extra_feature_weight
+        self.phase_weight = phase_weight
+        self.group_weight = group_weight
+        self.height_weight = height_weight
+        self.weight_weight = weight_weight
+        self.slice_pos_weight = slice_pos_weight
         self.patch_size = patch_size
         self.feature_model_batch_size = feature_model_batch_size
         self.use_model_features = use_model_features
@@ -82,7 +88,10 @@ class BaseCoreset(BaseDataGeometry):
 
     def create_coreset_inst(self, processed_data):
         return self.coreset_cls(processed_data, cfgs=self.image_cfgs, file_names=self.all_train_im_files,
-                                metric=self.metric, extra_feature_weight=self.extra_feature_weight, seed=self.seed)
+                                metric=self.metric, extra_feature_weight=self.extra_feature_weight,
+                                phase_weight=self.phase_weight, group_weight=self.group_weight,
+                                height_weight=self.height_weight, weight_weight=self.weight_weight,
+                                slice_pos_weight=self.slice_pos_weight, seed=self.seed)
 
     def get_coreset_inst_and_features_for_round(self, round_dir, train_logits_path, delete_preds=True):
         if self.use_model_features:

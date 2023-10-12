@@ -51,7 +51,8 @@ class kCenterGreedy(SamplingMethod):
        Can be extended to a robust k centers algorithm that ignores a certain number of
        outlier datapoints.  Resulting centers are solution to multiple integer program.
         """
-    def __init__(self, X, cfgs, file_names, metric="euclidean", extra_feature_weight=1.0, seed=None):
+    def __init__(self, X, cfgs, file_names, metric="euclidean", extra_feature_weight=1.0, phase_weight=1.0,
+                 group_weight=1.0, height_weight=1.0, weight_weight=1.0, slice_pos_weight=1.0, seed=None):
         self.X = X
         self.flat_X = self.flatten_X()
         self.file_names = file_names
@@ -73,6 +74,11 @@ class kCenterGreedy(SamplingMethod):
         self.slice_pos_starting_index = self.weight_ending_index
         self.slice_pos_ending_index = self.slice_pos_starting_index + 1
         self.extra_feature_weight = extra_feature_weight
+        self.phase_weight = phase_weight
+        self.group_weight = group_weight
+        self.height_weight = height_weight
+        self.weight_weight = weight_weight
+        self.slice_pos_weight = slice_pos_weight
 
         if metric == "euclidean_w_config":
             self.metric = partial(euclidean_w_config, num_im_features=self.num_im_features,
@@ -86,7 +92,10 @@ class kCenterGreedy(SamplingMethod):
                                   weight_ending_index=self.weight_ending_index,
                                   slice_pos_starting_index=self.slice_pos_starting_index,
                                   slice_pos_ending_index=self.slice_pos_ending_index,
-                                  extra_feature_weight=self.extra_feature_weight)
+                                  extra_feature_weight=self.extra_feature_weight,
+                                  phase_weight=self.phase_weight, group_weight=self.group_weight,
+                                  height_weight=self.height_weight, weight_weight=self.weight_weight,
+                                  slice_pos_weight=self.slice_pos_weight)
         else:
             self.metric = metric
         print(f"Using {metric} as distance metric.")
@@ -211,8 +220,6 @@ class kCenterGreedy(SamplingMethod):
         slice_str_len = len(slice_str)
         slice_num_len = 1
         extra_features_lst = []
-        zscore_height_total = []
-        zscore_weight_total = []
         for im_features, im_cfg, file_name in zip(self.flat_X, cfgs, self.file_names):
             extra_features = []
             # add if frame is ED or ES (one hot encoded)
@@ -233,8 +240,6 @@ class kCenterGreedy(SamplingMethod):
             # add Height and Weight
             z_score_height = (im_cfg['Height'] - height_mean) / height_sstd
             z_score_weight = (im_cfg['Weight'] - weight_mean) / weight_sstd
-            zscore_height_total.append(z_score_height)
-            zscore_weight_total.append(z_score_weight)
 
 
             extra_features.append(z_score_height)
@@ -247,9 +252,6 @@ class kCenterGreedy(SamplingMethod):
             extra_features.append(slice_num / num_slices_dict[frame_and_num_str])
 
             extra_features_lst.append(np.array(extra_features))
-
-        print(f"Height mean: {np.mean(zscore_height_total)}, Height sstd: {np.std(zscore_height_total)}")
-        print(f"Weight mean: {np.mean(zscore_weight_total)}, Weight sstd: {np.std(zscore_weight_total)}")
 
         return np.array(extra_features_lst)
 
