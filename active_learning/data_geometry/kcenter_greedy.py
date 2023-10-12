@@ -235,6 +235,7 @@ class kCenterGreedy(SamplingMethod):
             extra_features.append(z_score_weight)
 
             # add relative slice position
+            print(f"slice no: {file_name[slice_str_len:slice_str_len + slice_num_len]}")
             slice_num = int(file_name[slice_str_len:slice_str_len + slice_num_len])
             extra_features.append(slice_num / num_slices_dict[frame_and_num_str])
 
