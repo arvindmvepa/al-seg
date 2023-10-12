@@ -7,9 +7,8 @@ policy:
   policy_type: ranked
   seed: 1
   ensemble_kwargs:
+  ensemble_kwargs:
     skip: False
-    train: False
-    inf_train: False
     inf_test: True
   rounds: [[.05, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
