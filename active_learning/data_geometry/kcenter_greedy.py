@@ -201,8 +201,8 @@ class kCenterGreedy(SamplingMethod):
         for im_cfg in cfgs:
             height_sstd += (im_cfg['Height'] - height_mean) ** 2
             weight_sstd += (im_cfg['Weight'] - weight_mean) ** 2
-        height_sstd = (height_sstd**(.5))/(len(cfgs) - 1)
-        weight_sstd = (weight_sstd**(.5))/(len(cfgs) - 1)
+        height_sstd = (height_sstd/(len(cfgs) - 1))**(.5)
+        weight_sstd = (weight_sstd/(len(cfgs) - 1))**(.5)
 
 
 
