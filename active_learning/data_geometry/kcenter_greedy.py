@@ -8,7 +8,7 @@ import abc
 import numpy as np
 from collections import defaultdict
 from functools import partial
-from dist_metrics import  euclidean_w_config
+from active_learning.data_geometry.dist_metrics import euclidean_w_config
 
 
 class SamplingMethod(object):
