@@ -82,8 +82,8 @@ class kCenterGreedy(SamplingMethod):
                                   group_ending_index=self.group_ending_index,
                                   height_starting_index=self.height_starting_index,
                                   height_ending_index=self.height_ending_index,
-                                  width_starting_index=self.weight_starting_index,
-                                  width_ending_index=self.weight_ending_index,
+                                  weight_starting_index=self.weight_starting_index,
+                                  weight_ending_index=self.weight_ending_index,
                                   slice_pos_starting_index=self.slice_pos_starting_index,
                                   slice_pos_ending_index=self.slice_pos_ending_index,
                                   extra_feature_weight=self.extra_feature_weight)
@@ -228,7 +228,7 @@ class kCenterGreedy(SamplingMethod):
             im_one_hot_group[group_id] = 1
             extra_features.extend(im_one_hot_group)
 
-            # add Height and Width
+            # add Height and Weight
             z_score_height = (im_cfg['Height'] - height_mean) / height_sstd
             z_score_weight = (im_cfg['Weight'] - weight_mean) / weight_sstd
             extra_features.append(z_score_height)
