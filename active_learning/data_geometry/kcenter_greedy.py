@@ -211,6 +211,8 @@ class kCenterGreedy(SamplingMethod):
         slice_str_len = len(slice_str)
         slice_num_len = 1
         extra_features_lst = []
+        zscore_height_total = []
+        zscore_weight_total = []
         for im_features, im_cfg, file_name in zip(self.flat_X, cfgs, self.file_names):
             extra_features = []
             # add if frame is ED or ES (one hot encoded)
@@ -231,6 +233,10 @@ class kCenterGreedy(SamplingMethod):
             # add Height and Weight
             z_score_height = (im_cfg['Height'] - height_mean) / height_sstd
             z_score_weight = (im_cfg['Weight'] - weight_mean) / weight_sstd
+            zscore_height_total.append(z_score_height)
+            zscore_weight_total.append(z_score_weight)
+
+
             extra_features.append(z_score_height)
             extra_features.append(z_score_weight)
 
@@ -241,6 +247,9 @@ class kCenterGreedy(SamplingMethod):
             extra_features.append(slice_num / num_slices_dict[frame_and_num_str])
 
             extra_features_lst.append(np.array(extra_features))
+
+        print(f"Height mean: {np.mean(zscore_height_total)}, Height sstd: {np.std(zscore_height_total)}")
+        print(f"Weight mean: {np.mean(zscore_weight_total)}, Weight sstd: {np.std(zscore_weight_total)}")
 
         return np.array(extra_features_lst)
 
