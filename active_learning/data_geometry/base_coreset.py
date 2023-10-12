@@ -173,10 +173,11 @@ class BaseCoreset(BaseDataGeometry):
         return cases_arr, cfgs
 
     def _get_cfg_path(self, im_path):
-        patient_prefix = "patientxxx"
+        patient_prefix = "patient"
         patient_prefix_len = len(patient_prefix)
         patient_prefix_index = im_path.index(patient_prefix)
-        patient_prefix_end_index = patient_prefix_index + patient_prefix_len
+        patient_num_len = 3
+        patient_prefix_end_index = patient_prefix_index + patient_prefix_len + patient_num_len
         cfg_path = im_path[:patient_prefix_end_index] + ".json"
         return cfg_path
 
