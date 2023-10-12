@@ -5,7 +5,7 @@ def euclidean_w_config(image_vec1, image_vec2, num_im_features, phase_starting_i
                        group_starting_index, group_ending_index, height_starting_index, height_ending_index,
                        weight_starting_index, weight_ending_index, slice_pos_starting_index, slice_pos_ending_index,
                        extra_feature_weight=1.0):
-    print(f"np.sum(np.isnan(image_vec1)): {np.sum(np.isnan(image_vec1))}, np.sum(np.isnan(image_vecw)): {np.sum(np.isnan(image_vecw))}")
+    print(f"np.sum(np.isnan(image_vec1)): {np.sum(np.isnan(image_vec1))}, np.sum(np.isnan(image_vec2)): {np.sum(np.isnan(image_vec2))}")
     l2_norm_val = np.sum(image_vec1[:num_im_features]**2 - image_vec2[:num_im_features]**2)**(0.5)
     phase_score = 1 - np.abs(image_vec1[phase_starting_index:phase_ending_index] - image_vec2[phase_starting_index:phase_ending_index])
     group_score = 1 - np.dot(image_vec1[group_starting_index:group_ending_index], image_vec2[group_starting_index:group_ending_index])
