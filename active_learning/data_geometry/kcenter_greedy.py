@@ -68,9 +68,9 @@ class kCenterGreedy(SamplingMethod):
         self.group_ending_index = self.group_starting_index + self.num_groups
         self.height_starting_index = self.group_ending_index
         self.height_ending_index = self.height_starting_index + 1
-        self.width_starting_index = self.height_ending_index
-        self.width_ending_index = self.width_starting_index + 1
-        self.slice_pos_starting_index = self.width_ending_index
+        self.weight_starting_index = self.height_ending_index
+        self.weight_ending_index = self.weight_starting_index + 1
+        self.slice_pos_starting_index = self.weight_ending_index
         self.slice_pos_ending_index = self.slice_pos_starting_index + 1
         self.extra_feature_weight = extra_feature_weight
 
@@ -82,8 +82,8 @@ class kCenterGreedy(SamplingMethod):
                                   group_ending_index=self.group_ending_index,
                                   height_starting_index=self.height_starting_index,
                                   height_ending_index=self.height_ending_index,
-                                  width_starting_index=self.width_starting_index,
-                                  width_ending_index=self.width_ending_index,
+                                  width_starting_index=self.weight_starting_index,
+                                  width_ending_index=self.weight_ending_index,
                                   slice_pos_starting_index=self.slice_pos_starting_index,
                                   slice_pos_ending_index=self.slice_pos_ending_index,
                                   extra_feature_weight=self.extra_feature_weight)
@@ -187,20 +187,20 @@ class kCenterGreedy(SamplingMethod):
         self.num_groups = len(groups_dict)
         one_hot_group = [0] * self.num_groups
 
-        # calculate z-score params for height and width
+        # calculate z-score params for height and weight
         height_mean = 0
         height_sstd = 0
         weight_mean = 0
         weight_sstd = 0
         for im_cfg in cfgs:
             height_mean += im_cfg['Height']
-            weight_mean += im_cfg['Width']
+            weight_mean += im_cfg['Weight']
         height_mean /= len(cfgs)
         weight_mean /= len(cfgs)
 
         for im_cfg in cfgs:
             height_sstd += (im_cfg['Height'] - height_mean) ** 2
-            weight_sstd += (im_cfg['Width'] - weight_mean) ** 2
+            weight_sstd += (im_cfg['Weight'] - weight_mean) ** 2
         height_sstd = (height_sstd**(.5))/(len(cfgs) - 1)
         weight_sstd = (weight_sstd**(.5))/(len(cfgs) - 1)
 
@@ -230,9 +230,9 @@ class kCenterGreedy(SamplingMethod):
 
             # add Height and Width
             z_score_height = (im_cfg['Height'] - height_mean) / height_sstd
-            z_score_width = (im_cfg['Width'] - weight_mean) / weight_sstd
+            z_score_weight = (im_cfg['Weight'] - weight_mean) / weight_sstd
             extra_features.append(z_score_height)
-            extra_features.append(z_score_width)
+            extra_features.append(z_score_weight)
 
             # add relative slice position
             slice_num = int(file_name[slice_str_len:slice_str_len + slice_num_len])
