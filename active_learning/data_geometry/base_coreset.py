@@ -74,9 +74,7 @@ class BaseCoreset(BaseDataGeometry):
     def setup_alg(self):
         if self.alg_string in coreset_algs:
             self.coreset_cls = coreset_algs[self.alg_string]
-            self.basic_coreset_alg = coreset_algs[self.alg_string](self.image_features,
-                                                                   metric=self.metric,
-                                                                   seed=self.seed)
+            self.basic_coreset_alg = self.create_coreset_inst(self.image_features)
         else:
             print(f"No coreset alg found for {self.alg_string}")
             self.coreset_cls = None
