@@ -178,7 +178,7 @@ class BaseCoreset(BaseDataGeometry):
         patient_prefix_index = im_path.index(patient_prefix)
         patient_num_len = 3
         patient_prefix_end_index = patient_prefix_index + patient_prefix_len + patient_num_len
-        cfg_path = im_path[:patient_prefix_end_index] + ".json"
+        cfg_path = im_path[:patient_prefix_end_index] + ".cfg"
         return cfg_path
 
 
