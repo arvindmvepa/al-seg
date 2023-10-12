@@ -1,13 +1,11 @@
 import numpy as np
-from numpy.linalg import norm
 
 
 def euclidean_w_config(image_vec1, image_vec2, num_im_features, phase_starting_index, phase_ending_index,
                        group_starting_index, group_ending_index, height_starting_index, height_ending_index,
                        weight_starting_index, weight_ending_index, slice_pos_starting_index, slice_pos_ending_index,
                        extra_feature_weight=1.0):
-    print(f"image_vec1.shape: {image_vec1.shape}, image_vec2.shape: {image_vec2.shape}")
-    l2_norm_val = norm(image_vec1[:num_im_features], image_vec2[:num_im_features])
+    l2_norm_val = np.sum(image_vec1[:num_im_features]**2 - image_vec2[:num_im_features]**2)**(0.5)
     phase_score = 1 - np.abs(image_vec1[phase_starting_index:phase_ending_index] - image_vec2[phase_starting_index:phase_ending_index])
     group_score = 1 - np.abs(image_vec1[group_starting_index:group_ending_index] - image_vec2[group_starting_index:group_ending_index])
     height_score = np.abs(image_vec1[height_starting_index:height_ending_index] - image_vec2[height_starting_index:height_ending_index])
