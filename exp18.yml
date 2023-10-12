@@ -5,7 +5,7 @@ model:
   gpus: "cuda:0"
 policy:
   policy_type: ranked
-  seed: 1
+  seed: 3
   ensemble_kwargs:
     skip: False
     train: False
@@ -14,5 +14,7 @@ policy:
   rounds: [[.05, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  seed: 1
-exp_dir: "DMPLS_exp1_coreset_v5"
+  seed: 3
+  metric: euclidean_w_config
+  extra_feature_weight: 10.0
+exp_dir: "DMPLS_exp3_coreset_umetric_ew10.0_v5"
