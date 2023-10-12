@@ -2,7 +2,6 @@ import h5py
 from glob import glob
 from scipy.ndimage.interpolation import zoom
 import numpy as np
-import json
 from tqdm import tqdm
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
@@ -156,8 +155,15 @@ class BaseCoreset(BaseDataGeometry):
         return patched_image[np.newaxis,]
 
     def _load_cfg(self, cfg_file):
+        cfg = {}
         with open(cfg_file, 'r') as f:
-            cfg = json.load(f)
+            for line in f:
+                key, value = line.strip().split(': ')
+                if key == 'ED' or key == 'ES':
+                    value = int(value)
+                if key == 'Height' or key == 'Weight':
+                    value = float(value)
+                cfg[key] = value
         return cfg
 
     def _get_data(self):
