@@ -11,6 +11,7 @@ def euclidean_w_config(image_vec1, image_vec2, num_im_features, phase_starting_i
     height_score = np.abs(image_vec1[height_starting_index:height_ending_index] - image_vec2[height_starting_index:height_ending_index])
     weight_score = np.abs(image_vec1[weight_starting_index:weight_ending_index] - image_vec2[weight_starting_index:weight_ending_index])
     slice_pos_score = 1 - np.abs(image_vec1[slice_pos_starting_index:slice_pos_ending_index] - image_vec2[slice_pos_starting_index:slice_pos_ending_index])
+    print("l2_norm_val: ", l2_norm_val, "phase_score: ", phase_score, "group_score: ", group_score, "height_score: ", height_score, "weight_score: ", weight_score, "slice_pos_score: ", slice_pos_score)
     return l2_norm_val + extra_feature_weight * (phase_score + group_score + height_score + weight_score + slice_pos_score)
 
 
