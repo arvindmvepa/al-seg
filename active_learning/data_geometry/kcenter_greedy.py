@@ -59,28 +59,28 @@ class kCenterGreedy(SamplingMethod):
         self.random_state = RandomState(seed=seed)
         self.name = "kcenter"
         self.features = self.flat_X
-        self.num_im_features = self.features.shape[1]
-        self.cfgs = self.process_cfgs(cfgs)
-        self.features = np.concatenate([self.features, self.cfgs], axis=1)
-        self.num_extra_features = self.features.shape[1] - self.num_im_features
-        self.phase_starting_index = self.num_im_features
-        self.phase_ending_index = self.phase_starting_index + 1
-        self.group_starting_index = self.phase_ending_index
-        self.group_ending_index = self.group_starting_index + self.num_groups
-        self.height_starting_index = self.group_ending_index
-        self.height_ending_index = self.height_starting_index + 1
-        self.weight_starting_index = self.height_ending_index
-        self.weight_ending_index = self.weight_starting_index + 1
-        self.slice_pos_starting_index = self.weight_ending_index
-        self.slice_pos_ending_index = self.slice_pos_starting_index + 1
-        self.extra_feature_weight = extra_feature_weight
-        self.phase_weight = phase_weight
-        self.group_weight = group_weight
-        self.height_weight = height_weight
-        self.weight_weight = weight_weight
-        self.slice_pos_weight = slice_pos_weight
 
         if metric == "euclidean_w_config":
+            self.num_im_features = self.features.shape[1]
+            self.cfgs = self.process_cfgs(cfgs)
+            self.features = np.concatenate([self.features, self.cfgs], axis=1)
+            self.num_extra_features = self.features.shape[1] - self.num_im_features
+            self.phase_starting_index = self.num_im_features
+            self.phase_ending_index = self.phase_starting_index + 1
+            self.group_starting_index = self.phase_ending_index
+            self.group_ending_index = self.group_starting_index + self.num_groups
+            self.height_starting_index = self.group_ending_index
+            self.height_ending_index = self.height_starting_index + 1
+            self.weight_starting_index = self.height_ending_index
+            self.weight_ending_index = self.weight_starting_index + 1
+            self.slice_pos_starting_index = self.weight_ending_index
+            self.slice_pos_ending_index = self.slice_pos_starting_index + 1
+            self.extra_feature_weight = extra_feature_weight
+            self.phase_weight = phase_weight
+            self.group_weight = group_weight
+            self.height_weight = height_weight
+            self.weight_weight = weight_weight
+            self.slice_pos_weight = slice_pos_weight
             self.metric = partial(euclidean_w_config, num_im_features=self.num_im_features,
                                   phase_starting_index=self.phase_starting_index,
                                   phase_ending_index=self.phase_ending_index,
