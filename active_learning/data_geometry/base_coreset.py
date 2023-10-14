@@ -18,13 +18,19 @@ from active_learning.data_geometry import coreset_algs
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', patch_size=(256, 256), feature_model=None,
-                 feature_model_ignore_layer=-1, feature_model_batch_size=128, use_model_features=False, seed=0,
-                 gpus="cuda:0", **kwargs):
+    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', extra_feature_weight=1.0, phase_weight=1.0,
+                 group_weight=1.0, height_weight=1.0, weight_weight=1.0, slice_pos_weight=1.0, patch_size=(256, 256),
+                 feature_model=None, feature_model_ignore_layer=-1, feature_model_batch_size=128,
+                 use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
-        print(f"Using the {self.metric} metric in Coreset sampling...")
+        self.extra_feature_weight = extra_feature_weight
+        self.phase_weight = phase_weight
+        self.group_weight = group_weight
+        self.height_weight = height_weight
+        self.weight_weight = weight_weight
+        self.slice_pos_weight = slice_pos_weight
         self.patch_size = patch_size
         self.feature_model_batch_size = feature_model_batch_size
         self.use_model_features = use_model_features
@@ -49,6 +55,7 @@ class BaseCoreset(BaseDataGeometry):
         self.all_train_im_files = None
         self.all_train_full_im_paths = None
         self.image_features = None
+        self.image_cfgs = None
     
     def setup(self, data_root, all_train_im_files):
         self.setup_data(data_root, all_train_im_files)
@@ -59,7 +66,7 @@ class BaseCoreset(BaseDataGeometry):
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
-        image_data =  self._get_data()
+        image_data, self.image_cfgs =  self._get_data()
         if self.feature_model is not None:
             print("Extracting features for all training data using feature_model...")
             dataset = CoresetDatasetWrapper(image_data, transform=T.ToTensor())
@@ -73,16 +80,18 @@ class BaseCoreset(BaseDataGeometry):
     def setup_alg(self):
         if self.alg_string in coreset_algs:
             self.coreset_cls = coreset_algs[self.alg_string]
-            self.basic_coreset_alg = coreset_algs[self.alg_string](self.image_features,
-                                                                   metric=self.metric,
-                                                                   seed=self.seed)
+            self.basic_coreset_alg = self.create_coreset_inst(self.image_features)
         else:
             print(f"No coreset alg found for {self.alg_string}")
             self.coreset_cls = None
             self.basic_coreset_alg = None
 
     def create_coreset_inst(self, processed_data):
-        return self.coreset_cls(processed_data, metric=self.metric, seed=self.seed)
+        return self.coreset_cls(processed_data, cfgs=self.image_cfgs, file_names=self.all_train_im_files,
+                                metric=self.metric, extra_feature_weight=self.extra_feature_weight,
+                                phase_weight=self.phase_weight, group_weight=self.group_weight,
+                                height_weight=self.height_weight, weight_weight=self.weight_weight,
+                                slice_pos_weight=self.slice_pos_weight, seed=self.seed)
 
     def get_coreset_inst_and_features_for_round(self, round_dir, train_logits_path, delete_preds=True):
         if self.use_model_features:
@@ -152,13 +161,38 @@ class BaseCoreset(BaseDataGeometry):
         patched_image = self._patch_im(image, self.patch_size)
         return patched_image[np.newaxis,]
 
+    def _load_cfg(self, cfg_file):
+        cfg = {}
+        with open(cfg_file, 'r') as f:
+            for line in f:
+                key, value = line.strip().split(': ')
+                if key == 'ED' or key == 'ES':
+                    value = int(value)
+                if key == 'Height' or key == 'Weight':
+                    value = float(value)
+                cfg[key] = value
+        return cfg
+
     def _get_data(self):
         cases = []
+        cfgs = []
         for im_path in tqdm(self.all_train_full_im_paths):
             image = self._load_image(im_path)
+            cfg_path = self._get_cfg_path(im_path)
+            cfg = self._load_cfg(cfg_path)
             cases.append(image)
+            cfgs.append(cfg)
         cases_arr = np.concatenate(cases, axis=0)
-        return cases_arr
+        return cases_arr, cfgs
+
+    def _get_cfg_path(self, im_path):
+        patient_prefix = "patient"
+        patient_prefix_len = len(patient_prefix)
+        patient_prefix_index = im_path.index(patient_prefix)
+        patient_num_len = 3
+        patient_prefix_end_index = patient_prefix_index + patient_prefix_len + patient_num_len
+        cfg_path = im_path[:patient_prefix_end_index] + ".cfg"
+        return cfg_path
 
 
 class CoresetDatasetWrapper(Dataset):
