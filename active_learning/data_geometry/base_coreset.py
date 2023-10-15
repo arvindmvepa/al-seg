@@ -306,8 +306,8 @@ class BaseCoreset(BaseDataGeometry):
         frame_num_len = 2
         frame_and_num_prefix_len = len(frame_prefix) + frame_num_len
         frame_and_num_end_index = im_path.index(frame_prefix) + frame_and_num_prefix_len
-        frame_and_num_str = im_path[:frame_and_num_end_index]
-        return int(frame_and_num_str)
+        frame_no = im_path[frame_and_num_end_index-frame_num_len:frame_and_num_end_index]
+        return int(frame_no)
 
     def _extract_slice_no(self, im_path):
         slice_str = "slice_"
