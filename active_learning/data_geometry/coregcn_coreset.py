@@ -128,8 +128,9 @@ class CoreGCN(BaseCoreset):
 
 
     def aff_to_adj(self, x, y=None, eps=1e-10):
+        num_features = x.shape[1]
         if self.affine_sim_metric is not None:
-            adj = np.eye((self.num_features, self.num_features))
+            adj = np.eye((num_features, num_features))
             for i in range(len(self.all_train_im_files)):
                 slice_no = self.image_cfgs_arr[i, self.slice_pos_starting_index:self.slice_pos_ending_index]
                 cur_index = i + 1
