@@ -91,7 +91,7 @@ class BaseCoreset(BaseDataGeometry):
             self.basic_coreset_alg = None
 
     def create_coreset_inst(self, processed_data):
-        return self.coreset_cls(processed_data, file_names=self.all_train_im_files, cfgs=self.image_cfgs,
+        return self.coreset_cls(processed_data, file_names=self.all_train_im_files, cfgs_arr=self.image_cfgs_arr,
                                 metric=self.metric, phase_starting_index=self.phase_starting_index,
                                 phase_ending_index=self.phase_ending_index,
                                 group_starting_index=self.group_starting_index,
