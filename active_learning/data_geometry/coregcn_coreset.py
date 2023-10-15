@@ -25,7 +25,7 @@ class CoreGCN(BaseCoreset):
         if affine_sim_wt_metric is None:
             self.affine_sim_wt_metric = None
         elif affine_sim_wt_metric not in wt_metrics:
-            raise ValueError(f"affine_sim_wt_metric must be None or one of {wt_metrics}")
+            raise ValueError(f"affine_sim_wt_metric must be None or one of {list(wt_metrics.keys())}. Instead got {affine_sim_wt_metric}")
         else:
             self.affine_sim_wt_metric = wt_metrics[affine_sim_wt_metric]
         
