@@ -10,7 +10,7 @@ class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
     def __init__(self, subset_size="all", hidden_units=128, dropout_rate=0.3, lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2,
-                 num_epochs_gcn=200, s_margin=0.1, starting_sample=5, **kwargs):
+                 num_epochs_gcn=200, s_margin=0.1, starting_sample=5, affine_sim_wt_metric=None, **kwargs):
         super().__init__(**kwargs)
         self.subset_size = subset_size
         self.hidden_units = hidden_units
@@ -21,6 +21,13 @@ class CoreGCN(BaseCoreset):
         self.num_epochs_gcn = num_epochs_gcn
         self.s_margin = s_margin
         self.starting_sample = starting_sample
+        self.affine_sim_metric = affine_sim_wt_metric
+        if affine_sim_wt_metric is None:
+            self.affine_sim_wt_metric = None
+        elif affine_sim_wt_metric not in wt_metrics:
+            raise ValueError(f"affine_sim_wt_metric must be None or one of {wt_metrics}")
+        else:
+            self.affine_sim_wt_metric = wt_metrics[affine_sim_wt_metric]
         
     def calculate_representativeness(self, im_score_file, num_samples, prev_round_dir, train_logits_path,
                                      already_selected=[], skip=False, delete_preds=True, **kwargs):
@@ -119,9 +126,22 @@ class CoreGCN(BaseCoreset):
 
         return [self.all_train_im_files[i] for i in sample_indices]
 
+
     def aff_to_adj(self, x, y=None, eps=1e-10):
-        x = x.detach().cpu().numpy()
-        adj = np.matmul(x, x.transpose())
+        if self.affine_sim_metric is not None:
+            adj = np.eye((self.num_features, self.num_features))
+            for i in range(len(self.all_train_im_files)):
+                slice_no = self.image_cfgs_arr[i, self.slice_pos_starting_index:self.slice_pos_ending_index]
+                cur_index = i + 1
+                cur_slice_no = self.image_cfgs_arr[cur_index, self.slice_pos_starting_index:self.slice_pos_ending_index]
+                while cur_slice_no != 0:
+                    adj[i, cur_index] = self.affine_sim_metric(slice_no, cur_slice_no)
+                    adj[cur_index, i] = self.affine_sim_metric(slice_no, cur_slice_no)
+                    cur_index = i + 1
+                    cur_slice_no = self.image_cfgs_arr[cur_index, self.slice_pos_starting_index:self.slice_pos_ending_index]
+        else:
+            x = x.detach().cpu().numpy()
+            adj = np.matmul(x, x.transpose())
         adj += -1.0 * np.eye(adj.shape[0])
         adj_diag = np.sum(adj, axis=0)  # rowise sum
         adj = np.matmul(adj, np.diag(1 / (adj_diag + eps)))
@@ -137,3 +157,27 @@ class CoreGCN(BaseCoreset):
         unlabeled_score = torch.mean(lnu)
         bce_adj_loss = -labeled_score - l_adj*unlabeled_score
         return bce_adj_loss
+
+
+def get_k_slice_wt(orig_slice_pos, other_slice_pos, k=1):
+    if np.abs(orig_slice_pos - other_slice_pos) <= k:
+        return 1
+    else:
+        return 0
+
+def get_inv_slice_wt(orig_slice_pos, other_slice_pos):
+    if orig_slice_pos == other_slice_pos:
+        return 1
+    else:
+        return 1/(np.abs(orig_slice_pos - other_slice_pos))
+
+def get_exp_slice_wt(orig_slice_pos, other_slice_pos):
+    if orig_slice_pos == other_slice_pos:
+        return 1
+    else:
+        return 1/(np.exp(np.abs(orig_slice_pos - other_slice_pos) -1))
+
+
+wt_metrics = {"k_slice_wt": get_k_slice_wt,
+              "inv_slice_wt": get_inv_slice_wt,
+              "exp_slice_wt": get_exp_slice_wt}

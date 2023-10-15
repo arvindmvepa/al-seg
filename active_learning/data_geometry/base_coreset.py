@@ -9,6 +9,7 @@ import torchvision.transforms as T
 import torch
 import torch.nn as nn
 from numpy.random import RandomState
+from collections import defaultdict
 import os
 from torchvision.models import resnet18, resnet50
 from active_learning.data_geometry.base_data_geometry import BaseDataGeometry
@@ -56,6 +57,7 @@ class BaseCoreset(BaseDataGeometry):
         self.all_train_full_im_paths = None
         self.image_features = None
         self.image_cfgs = None
+        self.image_cfgs_arr = None
     
     def setup(self, data_root, all_train_im_files):
         self.setup_data(data_root, all_train_im_files)
@@ -66,7 +68,9 @@ class BaseCoreset(BaseDataGeometry):
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
-        image_data, self.image_cfgs =  self._get_data()
+        image_data, self.image_cfgs =  self._get_data(self.all_train_full_im_paths)
+        self.image_cfgs_arr = self._process_cfgs()
+        self._update_cfgs_arr_indices()
         if self.feature_model is not None:
             print("Extracting features for all training data using feature_model...")
             dataset = CoresetDatasetWrapper(image_data, transform=T.ToTensor())
@@ -87,8 +91,20 @@ class BaseCoreset(BaseDataGeometry):
             self.basic_coreset_alg = None
 
     def create_coreset_inst(self, processed_data):
-        return self.coreset_cls(processed_data, cfgs=self.image_cfgs, file_names=self.all_train_im_files,
-                                metric=self.metric, extra_feature_weight=self.extra_feature_weight,
+        return self.coreset_cls(processed_data, file_names=self.all_train_im_files, cfgs=self.image_cfgs,
+                                metric=self.metric, phase_starting_index=self.phase_starting_index,
+                                phase_ending_index=self.phase_ending_index,
+                                group_starting_index=self.group_starting_index,
+                                group_ending_index=self.group_ending_index,
+                                height_starting_index=self.height_starting_index,
+                                height_ending_index=self.height_ending_index,
+                                weight_starting_index=self.weight_starting_index,
+                                weight_ending_index=self.weight_ending_index,
+                                slice_rel_pos_starting_index=self.slice_rel_pos_starting_index,
+                                slice_rel_pos_ending_index=self.slice_rel_pos_ending_index,
+                                slice_pos_starting_index=self.slice_pos_starting_index,
+                                slice_pos_ending_index=self.slice_pos_ending_index,
+                                extra_feature_weight=self.extra_feature_weight,
                                 phase_weight=self.phase_weight, group_weight=self.group_weight,
                                 height_weight=self.height_weight, weight_weight=self.weight_weight,
                                 slice_pos_weight=self.slice_pos_weight, seed=self.seed)
@@ -119,8 +135,7 @@ class BaseCoreset(BaseDataGeometry):
             feat = features
         return feat.detach().cpu().numpy()
 
-    @staticmethod
-    def get_model_features(prev_round_dir, train_logits_path, delete_preds=True):
+    def get_model_features(self, prev_round_dir, train_logits_path, delete_preds=True):
         if prev_round_dir is None:
             print("No model features for first round!")
             return None
@@ -132,10 +147,9 @@ class BaseCoreset(BaseDataGeometry):
         if len(train_results) > 1:
             raise ValueError(f"More than one prediction file found: {train_results}")
         train_results = train_results[0]
-        im_files = sorted(np.load(train_results, mmap_mode='r').files)
         # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
         preds_arrs = []
-        for im_file in tqdm(im_files):
+        for im_file in tqdm(self.all_train_im_files):
             preds_arr = np.load(train_results, mmap_mode='r')[im_file]
             preds_arrs.append(preds_arr)
         preds_arrs = np.concatenate(preds_arrs, axis=0)
@@ -147,7 +161,6 @@ class BaseCoreset(BaseDataGeometry):
             os.remove(train_results)
 
         return preds_arrs
-
 
     @staticmethod
     def _patch_im(im, patch_size):
@@ -173,10 +186,10 @@ class BaseCoreset(BaseDataGeometry):
                 cfg[key] = value
         return cfg
 
-    def _get_data(self):
+    def _get_data(self, all_train_full_im_paths):
         cases = []
         cfgs = []
-        for im_path in tqdm(self.all_train_full_im_paths):
+        for im_path in tqdm(all_train_full_im_paths):
             image = self._load_image(im_path)
             cfg_path = self._get_cfg_path(im_path)
             cfg = self._load_cfg(cfg_path)
@@ -186,14 +199,124 @@ class BaseCoreset(BaseDataGeometry):
         return cases_arr, cfgs
 
     def _get_cfg_path(self, im_path):
+        cfg_path = self._extract_patient_prefix(im_path) + ".cfg"
+        return cfg_path
+
+    def _process_cfgs(self):
+        # calculate number of slices per frame
+        num_slices_dict = dict()
+        for file_name in self.all_train_im_files:
+            patient_frame_no = self._extract_patient_frame_no_str(file_name)
+            if patient_frame_no not in num_slices_dict:
+                num_slices_dict[patient_frame_no] = 1
+            else:
+                num_slices_dict[patient_frame_no] += 1
+
+        # calculate number of groups
+        groups_dict = defaultdict(lambda: len(groups_dict))
+        for im_cfg in self.image_cfgs:
+            groups_dict[im_cfg['Group']]
+        self.num_groups = len(groups_dict)
+        one_hot_group = [0] * self.num_groups
+
+        # calculate z-score params for height and weight
+        height_mean = 0
+        height_sstd = 0
+        weight_mean = 0
+        weight_sstd = 0
+        for im_cfg in self.image_cfgs:
+            height_mean += im_cfg['Height']
+            weight_mean += im_cfg['Weight']
+        height_mean /= len(self.image_cfgs)
+        weight_mean /= len(self.image_cfgs)
+
+        for im_cfg in self.image_cfgs:
+            height_sstd += (im_cfg['Height'] - height_mean) ** 2
+            weight_sstd += (im_cfg['Weight'] - weight_mean) ** 2
+        height_sstd = (height_sstd / (len(self.image_cfgs) - 1)) ** (.5)
+        weight_sstd = (weight_sstd / (len(self.image_cfgs) - 1)) ** (.5)
+
+        # encode all cfg features
+        extra_features_lst = []
+        for im_cfg, file_name in zip(self.image_cfgs, self.all_train_im_files):
+            extra_features = []
+            # add if frame is ED or ES (one hot encoded)
+            patient_frame_no = self._extract_patient_frame_no_str(file_name)
+            frame_num = self._extract_frame_no(file_name)
+            if im_cfg['ED'] == frame_num:
+                extra_features.append(1)
+            elif im_cfg['ES'] == frame_num:
+                extra_features.append(0)
+            else:
+                raise ValueError("Frame number not found in ED or ES")
+            # add Group ID (one hot encoded)
+            group_id = groups_dict[im_cfg['Group']]
+            im_one_hot_group = one_hot_group.copy()
+            im_one_hot_group[group_id] = 1
+            extra_features.extend(im_one_hot_group)
+
+            # add Height and Weight
+            z_score_height = (im_cfg['Height'] - height_mean) / height_sstd
+            z_score_weight = (im_cfg['Weight'] - weight_mean) / weight_sstd
+
+            extra_features.append(z_score_height)
+            extra_features.append(z_score_weight)
+
+            # add relative slice position and general slice position
+            slice_num = self._extract_slice_no(file_name)
+            extra_features.append(slice_num / num_slices_dict[patient_frame_no])
+            extra_features.append(slice_num)
+
+            extra_features_lst.append(np.array(extra_features))
+
+        return np.array(extra_features_lst)
+
+    def _update_cfgs_arr_indices(self):
+        self.phase_starting_index = 0
+        self.phase_ending_index = self.phase_starting_index + 1
+        self.group_starting_index = self.phase_ending_index
+        self.group_ending_index = self.group_starting_index + self.num_groups
+        self.height_starting_index = self.group_ending_index
+        self.height_ending_index = self.height_starting_index + 1
+        self.weight_starting_index = self.height_ending_index
+        self.weight_ending_index = self.weight_starting_index + 1
+        self.slice_rel_pos_starting_index = self.weight_ending_index
+        self.slice_rel_pos_ending_index = self.slice_rel_pos_starting_index + 1
+        self.slice_pos_starting_index = self.slice_rel_pos_ending_index
+        self.slice_pos_ending_index = self.slice_pos_starting_index + 1
+
+    def _extract_patient_frame_no_str(self, im_path):
+        return self._extract_patient_prefix(im_path) + "_" + str(self._extract_frame_no(im_path))
+
+    def _extract_patient_prefix(self, im_path):
+        patient_prefix_end_index = self._get_patient_prefix_end_index(im_path)
+        patient_prefix = im_path[:patient_prefix_end_index]
+        return patient_prefix
+
+    def _get_patient_prefix_end_index(self, im_path):
         patient_prefix = "patient"
         patient_prefix_len = len(patient_prefix)
         patient_prefix_index = im_path.index(patient_prefix)
         patient_num_len = 3
         patient_prefix_end_index = patient_prefix_index + patient_prefix_len + patient_num_len
-        cfg_path = im_path[:patient_prefix_end_index] + ".cfg"
-        return cfg_path
+        return patient_prefix_end_index
 
+    def _extract_frame_no(self, im_path):
+        frame_prefix = "frame"
+        frame_num_len = 2
+        frame_and_num_prefix_len = len(frame_prefix) + frame_num_len
+        frame_and_num_end_index = im_path.index(frame_prefix) + frame_and_num_prefix_len
+        frame_and_num_str = im_path[:frame_and_num_end_index]
+        return int(frame_and_num_str)
+
+    def _extract_slice_no(self, im_path):
+        slice_str = "slice_"
+        slice_str_len = len(slice_str)
+        slice_num_len = 1
+        slice_start_index = im_path.index(slice_str) + slice_str_len
+        slice_end_index = slice_start_index + slice_num_len
+        slice_num = int(im_path[slice_start_index:slice_end_index])
+        return slice_num
 
 class CoresetDatasetWrapper(Dataset):
 
