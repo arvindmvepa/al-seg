@@ -4,6 +4,7 @@ import torch
 import torch.optim as optim
 from active_learning.data_geometry.base_coreset import BaseCoreset
 from active_learning.data_geometry.gcn import GCN
+from tqdm import tqdm
 
 
 class CoreGCN(BaseCoreset):
@@ -130,7 +131,7 @@ class CoreGCN(BaseCoreset):
         num_features = x.shape[1]
         if self.adj_sim_wt_metric is not None:
             adj = np.eye(num_features)
-            for i in range(len(self.all_train_im_files)):
+            for i in tqdm(range(len(self.all_train_im_files))):
                 slice_no = self.image_cfgs_arr[i, self.slice_pos_starting_index:self.slice_pos_ending_index]
                 cur_index = i + 1
                 cur_slice_no = self.image_cfgs_arr[cur_index, self.slice_pos_starting_index:self.slice_pos_ending_index]
