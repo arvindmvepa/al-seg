@@ -136,7 +136,7 @@ class CoreGCN(BaseCoreset):
         num_features = x.shape[1]
         assert num_features > 1, "Number of features must be greater than 1"
         if self.adj_sim_wt_metric is not None:
-            adj = np.eye(num_features)
+            adj = np.eye(num_ims)
             for i in tqdm(range(num_ims)):
                 slice_no = self.get_slice_no(i)
                 cur_index = i + 1
