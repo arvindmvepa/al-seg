@@ -12,6 +12,6 @@ policy:
   rounds: [[.005, 0], [.005, 0], [.005, 0]]
 data_geometry:
   data_geometry_type: coregcn
-  affine_sim_wt_metric: k_slice_wt
+  adj_sim_wt_metric: k_slice_wt
   feature_model: resnet50
 exp_dir: "DMPLS_w_coregcn_updated_aff_test_run"

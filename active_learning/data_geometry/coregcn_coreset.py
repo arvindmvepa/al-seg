@@ -10,7 +10,7 @@ class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
     def __init__(self, subset_size="all", hidden_units=128, dropout_rate=0.3, lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2,
-                 num_epochs_gcn=200, s_margin=0.1, starting_sample=5, affine_sim_wt_metric=None, **kwargs):
+                 num_epochs_gcn=200, s_margin=0.1, starting_sample=5, adj_sim_wt_metric=None, **kwargs):
         super().__init__(**kwargs)
         self.subset_size = subset_size
         self.hidden_units = hidden_units
@@ -21,13 +21,12 @@ class CoreGCN(BaseCoreset):
         self.num_epochs_gcn = num_epochs_gcn
         self.s_margin = s_margin
         self.starting_sample = starting_sample
-        self.affine_sim_metric = affine_sim_wt_metric
-        if affine_sim_wt_metric is None:
-            self.affine_sim_wt_metric = None
-        elif affine_sim_wt_metric not in wt_metrics:
-            raise ValueError(f"affine_sim_wt_metric must be None or one of {list(wt_metrics.keys())}. Instead got {affine_sim_wt_metric}")
+        if adj_sim_wt_metric is None:
+            self.adj_sim_wt_metric = None
+        elif adj_sim_wt_metric not in wt_metrics:
+            raise ValueError(f"adj_sim_wt_metric must be None or one of {list(wt_metrics.keys())}. Instead got {adj_sim_wt_metric}")
         else:
-            self.affine_sim_wt_metric = wt_metrics[affine_sim_wt_metric]
+            self.adj_sim_wt_metric = wt_metrics[adj_sim_wt_metric]
         
     def calculate_representativeness(self, im_score_file, num_samples, prev_round_dir, train_logits_path,
                                      already_selected=[], skip=False, delete_preds=True, **kwargs):
@@ -129,15 +128,16 @@ class CoreGCN(BaseCoreset):
 
     def aff_to_adj(self, x, y=None, eps=1e-10):
         num_features = x.shape[1]
-        if self.affine_sim_metric is not None:
+        if self.adj_sim_wt_metric is not None:
             adj = np.eye(num_features)
             for i in range(len(self.all_train_im_files)):
                 slice_no = self.image_cfgs_arr[i, self.slice_pos_starting_index:self.slice_pos_ending_index]
                 cur_index = i + 1
                 cur_slice_no = self.image_cfgs_arr[cur_index, self.slice_pos_starting_index:self.slice_pos_ending_index]
                 while cur_slice_no != 0:
-                    adj[i, cur_index] = self.affine_sim_metric(slice_no, cur_slice_no)
-                    adj[cur_index, i] = self.affine_sim_metric(slice_no, cur_slice_no)
+                    wt = self.adj_sim_wt_metric(slice_no, cur_slice_no)
+                    adj[i, cur_index] = wt
+                    adj[cur_index, i] = wt
                     cur_index = i + 1
                     cur_slice_no = self.image_cfgs_arr[cur_index, self.slice_pos_starting_index:self.slice_pos_ending_index]
         else:
