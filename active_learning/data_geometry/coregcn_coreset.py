@@ -130,19 +130,22 @@ class CoreGCN(BaseCoreset):
 
 
     def aff_to_adj(self, x, y=None, eps=1e-10):
+        num_ims = len(self.all_train_im_files)
+        assert num_ims > 1, "Number of images must be greater than 1"
         num_features = x.shape[1]
+        assert num_features > 1, "Number of features must be greater than 1"
         if self.adj_sim_wt_metric is not None:
             adj = np.eye(num_features)
-            for i in tqdm(range(len(self.all_train_im_files))):
-                slice_no = self.image_cfgs_arr[i, self.slice_pos_starting_index:self.slice_pos_ending_index]
+            for i in tqdm(range(num_ims)):
+                slice_no = self.get_slice_no(i)
                 cur_index = i + 1
-                cur_slice_no = self.image_cfgs_arr[cur_index, self.slice_pos_starting_index:self.slice_pos_ending_index]
-                while cur_slice_no != 0:
+                cur_slice_no = self.get_slice_no(i)
+                while cur_slice_no != 0 and cur_index < num_ims:
                     wt = self.adj_sim_wt_metric(slice_no, cur_slice_no)
                     adj[i, cur_index] = wt
                     adj[cur_index, i] = wt
-                    cur_index = cur_index + 1
-                    cur_slice_no = self.image_cfgs_arr[cur_index, self.slice_pos_starting_index:self.slice_pos_ending_index]
+                    cur_index += 1
+                    cur_slice_no = self.get_slice_no(i)
         else:
             x = x.detach().cpu().numpy()
             adj = np.matmul(x, x.transpose())
@@ -153,6 +156,12 @@ class CoreGCN(BaseCoreset):
         adj = torch.Tensor(adj).to(self.gpus)
 
         return adj
+
+    def get_slice_no(self, image_index):
+        if (0 <= image_index) and (image_index >= self.image_cfgs_arr.shape[0]):
+            return None
+        else:
+            return self.image_cfgs_arr[image_index, self.slice_pos_starting_index:self.slice_pos_ending_index]
 
     def BCEAdjLoss(self, scores, lbl, nlbl, l_adj, eps=1e-10):
         lnl = torch.log(scores[lbl] + eps)
