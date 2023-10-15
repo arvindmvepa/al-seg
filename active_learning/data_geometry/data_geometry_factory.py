@@ -5,7 +5,7 @@ from active_learning.data_geometry.coregcn_coreset import CoreGCN
 
 class DataGeometryFactory:
     def __init__(self):
-        pass 
+        pass
 
     @staticmethod
     def create_data_geometry(data_geometry_type, **geometry_kwargs):
@@ -18,4 +18,3 @@ class DataGeometryFactory:
         else:
             raise ValueError(f"There is no geometry_type {data_geometry_type}")
         return geometry
-

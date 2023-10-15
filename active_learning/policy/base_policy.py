@@ -104,7 +104,7 @@ class BaseActiveLearningPolicy:
 
     def setup_data_geometry(self):
         if self.data_geometry:
-            self.data_geometry.setup(self.data_root, self.all_train_files_dict[self.im_key])
+            self.data_geometry.setup(self.exp_dir, self.data_root, self.all_train_files_dict[self.im_key])
 
     def _run_round(self):
         im_score_file = os.path.join(self.round_dir, self.save_im_score_file)
