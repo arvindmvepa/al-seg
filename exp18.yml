@@ -11,8 +11,8 @@ policy:
     inf_test: True
   rounds: [[.05, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
-  data_geometry_type: kcenter_greedy
+  data_geometry_type: coregcn
   seed: 3
-  metric: euclidean_w_config
-  extra_feature_weight: 10.0
-exp_dir: "DMPLS_exp3_coreset_umetric_ew10.0_v5"
+  adj_sim_wt_metric: exp_slice_wt
+  feature_model: resnet50
+exp_dir: "DMPLS_exp3_coregcn_exp_slice_wt_v5"

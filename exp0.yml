@@ -11,6 +11,7 @@ policy:
     inf_test: True
   rounds: [[.05, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
-  data_geometry_type: kcenter_greedy
+  data_geometry_type: coregcn
   seed: 0
-exp_dir: "DMPLS_exp0_coreset_v5"
+  feature_model: resnet50
+exp_dir: "DMPLS_exp0_coregcn_v5"

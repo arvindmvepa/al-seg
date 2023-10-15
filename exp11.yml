@@ -7,13 +7,12 @@ policy:
   policy_type: ranked
   seed: 1
   ensemble_kwargs:
-  ensemble_kwargs:
     skip: False
     inf_test: True
   rounds: [[.05, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
-  data_geometry_type: kcenter_greedy
+  data_geometry_type: coregcn
   seed: 1
-  metric: euclidean_w_config
-  extra_feature_weight: 5.0
-exp_dir: "DMPLS_exp1_coreset_umetric_ew5.0_v5"
+  adj_sim_wt_metric: inv_slice_wt
+  feature_model: resnet50
+exp_dir: "DMPLS_exp1_coregcn_inv_slice_wt_v5"
