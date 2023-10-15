@@ -65,7 +65,9 @@ class CoreGCN(BaseCoreset):
             else:
                 raise ValueError("feat must be a numpy array")
             features = nn.functional.normalize(features)
+            print("Getting adjacency matrix...")
             adj = self.aff_to_adj(features)
+            print("Finished.")
 
             gcn_module = GCN(nfeat=features.shape[1],
                              nhid=self.hidden_units,
@@ -139,7 +141,7 @@ class CoreGCN(BaseCoreset):
                     wt = self.adj_sim_wt_metric(slice_no, cur_slice_no)
                     adj[i, cur_index] = wt
                     adj[cur_index, i] = wt
-                    cur_index = i + 1
+                    cur_index = cur_index + 1
                     cur_slice_no = self.image_cfgs_arr[cur_index, self.slice_pos_starting_index:self.slice_pos_ending_index]
         else:
             x = x.detach().cpu().numpy()
