@@ -131,6 +131,7 @@ class CoreGCN(BaseCoreset):
 
     def aff_to_adj(self, x, y=None, eps=1e-10):
         num_ims = len(self.all_train_im_files)
+        print(f"num_ims: {num_ims}, x.shape[0]: {x.shape[0]}")
         assert num_ims > 1, "Number of images must be greater than 1"
         num_features = x.shape[1]
         assert num_features > 1, "Number of features must be greater than 1"
