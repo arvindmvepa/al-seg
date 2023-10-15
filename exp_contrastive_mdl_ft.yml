@@ -1,8 +1,8 @@
 model:
   model_type: "dmpls"
   ann_type: "scribble"
-  ensemble_size: 5
-  gpus: "cuda:0"
+  ensemble_size: 1
+  gpus: "mps"
   inf_train_type: "features"
 policy:
   policy_type: ranked
@@ -12,6 +12,7 @@ policy:
     inf_test: False
   rounds: [[.005, 0], [.005, 0], [.005, 0]]
 data_geometry:
-  data_geometry_type: coregcn
-  use_model_features: True
-exp_dir: "DMPLS_w_coregcn_mdl_ft_test_run"
+  data_geometry_type: contrastive
+  batch_size: 8
+  gpus: "mps"
+exp_dir: "DMPLS_w_contrast_mdl_ft_test_run"

@@ -9,7 +9,12 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: False
-  rounds: [[.01, 0, random, True], [.001, 0], [.001, 0]]
+  rounds: [[.05, 0], [.001, 0], [.001, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-exp_dir: "DMPLS_w_coreset_test_run"
+  alg_string: pkcenter_greedy
+  seed: 0
+  coreset_kwargs:
+    temp_scale: inv_iter
+    temp_init: 2.0
+exp_dir: "DMPLS_w_pcoreset_test_run"

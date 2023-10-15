@@ -8,12 +8,12 @@ class BaseModelUncertainty(ABC):
         self.model = model
 
     @abstractmethod
-    def calculate_uncertainty(self, im_score_file, round_dir, ignore_ims_dict, skip=False, **kwargs):
+    def calculate_uncertainty(self, im_score_file, round_dir, ignore_ims_dict=None, skip=False, **kwargs):
         raise NotImplementedError()
 
 
 class NoModelUncertainty(BaseModelUncertainty):
     """Placeholder class for no model uncertainty"""
 
-    def calculate_uncertainty(self, im_score_file, round_dir, ignore_ims_dict):
+    def calculate_uncertainty(self, im_score_file, round_dir, ignore_ims_dict=None, skip=False, **kwargs):
         pass

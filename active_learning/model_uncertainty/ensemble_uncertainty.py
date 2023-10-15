@@ -17,7 +17,7 @@ class EnsembleUncertainty(BaseModelUncertainty):
         super().__init__(model=model)
         self.score_func=score_func
 
-    def calculate_uncertainty(self, im_score_file, ignore_ims_dict, round_dir, skip=False, **kwargs):
+    def calculate_uncertainty(self, im_score_file, round_dir, ignore_ims_dict=None, skip=False, **kwargs):
         if skip:
             print("Skipping Calculating Uncertainty!")
             return

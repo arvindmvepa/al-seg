@@ -1,9 +1,8 @@
 model:
   model_type: "dmpls"
   ann_type: "scribble"
-  ensemble_size: 5
+  ensemble_size: 1
   gpus: "cuda:0"
-  inf_train_type: "features"
 policy:
   policy_type: ranked
   seed: 0
@@ -13,5 +12,8 @@ policy:
   rounds: [[.005, 0], [.005, 0], [.005, 0]]
 data_geometry:
   data_geometry_type: coregcn
-  use_model_features: True
-exp_dir: "DMPLS_w_coregcn_mdl_ft_test_run"
+  adj_sim_wt_metric: k_slice_wt
+  feature_model: True
+  feature_model_params:
+    encoder: resnet18
+exp_dir: "DMPLS_w_coregcn_updated_aff_test_run"
