@@ -151,15 +151,17 @@ class kCenterGreedy(SamplingMethod):
             print("Getting features...")
             print("Calculating distances...")
             self.update_distances(already_selected, only_new=False, reset_dist=True)
-        except:
+        except Exception as error:
+            print(f"Previous attempt generated error: {error}")
             print("Getting features...")
             print("Calculating distances...")
             self.update_distances(already_selected, only_new=True, reset_dist=False)
 
         new_batch = []
 
+        combined_already_selected = already_selected + self.already_selected
         for i in range(N):
-            if (not self.already_selected) and (i == 0):
+            if not combined_already_selected and (i == 0):
                 # Initialize centers with a randomly selected datapoint
                 ind = self.random_state.choice(np.arange(self.n_obs))
             else:
