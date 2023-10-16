@@ -146,6 +146,7 @@ class kCenterGreedy(SamplingMethod):
         Returns:
           indices of points selected to minimize distance to cluster centers
         """
+        assert isinstance(already_selected, list)
 
         try:
             print("Getting features...")

@@ -103,7 +103,7 @@ class CoreGCN(BaseCoreset):
 
                 feat = feat.detach().cpu().numpy()
                 coreset_inst = self.create_coreset_inst(feat)
-                sample_indices += coreset_inst.select_batch_(lbl, num_samples)
+                sample_indices += coreset_inst.select_batch_(lbl.tolist(), num_samples)
 
                 print("Max confidence value: ", torch.max(scores.data).item())
                 print("Mean confidence value: ", torch.mean(scores.data).item())
