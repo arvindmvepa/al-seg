@@ -11,9 +11,12 @@ class ContrastiveLearner(nn.Module):
         self.projection_head = ProjectionHead(encoder_out_dim, projection_dim)
 
     def forward(self, x_i, x_j=None):
+        print(f"x_i shape: {x_i.shape}")
         if self.training:
             h_i = self.encoder(x_i)
             h_j = self.encoder(x_j)
+
+            print(f"h_i shape: {h_i.shape}")
 
             z_i = self.projection_head(h_i)
             z_j = self.projection_head(h_j)
