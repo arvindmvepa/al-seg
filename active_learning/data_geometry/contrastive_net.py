@@ -33,6 +33,7 @@ class ProjectionHead(nn.Module):
         self.fc2 = nn.Linear(input_dim, output_dim, bias=False)
 
     def forward(self, x):
+        print(x.shape)
         x = self.fc1(x)
         x = self.bn1(x)
         x = self.relu1(x)
