@@ -1,4 +1,5 @@
-from torchvision.models import resnet18, resnet50
+from torchvision.models import resnet18 as resnet18_
+from torchvision.models import resnet50 as resnet50_
 from torchvision.models.resnet import model_urls
 from torch.utils import model_zoo
 
@@ -14,14 +15,14 @@ def _load_pretrained(model, url, inchans=3):
 
 
 def resnet50(pretrained=False, inchans=3):
-    model = resnet50(pretrained=pretrained)
+    model = resnet50_(pretrained=pretrained)
     if pretrained:
         _load_pretrained(model, model_urls['resnet50'], inchans=inchans)
     return model
 
 
 def resnet18(pretrained=False, inchans=3):
-    model = resnet18(pretrained=pretrained)
+    model = resnet18_(pretrained=pretrained)
     if pretrained:
         _load_pretrained(model, model_urls['resnet18'], inchans=inchans)
     return model
