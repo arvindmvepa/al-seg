@@ -9,7 +9,7 @@ class ResNet18(nn.Module):
         self.resnet = resnet18_(pretrained=pretrained)
         if inchans == 1:
             self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        self.resnet.fc = Identity()
+        self.resnet.fc = Identity(self.resnet.fc.in_features)
 
     def forward(self, x):
         x = self.resnet(x)
@@ -22,7 +22,7 @@ class ResNet50(nn.Module):
         self.resnet = resnet50_(pretrained=pretrained)
         if inchans == 1:
             self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        self.resnet.fc = Identity()
+        self.resnet.fc = Identity(self.resnet.fc.in_features)
 
     def forward(self, x):
         x = self.resnet(x)
