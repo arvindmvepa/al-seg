@@ -9,12 +9,10 @@ class ResNet18(nn.Module):
         self.resnet = resnet18_(pretrained=pretrained)
         if inchans == 1:
             self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.resnet.fc = Identity()
 
     def forward(self, x):
-        print(f"x shape: {x.shape}")
-        print(f"self.resnet: {self.resnet}")
         x = self.resnet(x)
-        print(f"out x shape: {x.shape}")
         return x
 
 
@@ -24,9 +22,18 @@ class ResNet50(nn.Module):
         self.resnet = resnet50_(pretrained=pretrained)
         if inchans == 1:
             self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.resnet.fc = Identity()
 
     def forward(self, x):
         x = self.resnet(x)
+        return x
+
+
+class Identity(nn.Module):
+    def __init__(self):
+        super(Identity, self).__init__()
+
+    def forward(self, x):
         return x
 
 

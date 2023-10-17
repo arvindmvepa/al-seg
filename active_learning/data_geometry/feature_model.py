@@ -11,13 +11,12 @@ from active_learning.data_geometry.contrastive_loss import losses
 
 class FeatureModel(object):
 
-    def __init__(self, encoder=None, patch_size=(256, 256), pretrained=True, model_ignore_layer=-1, inf_batch_size=128,
+    def __init__(self, encoder=None, patch_size=(256, 256), pretrained=True, inf_batch_size=128,
                  gpus="cuda:0"):
         super().__init__()
         self.encoder = encoder
         self.patch_size = patch_size
         self.pretrained = pretrained
-        self.ignore_layer = model_ignore_layer
         self.inf_batch_size = inf_batch_size
         self.gpus = gpus
         self.image_features = None
@@ -51,8 +50,6 @@ class FeatureModel(object):
             encoder = resnet50(pretrained=self.pretrained)
         else:
             raise ValueError(f"Unknown feature model {self.encoder}")
-        # only layers before feature_model_ignore_layer will be used for feature extraction
-        encoder = nn.Sequential(*list(encoder.children())[:self.ignore_layer])
         encoder = encoder.to(self.gpus)
         return encoder
 
@@ -86,17 +83,6 @@ class ContrastiveFeatureModel(FeatureModel):
             encoder = resnet50(pretrained=self.pretrained, inchans=1)
         else:
             raise ValueError(f"Unknown feature model {self.encoder}")
-        print('stuff1')
-        print(list(encoder.children()))
-        print(print(list(encoder.children())[-1]))
-        print(len(list(encoder.children())))
-        print('stuff2')
-        print(len(list(encoder.children())[0]))
-        print('stuff3')
-        import sys
-        sys.stdout.flush()
-        # only layers before feature_model_ignore_layer will be used for feature extraction
-        encoder = nn.Sequential(*list(encoder.children())[:self.ignore_layer])
         encoder = ContrastiveLearner(encoder, projection_dim=self.projection_dim)
         encoder = encoder.to(self.gpus)
         return encoder
