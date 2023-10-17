@@ -88,6 +88,7 @@ class ContrastiveFeatureModel(FeatureModel):
             raise ValueError(f"Unknown feature model {self.encoder}")
         # only layers before feature_model_ignore_layer will be used for feature extraction
         encoder = nn.Sequential(*list(encoder.children())[:self.ignore_layer])
+        encoder = ContrastiveLearner(encoder, projection_dim=self.projection_dim)
         encoder = encoder.to(self.gpus)
         return encoder
 
@@ -108,9 +109,8 @@ class ContrastiveFeatureModel(FeatureModel):
             torch.cuda.empty_cache()
         return feat
 
-    def train(self, encoder, data):
+    def train(self, model, data):
         print("Training feature model with contrastive loss...")
-        model = ContrastiveLearner(encoder, projection_dim=self.projection_dim)
         model = model.train()
 
         contrastive_dataset = ContrastiveAugmentedDataSet(data, transform=get_contrastive_augmentation(
