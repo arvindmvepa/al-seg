@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 
 
@@ -8,7 +7,7 @@ class ContrastiveLearner(nn.Module):
     def __init__(self, encoder, projection_dim=64):
         super(ContrastiveLearner, self).__init__()
         self.encoder = encoder
-        encoder_out_dim = self.encoder.fc.in_features
+        encoder_out_dim = self.encoder.resnet.fc.in_features
         self.projection_head = ProjectionHead(encoder_out_dim, projection_dim)
 
     def forward(self, x_i, x_j=None):

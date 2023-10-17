@@ -37,11 +37,11 @@ class Identity(nn.Module):
         return x
 
 
-def resnet50(pretrained=False, inchans=3):
+def resnet18(pretrained=False, inchans=3):
     model = ResNet18(pretrained=pretrained, inchans=inchans)
     return model
 
 
-def resnet18(pretrained=False, inchans=3):
+def resnet50(pretrained=False, inchans=3):
     model = ResNet50(pretrained=pretrained, inchans=inchans)
     return model

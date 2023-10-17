@@ -11,7 +11,7 @@ from active_learning.data_geometry.contrastive_loss import losses
 
 class FeatureModel(object):
 
-    def __init__(self, encoder=None, patch_size=(256, 256), pretrained=True, inf_batch_size=128,
+    def __init__(self, encoder='resnet18', patch_size=(256, 256), pretrained=True, inf_batch_size=128,
                  gpus="cuda:0"):
         super().__init__()
         self.encoder = encoder
@@ -139,7 +139,7 @@ class ContrastiveFeatureModel(FeatureModel):
 class NoFeatureModel(FeatureModel):
 
     def __init__(self, **kwargs):
-        super().__init__()
+        super().__init__(encoder=None)
 
     def init_image_features(self, data):
         self.image_features = data.reshape(data.shape[0], -1)
