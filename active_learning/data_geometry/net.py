@@ -1,28 +1,36 @@
-from torchvision.models import resnet18 as resnet18_
-from torchvision.models import resnet50 as resnet50_
-from torchvision.models.resnet import model_urls
-from torch.utils import model_zoo
+import torch.nn as nn
+from torchvision.models import resnet18, resnet50
 
 
-def _load_pretrained(model, url, inchans=3):
-    state_dict = model_zoo.load_url(url)
-    if inchans == 1:
-        conv1_weight = state_dict['conv1.weight']
-        state_dict['conv1.weight'] = conv1_weight.sum(dim=1, keepdim=True)
-    elif inchans != 3:
-        assert False, "Invalid number of inchans for pretrained weights"
-    model.load_state_dict(state_dict)
+class ResNet18(nn.Module):
+    def __init__(self, pretrained=False, inchans=3):
+        super().__init__()
+        self.resnet = resnet18(pretrained=pretrained)
+        if inchans == 1:
+            self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+
+    def forward(self, x):
+        x = self.resnet(x)
+        return x
+
+
+class ResNet50(nn.Module):
+    def __init__(self, pretrained=False, inchans=3):
+        super().__init__()
+        self.resnet = resnet50(pretrained=pretrained)
+        if inchans == 1:
+            self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+
+    def forward(self, x):
+        x = self.resnet(x)
+        return x
 
 
 def resnet50(pretrained=False, inchans=3):
-    model = resnet50_(pretrained=pretrained)
-    if pretrained:
-        _load_pretrained(model, model_urls['resnet50'], inchans=inchans)
+    model = ResNet18(pretrained=pretrained, inchans=inchans)
     return model
 
 
 def resnet18(pretrained=False, inchans=3):
-    model = resnet18_(pretrained=pretrained)
-    if pretrained:
-        _load_pretrained(model, model_urls['resnet18'], inchans=inchans)
+    model = ResNet50(pretrained=pretrained, inchans=inchans)
     return model
