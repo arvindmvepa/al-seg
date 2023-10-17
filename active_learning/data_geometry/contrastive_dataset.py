@@ -15,7 +15,6 @@ class ContrastiveAugmentedDataSet(Dataset):
     def __getitem__(self, idx):
         img = self.data_arr[idx]
         img = torch.tensor(img, dtype=torch.float32)
-        img = img[None, :, :]
         # Generate two different augmentations for the same image
         print(f"img.shape: {img.shape}")
         aug_img1, aug_img2 = self.transform(img), self.transform(img)
@@ -23,7 +22,7 @@ class ContrastiveAugmentedDataSet(Dataset):
 
 
 def get_contrastive_augmentation(patch_size=(256, 256)):
-    transform = T.Compose([T.RandomResizedCrop(patch_size[0], scale=(0.8, 1.0)),
+    transform = T.Compose([T.RandomResizedCrop(patch_size, scale=(0.8, 1.0)),
                            T.RandomHorizontalFlip(p=0.5),
                            T.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.2)])
     return transform
