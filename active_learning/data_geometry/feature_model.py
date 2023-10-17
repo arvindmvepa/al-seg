@@ -111,7 +111,7 @@ class ContrastiveFeatureModel(FeatureModel):
         contrastive_dataset = ContrastiveAugmentedDataSet(data, transform=get_contrastive_augmentation(
             patch_size=self.patch_size))
         contrastive_dataloader = DataLoader(contrastive_dataset, batch_size=self.batch_size, shuffle=True,
-                                            pin_memory=True)
+                                            drop_last=True, pin_memory=True)
         criterion = losses[self.loss](batch_size=self.batch_size, temperature=self.temperature)
         optimizer = torch.optim.Adam(model.parameters(), lr=self.lr,
                                      weight_decay=self.weight_decay)
