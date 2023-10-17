@@ -11,7 +11,10 @@ class ResNet18(nn.Module):
             self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
 
     def forward(self, x):
+        print(f"x shape: {x.shape}")
+        print(f"self.resnet: {self.resnet}")
         x = self.resnet(x)
+        print(f"out x shape: {x.shape}")
         return x
 
 
