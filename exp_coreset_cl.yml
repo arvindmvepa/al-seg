@@ -13,6 +13,7 @@ policy:
 data_geometry:
   data_geometry_type: kcenter_greedy
   contrastive: True
+  feature_model: True
   feature_model_params:
     encoder: resnet18
 exp_dir: "DMPLS_w_coreset_cl_test_run"
