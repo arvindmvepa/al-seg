@@ -1,11 +1,11 @@
 import torch.nn as nn
-from torchvision.models import resnet18, resnet50
+from torchvision.models import resnet18_, resnet50_
 
 
 class ResNet18(nn.Module):
     def __init__(self, pretrained=False, inchans=3):
         super().__init__()
-        self.resnet = resnet18(pretrained=pretrained)
+        self.resnet = resnet18_(pretrained=pretrained)
         if inchans == 1:
             self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
 
@@ -17,7 +17,7 @@ class ResNet18(nn.Module):
 class ResNet50(nn.Module):
     def __init__(self, pretrained=False, inchans=3):
         super().__init__()
-        self.resnet = resnet50(pretrained=pretrained)
+        self.resnet = resnet50_(pretrained=pretrained)
         if inchans == 1:
             self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
 
