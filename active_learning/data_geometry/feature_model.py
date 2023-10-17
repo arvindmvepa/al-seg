@@ -9,7 +9,7 @@ from active_learning.data_geometry.contrastive_net import ContrastiveLearner
 from active_learning.data_geometry.contrastive_loss import losses
 
 
-class FeatureModel:
+class FeatureModel(object):
 
     def __init__(self, encoder=None, patch_size=(256, 256), pretrained=True, model_ignore_layer=-1, inf_batch_size=128,
                  gpus="cuda:0"):
@@ -64,7 +64,7 @@ class ContrastiveFeatureModel(FeatureModel):
 
     def __init__(self, lr=3e-4, batch_size=64, weight_decay=1.0e-6, temperature=0.5, projection_dim=64, num_epochs=100,
                  patch_size=(256,256), loss="nt_xent", **kwargs):
-        super(ContrastiveFeatureModel).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.lr = lr
         self.batch_size = batch_size
         self.weight_decay = weight_decay
