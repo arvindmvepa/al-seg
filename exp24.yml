@@ -17,5 +17,5 @@ data_geometry:
   seed: 4
   feature_model_params:
     encoder: resnet18
-    batch_size: 96
-exp_dir: "DMPLS_exp4_coreset_cl_bs96_v5"
+    batch_size: 8
+exp_dir: "DMPLS_exp4_coreset_cl_bs8_v5"
