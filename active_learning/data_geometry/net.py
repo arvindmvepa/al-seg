@@ -30,8 +30,9 @@ class ResNet50(nn.Module):
 
 
 class Identity(nn.Module):
-    def __init__(self):
+    def __init__(self, in_features=None):
         super(Identity, self).__init__()
+        self.in_features = in_features
 
     def forward(self, x):
         return x
