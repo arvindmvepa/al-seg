@@ -23,7 +23,7 @@ class BaseCoreset(BaseDataGeometry):
         self.patch_size = patch_size
         self.contrastive = contrastive
         self.feature_model = FeatureModelFactory.create_feature_model(model=feature_model, contrastive=self.contrastive,
-                                                                      **feature_model_params)
+                                                                      gpus=self.gpus, **feature_model_params)
         self.use_model_features = use_model_features
         self.seed = seed
         self.gpus = gpus

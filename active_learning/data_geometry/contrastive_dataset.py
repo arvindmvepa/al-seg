@@ -24,6 +24,8 @@ def get_contrastive_augmentation(patch_size=(256, 256)):
     transform = T.Compose([T.ToTensor(),
                            T.RandomResizedCrop(patch_size, scale=(0.8, 1.0)),
                            T.RandomHorizontalFlip(p=0.5),
-                           #T.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.2)
+                           T.RandomAffine(degrees=15, translate=(0.2, 0.2), scale=(0.8, 1.2), shear=10),
+                           T.GaussianBlur(kernel_size=(5, 5), sigma=(0.1, 2.0)),
+                           T.RandomErasing(p=0.2, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0, inplace=False)
                            ])
     return transform

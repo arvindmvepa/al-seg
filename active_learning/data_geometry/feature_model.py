@@ -124,8 +124,8 @@ class ContrastiveFeatureModel(FeatureModel):
             loss_epoch = 0
             for step, (x_i, x_j) in enumerate(contrastive_dataloader):
                 optimizer.zero_grad()
-                x_i = x_i.device(self.gpus)
-                x_j = x_j.device(self.gpus)
+                x_i = x_i.to(self.gpus)
+                x_j = x_j.to(self.gpus)
 
                 z_i, z_j = model(x_i, x_j)
 
