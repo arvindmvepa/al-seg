@@ -91,6 +91,8 @@ class ContrastiveFeatureModel(FeatureModel):
         print(print(list(encoder.children())[-1]))
         print(len(list(encoder.children())))
         print('stuff2')
+        print(len(list(encoder.children())[0]))
+        print('stuff3')
         import sys
         sys.stdout.flush()
         # only layers before feature_model_ignore_layer will be used for feature extraction
