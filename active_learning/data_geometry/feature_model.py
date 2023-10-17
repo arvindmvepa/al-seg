@@ -87,7 +87,9 @@ class ContrastiveFeatureModel(FeatureModel):
         else:
             raise ValueError(f"Unknown feature model {self.encoder}")
         print('stuff1')
-        print(encoder.children())
+        print(list(encoder.children()))
+        print(print(list(encoder.children())[-1]))
+        print(len(list(encoder.children())))
         print('stuff2')
         import sys
         sys.stdout.flush()
