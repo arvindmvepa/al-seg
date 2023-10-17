@@ -51,6 +51,7 @@ class FeatureModel(object):
             encoder = resnet50(pretrained=self.pretrained)
         else:
             raise ValueError(f"Unknown feature model {self.encoder}")
+        print(encoder.children())
         # only layers before feature_model_ignore_layer will be used for feature extraction
         encoder = nn.Sequential(*list(encoder.children())[:self.ignore_layer])
         encoder = encoder.to(self.gpus)
