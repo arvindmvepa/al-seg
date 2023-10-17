@@ -13,14 +13,14 @@ def _load_pretrained(model, url, inchans=3):
 
 
 def resnet50(pretrained=False, inchans=3):
-    model = ResNet(Bottleneck, [3, 4, 6, 3], inchans=inchans)
+    model = ResNet(Bottleneck, [3, 4, 6, 3])
     if pretrained:
         _load_pretrained(model, model_urls['resnet50'], inchans=inchans)
     return model
 
 
 def resnet18(pretrained=False, inchans=3):
-    model = ResNet(Bottleneck, [2, 2, 2, 2], inchans=inchans)
+    model = ResNet(Bottleneck, [2, 2, 2, 2])
     if pretrained:
         _load_pretrained(model, model_urls['resnet18'], inchans=inchans)
     return model
