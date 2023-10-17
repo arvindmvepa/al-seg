@@ -1,0 +1,18 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 1
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: False
+  rounds: [[.005, 0], [.005, 0], [.005, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  contrastive: True
+  feature_model_params:
+    model: resnet18
+exp_dir: "DMPLS_w_coreset_cl_test_run"
