@@ -96,6 +96,7 @@ class ContrastiveFeatureModel(FeatureModel):
         data_loader = DataLoader(dataset, batch_size=self.inf_batch_size, shuffle=False, pin_memory=True)
         features = torch.tensor([]).to(self.gpus)
         encoder = self.get_encoder()
+        print(f"self.image_features.shape: {self.image_features.shape}")
         self.train(encoder, self.image_features)
         encoder = encoder.eval()
         with torch.no_grad():
