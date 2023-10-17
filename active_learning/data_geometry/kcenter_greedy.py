@@ -4,7 +4,6 @@ from __future__ import print_function
 
 from sklearn.metrics import pairwise_distances
 from numpy.random import RandomState
-
 import abc
 import numpy as np
 
@@ -56,6 +55,7 @@ class kCenterGreedy(SamplingMethod):
         self.name = "kcenter"
         self.features = self.flat_X
         self.metric = metric
+        print(f"Using {metric} as distance metric.")
         self.min_distances = None
         self.max_distances = None
         self.n_obs = self.X.shape[0]
@@ -100,21 +100,23 @@ class kCenterGreedy(SamplingMethod):
         Returns:
           indices of points selected to minimize distance to cluster centers
         """
+        assert isinstance(already_selected, list)
 
         try:
-            # Assumes that the transform function takes in original data and not
-            # flattened data.
-            #   self.features = model.transform(self.X)
+            print("Getting features...")
             print("Calculating distances...")
             self.update_distances(already_selected, only_new=False, reset_dist=True)
-        except:
-            print("Using flat_X as features.")
+        except Exception as error:
+            print(f"Previous attempt generated error: {error}")
+            print("Getting features...")
+            print("Calculating distances...")
             self.update_distances(already_selected, only_new=True, reset_dist=False)
 
         new_batch = []
 
-        for _ in range(N):
-            if self.already_selected is None:
+        combined_already_selected = already_selected + self.already_selected
+        for i in range(N):
+            if not combined_already_selected and (i == 0):
                 # Initialize centers with a randomly selected datapoint
                 ind = self.random_state.choice(np.arange(self.n_obs))
             else:
@@ -132,4 +134,3 @@ class kCenterGreedy(SamplingMethod):
         self.already_selected = already_selected
 
         return new_batch
-
