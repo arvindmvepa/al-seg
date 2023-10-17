@@ -6,7 +6,7 @@ from tqdm import tqdm
 from numpy.random import RandomState
 import os
 from active_learning.data_geometry.base_data_geometry import BaseDataGeometry
-from active_learning.data_geometry.feature_model import FeatureModel, ContrastiveFeatureModel
+from active_learning.data_geometry.feature_model_factory import FeatureModelFactory
 from active_learning.data_geometry import coreset_algs
 
 
@@ -22,15 +22,8 @@ class BaseCoreset(BaseDataGeometry):
         print(f"Using the {self.metric} metric in Coreset sampling...")
         self.patch_size = patch_size
         self.contrastive = contrastive
-        if feature_model is None:
-            print("No feature model specified for Coreset sampling!")
-            self.feature_model = feature_model
-        elif self.contrastive:
-            print("Using Contrastive Feature Model for Coreset sampling...")
-            self.feature_model = ContrastiveFeatureModel(**feature_model_params)
-        else:
-            print("Using Feature Model for Coreset sampling...")
-            self.feature_model = FeatureModel(**feature_model_params)
+        self.feature_model = FeatureModelFactory.create_feature_model(feature_model, contrastive=self.contrastive,
+                                                                      **feature_model_params)
         self.use_model_features = use_model_features
         self.seed = seed
         self.gpus = gpus
@@ -50,19 +43,11 @@ class BaseCoreset(BaseDataGeometry):
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
-        self.setup_image_features
+        self.setup_image_features()
 
     def setup_image_features(self):
-        if not self.contrastive:
-            image_data = self._get_data()
-            if self.feature_model is not None:
-                print("Extracting features for all training data using feature_model...")
-                self.image_features = self.feature_model.get_features(image_data)
-            elif self.feature_model is None:
-                # flatten array except for first dim
-                self.image_features = image_data.reshape(image_data.shape[0], -1)
-        else:
-            self.image_features = None
+        image_data = self._get_data()
+        self.feature_model.init_image_features(image_data)
 
     def setup_alg(self):
         if self.alg_string in coreset_algs:
@@ -76,11 +61,7 @@ class BaseCoreset(BaseDataGeometry):
             self.basic_coreset_alg = None
 
     def get_features(self):
-        if self.contrastive:
-            image_data = self._get_data()
-            return self.feature_model.get_features(image_data)
-        else:
-            return self.image_features
+        return self.feature_model.get_features()
 
     def create_coreset_inst(self, processed_data):
         return self.coreset_cls(processed_data, metric=self.metric, seed=self.seed)

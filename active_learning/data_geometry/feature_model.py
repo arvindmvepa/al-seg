@@ -11,7 +11,7 @@ from active_learning.data_geometry.contrastive_loss import losses
 
 class FeatureModel:
 
-    def __init__(self, model, patch_size=(256, 256), pretrained=True, model_ignore_layer=-1, inf_batch_size=128,
+    def __init__(self, model=None, patch_size=(256, 256), pretrained=True, model_ignore_layer=-1, inf_batch_size=128,
                  gpus="cuda:0"):
         super().__init__()
         self.model = model
@@ -20,23 +20,11 @@ class FeatureModel:
         self.ignore_layer = model_ignore_layer
         self.inf_batch_size = inf_batch_size
         self.gpus = gpus
+        self.image_features = None
 
-    def get_model(self):
-        if self.model == 'resnet18':
-            print("Using Resnet18 for feature extraction...")
-            model = resnet18(pretrained=self.pretrained)
-        elif self.model == 'resnet50':
-            print("Using Resnet50 for feature extraction...")
-            model = resnet50(pretrained=self.pretrained)
-        else:
-            raise ValueError(f"Unknown feature model {self.model}")
-        # only layers before feature_model_ignore_layer will be used for feature extraction
-        model = nn.Sequential(*list(model.children())[:self.ignore_layer])
-        model = model.to(self.gpus)
-        return model
-
-    def get_features(self, data):
-        dataset = DatasetWrapper(data, transform=T.ToTensor())
+    def init_image_features(self, data):
+        self.image_features = data
+        dataset = DatasetWrapper(self.image_features, transform=T.ToTensor())
         data_loader = DataLoader(dataset, batch_size=self.inf_batch_size, shuffle=False, pin_memory=True)
         features = torch.tensor([]).to(self.gpus)
         model = self.get_model()
@@ -53,6 +41,23 @@ class FeatureModel:
             torch.cuda.empty_cache()
         return feat
 
+    def get_model(self):
+        if self.model == 'resnet18':
+            print("Using Resnet18 for feature extraction...")
+            model = resnet18(pretrained=self.pretrained)
+        elif self.model == 'resnet50':
+            print("Using Resnet50 for feature extraction...")
+            model = resnet50(pretrained=self.pretrained)
+        else:
+            raise ValueError(f"Unknown feature model {self.model}")
+        # only layers before feature_model_ignore_layer will be used for feature extraction
+        model = nn.Sequential(*list(model.children())[:self.ignore_layer])
+        model = model.to(self.gpus)
+        return model
+
+    def get_features(self):
+        return self.image_features
+
 
 class ContrastiveFeatureModel(FeatureModel):
 
@@ -68,6 +73,9 @@ class ContrastiveFeatureModel(FeatureModel):
         self.patch_size = patch_size
         self.loss = loss
 
+    def init_image_features(self, data):
+        self.image_features = data
+
     def get_model(self):
         if self.model == 'resnet18':
             print("Using Resnet18 for feature extraction...")
@@ -82,12 +90,12 @@ class ContrastiveFeatureModel(FeatureModel):
         model = model.to(self.gpus)
         return model
 
-    def get_features(self, data):
-        dataset = DatasetWrapper(data, transform=T.ToTensor())
+    def get_features(self):
+        dataset = DatasetWrapper(self.image_features, transform=T.ToTensor())
         data_loader = DataLoader(dataset, batch_size=self.inf_batch_size, shuffle=False, pin_memory=True)
         features = torch.tensor([]).to(self.gpus)
         model = self.get_model()
-        self.train(model, data)
+        self.train(model, self.image_features)
         model = model.eval()
         with torch.no_grad():
             for inputs in data_loader:
@@ -132,4 +140,16 @@ class ContrastiveFeatureModel(FeatureModel):
         print("Done training feature model with contrastive loss!")
 
 
+class NoFeatureModel(FeatureModel):
 
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    def init_image_features(self, data):
+        self.image_features = data.reshape(data.shape[0], -1)
+
+    def get_model(self):
+        return None
+
+    def get_features(self):
+        return self.image_features
