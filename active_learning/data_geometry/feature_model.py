@@ -54,6 +54,8 @@ class FeatureModel(object):
         print('stuff1')
         print(encoder.children())
         print('stuff2')
+        import sys
+        sys.stdout.flush()
         # only layers before feature_model_ignore_layer will be used for feature extraction
         encoder = nn.Sequential(*list(encoder.children())[:self.ignore_layer])
         encoder = encoder.to(self.gpus)
