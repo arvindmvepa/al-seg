@@ -32,7 +32,6 @@ class BaseCoreset(BaseDataGeometry):
         self.data_root = None
         self.all_train_im_files = None
         self.all_train_full_im_paths = None
-        self.image_features = None
     
     def setup(self, data_root, all_train_im_files):
         self.setup_data(data_root, all_train_im_files)
@@ -52,13 +51,8 @@ class BaseCoreset(BaseDataGeometry):
     def setup_alg(self):
         if self.alg_string in coreset_algs:
             self.coreset_cls = coreset_algs[self.alg_string]
-            self.basic_coreset_alg = coreset_algs[self.alg_string](self.image_features,
-                                                                   metric=self.metric,
-                                                                   seed=self.seed)
         else:
-            print(f"No coreset alg found for {self.alg_string}")
-            self.coreset_cls = None
-            self.basic_coreset_alg = None
+            raise ValueError(f"No coreset alg found for {self.alg_string}")
 
     def get_features(self):
         return self.feature_model.get_features()
@@ -75,8 +69,8 @@ class BaseCoreset(BaseDataGeometry):
                 feat = self.get_features()
             coreset_inst = self.create_coreset_inst(feat)
         else:
-            coreset_inst = self.basic_coreset_alg
             feat = self.get_features()
+            coreset_inst = self.create_coreset_inst(feat)
         return coreset_inst, feat
 
     @staticmethod
