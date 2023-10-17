@@ -16,6 +16,7 @@ class ContrastiveAugmentedDataSet(Dataset):
         img = self.data_arr[idx]
         img = torch.tensor(img, dtype=torch.float32)
         # Generate two different augmentations for the same image
+        print(f"img.shape: {img.shape}")
         aug_img1, aug_img2 = self.transform(img), self.transform(img)
         return aug_img1, aug_img2
 
