@@ -51,11 +51,6 @@ class FeatureModel(object):
             encoder = resnet50(pretrained=self.pretrained)
         else:
             raise ValueError(f"Unknown feature model {self.encoder}")
-        print('stuff1')
-        print(encoder.children())
-        print('stuff2')
-        import sys
-        sys.stdout.flush()
         # only layers before feature_model_ignore_layer will be used for feature extraction
         encoder = nn.Sequential(*list(encoder.children())[:self.ignore_layer])
         encoder = encoder.to(self.gpus)
@@ -91,6 +86,11 @@ class ContrastiveFeatureModel(FeatureModel):
             encoder = resnet50(pretrained=self.pretrained, inchans=1)
         else:
             raise ValueError(f"Unknown feature model {self.encoder}")
+        print('stuff1')
+        print(encoder.children())
+        print('stuff2')
+        import sys
+        sys.stdout.flush()
         # only layers before feature_model_ignore_layer will be used for feature extraction
         encoder = nn.Sequential(*list(encoder.children())[:self.ignore_layer])
         encoder = ContrastiveLearner(encoder, projection_dim=self.projection_dim)
