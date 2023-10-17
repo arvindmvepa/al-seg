@@ -70,6 +70,7 @@ class BaseCoreset(BaseDataGeometry):
             coreset_inst = self.create_coreset_inst(feat)
         else:
             feat = self.get_features()
+            print("Finished getting model features")
             coreset_inst = self.create_coreset_inst(feat)
         return coreset_inst, feat
 

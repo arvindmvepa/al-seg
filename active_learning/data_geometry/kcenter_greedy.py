@@ -104,7 +104,6 @@ class kCenterGreedy(SamplingMethod):
         try:
             # Assumes that the transform function takes in original data and not
             # flattened data.
-            print("Getting transformed features...")
             #   self.features = model.transform(self.X)
             print("Calculating distances...")
             self.update_distances(already_selected, only_new=False, reset_dist=True)
