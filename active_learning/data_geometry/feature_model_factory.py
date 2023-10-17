@@ -7,7 +7,7 @@ class FeatureModelFactory:
 
     @staticmethod
     def create_feature_model(model, contrastive, **feature_model_kwargs):
-        if model is None:
+        if not model:
             model = NoFeatureModel(**feature_model_kwargs)
         elif contrastive:
             model = ContrastiveFeatureModel(**feature_model_kwargs)

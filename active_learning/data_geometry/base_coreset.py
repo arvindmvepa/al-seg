@@ -13,7 +13,7 @@ from active_learning.data_geometry import coreset_algs
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', patch_size=(256, 256), feature_model=None,
+    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', patch_size=(256, 256), feature_model=False,
                  feature_model_params=None, contrastive=False, use_model_features=False, seed=0, gpus="cuda:0",
                  **kwargs):
         super().__init__()
@@ -22,7 +22,7 @@ class BaseCoreset(BaseDataGeometry):
         print(f"Using the {self.metric} metric in Coreset sampling...")
         self.patch_size = patch_size
         self.contrastive = contrastive
-        self.feature_model = FeatureModelFactory.create_feature_model(feature_model, contrastive=self.contrastive,
+        self.feature_model = FeatureModelFactory.create_feature_model(model=feature_model, contrastive=self.contrastive,
                                                                       **feature_model_params)
         self.use_model_features = use_model_features
         self.seed = seed

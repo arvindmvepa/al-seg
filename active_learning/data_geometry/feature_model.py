@@ -11,10 +11,10 @@ from active_learning.data_geometry.contrastive_loss import losses
 
 class FeatureModel:
 
-    def __init__(self, model=None, patch_size=(256, 256), pretrained=True, model_ignore_layer=-1, inf_batch_size=128,
+    def __init__(self, encoder=None, patch_size=(256, 256), pretrained=True, model_ignore_layer=-1, inf_batch_size=128,
                  gpus="cuda:0"):
         super().__init__()
-        self.model = model
+        self.encoder = encoder
         self.patch_size = patch_size
         self.pretrained = pretrained
         self.ignore_layer = model_ignore_layer
@@ -23,37 +23,38 @@ class FeatureModel:
         self.image_features = None
 
     def init_image_features(self, data):
+        print("initializing image features for feature model...")
         self.image_features = data
         dataset = DatasetWrapper(self.image_features, transform=T.ToTensor())
         data_loader = DataLoader(dataset, batch_size=self.inf_batch_size, shuffle=False, pin_memory=True)
         features = torch.tensor([]).to(self.gpus)
-        model = self.get_model()
-        model = model.eval()
+        encoder = self.get_encoder()
+        encoder = encoder.eval()
         with torch.no_grad():
             for inputs in data_loader:
                 inputs = inputs.to(self.gpus)
                 # convert from grayscale to color, hard-coded for pretrained resnet
                 inputs = torch.cat([inputs, inputs, inputs], dim=1)
                 # flatten the feature map (but not the batch dim)
-                features_batch = model(inputs).flatten(1)
+                features_batch = encoder(inputs).flatten(1)
                 features = torch.cat((features, features_batch), 0)
             feat = features.detach().cpu().numpy()
             torch.cuda.empty_cache()
-        return feat
+        self.image_features = feat
 
-    def get_model(self):
-        if self.model == 'resnet18':
+    def get_encoder(self):
+        if self.encoder == 'resnet18':
             print("Using Resnet18 for feature extraction...")
-            model = resnet18(pretrained=self.pretrained)
-        elif self.model == 'resnet50':
+            encoder = resnet18(pretrained=self.pretrained)
+        elif self.encoder == 'resnet50':
             print("Using Resnet50 for feature extraction...")
-            model = resnet50(pretrained=self.pretrained)
+            encoder = resnet50(pretrained=self.pretrained)
         else:
-            raise ValueError(f"Unknown feature model {self.model}")
+            raise ValueError(f"Unknown feature model {self.encoder}")
         # only layers before feature_model_ignore_layer will be used for feature extraction
-        model = nn.Sequential(*list(model.children())[:self.ignore_layer])
-        model = model.to(self.gpus)
-        return model
+        encoder = nn.Sequential(*list(encoder.children())[:self.ignore_layer])
+        encoder = encoder.to(self.gpus)
+        return encoder
 
     def get_features(self):
         return self.image_features
@@ -76,40 +77,40 @@ class ContrastiveFeatureModel(FeatureModel):
     def init_image_features(self, data):
         self.image_features = data
 
-    def get_model(self):
-        if self.model == 'resnet18':
+    def get_encoder(self):
+        if self.encoder == 'resnet18':
             print("Using Resnet18 for feature extraction...")
-            model = resnet18(pretrained=self.pretrained, inchans=1)
-        elif self.model == 'resnet50':
+            encoder = resnet18(pretrained=self.pretrained, inchans=1)
+        elif self.encoder == 'resnet50':
             print("Using Resnet50 for feature extraction...")
-            model = resnet50(pretrained=self.pretrained, inchans=1)
+            encoder = resnet50(pretrained=self.pretrained, inchans=1)
         else:
-            raise ValueError(f"Unknown feature model {self.model}")
+            raise ValueError(f"Unknown feature model {self.encoder}")
         # only layers before feature_model_ignore_layer will be used for feature extraction
-        model = nn.Sequential(*list(model.children())[:self.ignore_layer])
-        model = model.to(self.gpus)
-        return model
+        encoder = nn.Sequential(*list(encoder.children())[:self.ignore_layer])
+        encoder = encoder.to(self.gpus)
+        return encoder
 
     def get_features(self):
         dataset = DatasetWrapper(self.image_features, transform=T.ToTensor())
         data_loader = DataLoader(dataset, batch_size=self.inf_batch_size, shuffle=False, pin_memory=True)
         features = torch.tensor([]).to(self.gpus)
-        model = self.get_model()
-        self.train(model, self.image_features)
-        model = model.eval()
+        encoder = self.get_encoder()
+        self.train(encoder, self.image_features)
+        encoder = encoder.eval()
         with torch.no_grad():
             for inputs in data_loader:
                 inputs = inputs.to(self.gpus)
                 # flatten the feature map (but not the batch dim)
-                features_batch = model(inputs).flatten(1)
+                features_batch = encoder(inputs).flatten(1)
                 features = torch.cat((features, features_batch), 0)
             feat = features.detach().cpu().numpy()
             torch.cuda.empty_cache()
         return feat
 
-    def train(self, model, data):
+    def train(self, encoder, data):
         print("Training feature model with contrastive loss...")
-        model = ContrastiveLearner(model, projection_dim=self.projection_dim)
+        model = ContrastiveLearner(encoder, projection_dim=self.projection_dim)
         model = model.train()
 
         contrastive_dataset = ContrastiveAugmentedDataSet(data, transform=get_contrastive_augmentation(
@@ -148,7 +149,7 @@ class NoFeatureModel(FeatureModel):
     def init_image_features(self, data):
         self.image_features = data.reshape(data.shape[0], -1)
 
-    def get_model(self):
+    def get_encoder(self):
         return None
 
     def get_features(self):
