@@ -21,10 +21,9 @@ class ContrastiveAugmentedDataSet(Dataset):
 
 
 def get_contrastive_augmentation(patch_size=(256, 256)):
-    transform = T.Compose([
+    transform = T.Compose([T.ToTensor(),
                            T.RandomResizedCrop(patch_size, scale=(0.8, 1.0)),
                            T.RandomHorizontalFlip(p=0.5),
-                           T.ToTensor(),
                            #T.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.2)
                            ])
     return transform
