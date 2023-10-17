@@ -22,11 +22,11 @@ class BaseCoreset(BaseDataGeometry):
         print(f"Using the {self.metric} metric in Coreset sampling...")
         self.patch_size = patch_size
         self.contrastive = contrastive
+        self.gpus = gpus
         self.feature_model = FeatureModelFactory.create_feature_model(model=feature_model, contrastive=self.contrastive,
                                                                       gpus=self.gpus, **feature_model_params)
         self.use_model_features = use_model_features
         self.seed = seed
-        self.gpus = gpus
         self.random_state = RandomState(seed=self.seed)
         self.basic_coreset_alg = None
         self.data_root = None
