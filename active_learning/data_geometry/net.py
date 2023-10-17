@@ -1,5 +1,6 @@
 import torch.nn as nn
-from torchvision.models import resnet18_, resnet50_
+from torchvision.models import resnet18 as resnet18_
+from torchvision.models import resnet50 as resnet50_
 
 
 class ResNet18(nn.Module):
