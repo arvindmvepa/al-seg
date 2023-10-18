@@ -74,8 +74,7 @@ class BaseCoreset(BaseDataGeometry):
             coreset_inst = self.create_coreset_inst(feat)
         return coreset_inst, feat
 
-    @staticmethod
-    def get_model_features(prev_round_dir, train_logits_path, delete_preds=True):
+    def get_model_features(self, prev_round_dir, train_logits_path, delete_preds=True):
         if prev_round_dir is None:
             print("No model features for first round!")
             return None
@@ -87,10 +86,9 @@ class BaseCoreset(BaseDataGeometry):
         if len(train_results) > 1:
             raise ValueError(f"More than one prediction file found: {train_results}")
         train_results = train_results[0]
-        im_files = sorted(np.load(train_results, mmap_mode='r').files)
         # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
         preds_arrs = []
-        for im_file in tqdm(im_files):
+        for im_file in tqdm(self.all_train_im_files):
             preds_arr = np.load(train_results, mmap_mode='r')[im_file]
             preds_arrs.append(preds_arr)
         preds_arrs = np.concatenate(preds_arrs, axis=0)
