@@ -23,6 +23,8 @@ class BaseCoreset(BaseDataGeometry):
         self.patch_size = patch_size
         self.contrastive = contrastive
         self.gpus = gpus
+        if feature_model_params is None:
+            feature_model_params = {}
         self.feature_model = FeatureModelFactory.create_feature_model(model=feature_model, contrastive=self.contrastive,
                                                                       gpus=self.gpus, **feature_model_params)
         self.use_model_features = use_model_features
