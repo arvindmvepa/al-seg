@@ -16,4 +16,5 @@ data_geometry:
   feature_model: True
   feature_model_params:
     encoder: resnet18
+    batch_size: 4
 exp_dir: "DMPLS_w_coreset_cl_test_run"
