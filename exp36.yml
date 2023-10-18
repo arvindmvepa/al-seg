@@ -1,0 +1,22 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 1
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 1
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.05, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  contrastive: True
+  feature_model: True
+  use_model_features: True
+  seed: 1
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 8
+exp_dir: "DMPLS_exp1_coreset_cl_bs8_preds_v5"
