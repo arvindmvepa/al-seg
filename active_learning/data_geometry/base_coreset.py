@@ -93,7 +93,7 @@ class BaseCoreset(BaseDataGeometry):
         for im_file in tqdm(self.all_train_im_files):
             preds_arr = np.load(train_results, mmap_mode='r')[os.path.basename(im_file)]
             preds_arrs.append(preds_arr)
-        preds_arrs = np.concatenate(preds_arrs, axis=0)
+        preds_arrs = np.stack(preds_arrs, axis=0)
         # flatten array except for first dim
         preds_arrs = preds_arrs.reshape(preds_arrs.shape[0], -1)
 
