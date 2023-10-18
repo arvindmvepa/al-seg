@@ -91,7 +91,7 @@ class BaseCoreset(BaseDataGeometry):
         # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
         preds_arrs = []
         for im_file in tqdm(self.all_train_im_files):
-            preds_arr = np.load(train_results, mmap_mode='r')[im_file]
+            preds_arr = np.load(train_results, mmap_mode='r')[os.path.basename(im_file)]
             preds_arrs.append(preds_arr)
         preds_arrs = np.concatenate(preds_arrs, axis=0)
         # flatten array except for first dim
