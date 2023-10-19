@@ -41,29 +41,27 @@ class NT_Xent(nn.Module):
         Instead, given a positive pair, similar to (Chen et al., 2017), we treat the other 2(N − 1) augmented examples within a minibatch as negative examples.
         """
         N = 2 * self.batch_size
-        print("N: ", N)
 
         z = torch.cat((z_i, z_j), dim=0)
-        print("z shape: ", z.shape)
 
         sim = self.similarity_f(z.unsqueeze(1), z.unsqueeze(0)) / self.temperature
-        print("sim shape: ", sim.shape)
 
+        # this is matching all the elements with their augmentations (top and bottom of matrix)
+        # collecting all the similarities of the positive pairs
         sim_i_j = torch.diag(sim, self.batch_size)
         sim_j_i = torch.diag(sim, -self.batch_size)
-        print("sim_i_j shape: ", sim_i_j.shape)
-        print("sim_j_i shape: ", sim_j_i.shape)
 
-        # We have 2N samples, but with Distributed training every GPU gets N examples too, resulting in: 2xNxN
+        # includes the positive pairs (but don't include main diagonal)
         positive_samples = torch.cat((sim_i_j, sim_j_i), dim=0).reshape(N, 1)
+        # removes elements on main diagonal as well as off diagonal augmentation pairs
         negative_samples = sim[self.mask].reshape(N, -1)
-        print("positive_samples shape: ", positive_samples.shape)
-        print("negative_samples shape: ", negative_samples.shape)
 
+        # basically a multi-class problem but for each sample
+        # the correct label is the first index for all the samples
         labels = torch.zeros(N).to(positive_samples.device).long()
-        print("labels shape: ", labels.shape)
+
+        # this is why positive samples goes first in the concat
         logits = torch.cat((positive_samples, negative_samples), dim=1)
-        print("logits shape: ", logits.shape)
         loss = self.criterion(logits, labels)
         loss /= N
         return loss
