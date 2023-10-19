@@ -1,4 +1,4 @@
-from active_learning.data_geometry.feature_model import FeatureModel, NoFeatureModel, ContrastiveFeatureModel
+from active_learning.feature_model.feature_model import FeatureModel, NoFeatureModel, ContrastiveFeatureModel
 
 
 class FeatureModelFactory:

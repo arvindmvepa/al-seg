@@ -5,9 +5,9 @@ from torch.utils.data import DataLoader
 from active_learning.data_geometry.net import resnet18, resnet50
 import torchvision.transforms as T
 from active_learning.data_geometry.dataset import DatasetWrapper
-from active_learning.data_geometry.contrastive_dataset import ContrastiveAugmentedDataSet, get_contrastive_augmentation
-from active_learning.data_geometry.contrastive_net import ContrastiveLearner
-from active_learning.data_geometry.contrastive_loss import losses
+from active_learning.feature_model.contrastive_dataset import ContrastiveAugmentedDataSet, get_contrastive_augmentation
+from active_learning.feature_model.contrastive_net import ContrastiveLearner
+from active_learning.feature_model.contrastive_loss import losses
 
 
 class FeatureModel(object):

@@ -6,7 +6,7 @@ from tqdm import tqdm
 from numpy.random import RandomState
 import os
 from active_learning.data_geometry.base_data_geometry import BaseDataGeometry
-from active_learning.data_geometry.feature_model_factory import FeatureModelFactory
+from active_learning.feature_model.feature_model_factory import FeatureModelFactory
 from active_learning.data_geometry import coreset_algs
 
 
