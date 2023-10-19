@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from active_learning.data_geometry.net import resnet18, resnet50
@@ -12,7 +13,7 @@ from active_learning.data_geometry.contrastive_loss import losses
 class FeatureModel(object):
 
     def __init__(self, exp_dir=None, encoder='resnet18', patch_size=(256, 256), pretrained=True, inf_batch_size=128,
-                 gpus="cuda:0"):
+                 fuse_image_data=False, gpus="cuda:0"):
         super().__init__()
         self.exp_dir = exp_dir
         self.encoder = encoder
@@ -20,12 +21,23 @@ class FeatureModel(object):
         self.pretrained = pretrained
         self.inf_batch_size = inf_batch_size
         self.gpus = gpus
+        self.fuse_image_data = fuse_image_data
+        self.model_feature_starting_index = None
+        self.model_feature_ending_index = None
+        self.image_data_starting_index = None
+        self.image_data_ending_index = None
+        self.image_data = None
+        self.flat_image_data = None
         self.image_features = None
 
     def init_image_features(self, data):
-        print("initializing image features for feature model...")
-        self.image_features = data
-        dataset = DatasetWrapper(self.image_features, transform=T.ToTensor())
+        self.image_data = data
+        self.flat_image_data = self.image_data.reshape(self.image_data.shape[0], -1)
+        self.init_model_features()
+
+    def init_model_features(self):
+        print("initializing image features from feature model...")
+        dataset = DatasetWrapper(self.image_data, transform=T.ToTensor())
         data_loader = DataLoader(dataset, batch_size=self.inf_batch_size, shuffle=False, pin_memory=True)
         features = torch.tensor([]).to(self.gpus)
         encoder = self.get_encoder()
@@ -54,8 +66,30 @@ class FeatureModel(object):
         encoder = encoder.to(self.gpus)
         return encoder
 
-    def get_features(self, exp_dir=None):
+    def get_features(self):
+        model_features = self.get_model_features()
+        if self.fuse_image_data:
+            print("Fusing image data with model features...")
+            self.image_data_starting_index = 0
+            self.image_data_ending_index = self.flat_image_data.shape[1]
+            self.model_feature_starting_index = self.image_data_ending_index
+            self.model_feature_ending_index = self.model_feature_starting_index + model_features.shape[1]
+            fused_data = np.hstack((self.flat_image_data, model_features))
+            print(f"Image data shape: {self.flat_image_data.shape}")
+            print(f"Model features shape: {model_features.shape}")
+            print(f"fused_data data shape: {self.fused_data.shape}")
+            return fused_data
+        else:
+            return model_features
+
+    def get_model_features(self):
         return self.image_features
+
+    def get_model_features_indices(self):
+        return self.model_feature_starting_index, self.model_feature_ending_index
+
+    def get_image_data_indices(self):
+        return self.image_data_starting_index, self.image_data_ending_index
 
 
 class ContrastiveFeatureModel(FeatureModel):
@@ -76,8 +110,8 @@ class ContrastiveFeatureModel(FeatureModel):
         self.tol = tol
         self.cl_model_save_path = os.path.join(self.exp_dir, cl_model_save_name)
 
-    def init_image_features(self, data):
-        self.image_features = data
+    def init_model_features(self):
+        pass
 
     def get_encoder(self):
         if self.encoder == 'resnet18':
@@ -92,12 +126,12 @@ class ContrastiveFeatureModel(FeatureModel):
         encoder = encoder.to(self.gpus)
         return encoder
 
-    def get_features(self):
-        dataset = DatasetWrapper(self.image_features, transform=T.ToTensor())
+    def get_model_features(self):
+        dataset = DatasetWrapper(self.image_data, transform=T.ToTensor())
         data_loader = DataLoader(dataset, batch_size=self.inf_batch_size, shuffle=False, pin_memory=True)
         features = torch.tensor([]).to(self.gpus)
         encoder = self.get_encoder()
-        self.train(encoder, self.image_features)
+        self.train(encoder, self.image_data)
         encoder = encoder.eval()
         with torch.no_grad():
             for inputs in data_loader:
@@ -167,11 +201,5 @@ class NoFeatureModel(FeatureModel):
     def __init__(self, **kwargs):
         super().__init__(encoder=None)
 
-    def init_image_features(self, data):
-        self.image_features = data.reshape(data.shape[0], -1)
-
     def get_encoder(self):
         return None
-
-    def get_features(self):
-        return self.image_features

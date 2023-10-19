@@ -19,4 +19,5 @@ data_geometry:
     batch_size: 4
     patience: 1
     num_epochs: 5
+    fuse_image_data: True
 exp_dir: "DMPLS_w_coreset_cl_test_run"

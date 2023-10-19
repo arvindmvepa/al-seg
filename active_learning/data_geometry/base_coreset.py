@@ -116,7 +116,6 @@ class BaseCoreset(BaseDataGeometry):
 
         return preds_arrs
 
-
     @staticmethod
     def _patch_im(im, patch_size):
         x, y = im.shape
