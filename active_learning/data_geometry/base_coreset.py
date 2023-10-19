@@ -13,9 +13,9 @@ from active_learning.data_geometry import coreset_algs
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', patch_size=(256, 256), feature_model=False,
-                 feature_model_params=None, contrastive=False, use_model_features=False, seed=0, gpus="cuda:0",
-                 **kwargs):
+    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', patch_size=(256, 256),
+                 feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False, seed=0,
+                 gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -23,14 +23,13 @@ class BaseCoreset(BaseDataGeometry):
         self.patch_size = patch_size
         self.contrastive = contrastive
         self.gpus = gpus
-        if feature_model_params is None:
-            feature_model_params = {}
-        self.feature_model = FeatureModelFactory.create_feature_model(model=feature_model, contrastive=self.contrastive,
-                                                                      gpus=self.gpus, **feature_model_params)
+        self.feature_model = feature_model
+        self.feature_model_params = feature_model_params
         self.use_model_features = use_model_features
         self.seed = seed
         self.random_state = RandomState(seed=self.seed)
         self.basic_coreset_alg = None
+        self.exp_dir = None
         self.data_root = None
         self.all_train_im_files = None
         self.all_train_full_im_paths = None
@@ -38,9 +37,11 @@ class BaseCoreset(BaseDataGeometry):
     def setup(self, data_root, all_train_im_files):
         self.setup_data(data_root, all_train_im_files)
         self.setup_alg()
+        self.setup_feature_model()
 
-    def setup_data(self, data_root, all_train_im_files):
+    def setup_data(self, exp_dir, data_root, all_train_im_files):
         print("Initializing Training pool X for coreset sampling!")
+        self.exp_dir = exp_dir
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
@@ -55,6 +56,15 @@ class BaseCoreset(BaseDataGeometry):
             self.coreset_cls = coreset_algs[self.alg_string]
         else:
             raise ValueError(f"No coreset alg found for {self.alg_string}")
+
+    def setup_feature_model(self):
+        if self.feature_model_params is None:
+            self.feature_model_params = {}
+        self.feature_model = FeatureModelFactory.create_feature_model(model=self.feature_model,
+                                                                      contrastive=self.contrastive,
+                                                                      gpus=self.gpus,
+                                                                      exp_dir=self.exp_dir,
+                                                                      **self.feature_model_params)
 
     def get_features(self):
         return self.feature_model.get_features()

@@ -1,5 +1,5 @@
+import os
 import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader
 from active_learning.data_geometry.net import resnet18, resnet50
 import torchvision.transforms as T
@@ -11,9 +11,10 @@ from active_learning.data_geometry.contrastive_loss import losses
 
 class FeatureModel(object):
 
-    def __init__(self, encoder='resnet18', patch_size=(256, 256), pretrained=True, inf_batch_size=128,
+    def __init__(self, exp_dir=None, encoder='resnet18', patch_size=(256, 256), pretrained=True, inf_batch_size=128,
                  gpus="cuda:0"):
         super().__init__()
+        self.exp_dir = exp_dir
         self.encoder = encoder
         self.patch_size = patch_size
         self.pretrained = pretrained
@@ -53,14 +54,15 @@ class FeatureModel(object):
         encoder = encoder.to(self.gpus)
         return encoder
 
-    def get_features(self):
+    def get_features(self, exp_dir=None):
         return self.image_features
 
 
 class ContrastiveFeatureModel(FeatureModel):
 
-    def __init__(self, lr=3e-4, batch_size=64, weight_decay=1.0e-6, temperature=0.5, projection_dim=64, num_epochs=100,
-                 patch_size=(256,256), loss="nt_xent", **kwargs):
+    def __init__(self, lr=3e-4, batch_size=64, weight_decay=1.0e-6, temperature=0.5, projection_dim=64,
+                 num_epochs=100, patch_size=(256,256), loss="nt_xent", patience=5, tol=.01,
+                 cl_model_save_name="cl_feature_model.pt", **kwargs):
         super().__init__(**kwargs)
         self.lr = lr
         self.batch_size = batch_size
@@ -70,6 +72,9 @@ class ContrastiveFeatureModel(FeatureModel):
         self.num_epochs = num_epochs
         self.patch_size = patch_size
         self.loss = loss
+        self.patience = patience
+        self.tol = tol
+        self.cl_model_save_path = os.path.join(self.exp_dir, cl_model_save_name)
 
     def init_image_features(self, data):
         self.image_features = data
@@ -105,6 +110,12 @@ class ContrastiveFeatureModel(FeatureModel):
         return feat
 
     def train(self, model, data):
+        if os.path.exists(self.cl_model_save_path):
+            model.load_state_dict(torch.load(self.cl_model_save_path))
+            return
+        else:
+            print("Unable to load contrastive feature model, training from scratch...")
+
         print("Training feature model with contrastive loss...")
         model = model.train()
 
@@ -115,6 +126,8 @@ class ContrastiveFeatureModel(FeatureModel):
         criterion = losses[self.loss](batch_size=self.batch_size, temperature=self.temperature)
         optimizer = torch.optim.Adam(model.parameters(), lr=self.lr,
                                      weight_decay=self.weight_decay)
+        min_loss = None
+        wait_time = 0
         for epoch in range(self.num_epochs):
             loss_epoch = 0
             for step, (x_i, x_j) in enumerate(contrastive_dataloader):
@@ -133,7 +146,19 @@ class ContrastiveFeatureModel(FeatureModel):
 
                 loss_epoch += loss.item()
             print(f"Epoch {epoch} loss: {loss_epoch / len(contrastive_dataloader)}")
+            if min_loss is None:
+                min_loss = None
+            elif (min_loss - loss_epoch) > self.tol:
+                min_loss = loss_epoch
+                wait_time = 0
+            elif wait_time >= self.patience:
+                print("Early stopping!")
+                break
+            else:
+                wait_time += 1
         print("Done training feature model with contrastive loss!")
+        torch.save(model.state_dict(), self.cl_model_save_path)
+        print("Saved CL feature model!")
 
 
 class NoFeatureModel(FeatureModel):
