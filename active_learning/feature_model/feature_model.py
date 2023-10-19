@@ -13,7 +13,7 @@ from active_learning.feature_model.contrastive_loss import losses
 class FeatureModel(object):
 
     def __init__(self, exp_dir=None, encoder='resnet18', patch_size=(256, 256), pretrained=True, inf_batch_size=128,
-                 fuse_image_data=False, gpus="cuda:0"):
+                 fuse_image_data=False, fuse_image_data_size_prop=.10, gpus="cuda:0"):
         super().__init__()
         self.exp_dir = exp_dir
         self.encoder = encoder
@@ -22,6 +22,7 @@ class FeatureModel(object):
         self.inf_batch_size = inf_batch_size
         self.gpus = gpus
         self.fuse_image_data = fuse_image_data
+        self.fuse_image_data_size_prop = fuse_image_data_size_prop
         self.model_feature_starting_index = None
         self.model_feature_ending_index = None
         self.image_data_starting_index = None
@@ -69,18 +70,27 @@ class FeatureModel(object):
     def get_features(self):
         model_features = self.get_model_features()
         if self.fuse_image_data:
-            print("Fusing image data with model features...")
-            self.image_data_starting_index = 0
-            self.image_data_ending_index = self.flat_image_data.shape[1]
-            self.model_feature_starting_index = self.image_data_ending_index
-            self.model_feature_ending_index = self.model_feature_starting_index + model_features.shape[1]
-            fused_data = np.hstack((self.flat_image_data, model_features))
-            print(f"Image data shape: {self.flat_image_data.shape}")
-            print(f"Model features shape: {model_features.shape}")
-            print(f"fused_data data shape: {fused_data.shape}")
-            return fused_data
+            self.fuse_image_data_with_model_features(model_features)
         else:
             return model_features
+
+    def fuse_image_data_with_model_features(self, model_features):
+        print("Fusing image data with model features...")
+        image_data_size = self.flat_image_data.shape[1]
+        model_features_size = model_features.shape[1]
+        num_model_features_repeats = int(self.fuse_image_data_size_prop * image_data_size/model_features_size)
+        model_features = np.repeat(model_features, num_model_features_repeats, axis=1)
+        self.image_data_starting_index = 0
+        self.image_data_ending_index = self.flat_image_data.shape[1]
+        self.model_feature_starting_index = self.image_data_ending_index
+        self.model_feature_ending_index = self.model_feature_starting_index + model_features.shape[1]
+
+        fused_data = np.hstack((self.flat_image_data, model_features))
+        print(f"Image data shape: {self.flat_image_data.shape}")
+        print(f"Model features shape: {model_features.shape}")
+        print(f"fused_data data shape: {fused_data.shape}")
+        return fused_data
+
 
     def get_model_features(self):
         return self.image_features
