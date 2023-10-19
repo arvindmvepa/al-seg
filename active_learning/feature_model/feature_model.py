@@ -210,5 +210,8 @@ class NoFeatureModel(FeatureModel):
     def __init__(self, **kwargs):
         super().__init__(encoder=None)
 
+    def init_model_features(self):
+        self.image_features = self.image_data
+
     def get_encoder(self):
         return None
