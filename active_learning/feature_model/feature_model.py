@@ -70,12 +70,13 @@ class FeatureModel(object):
     def get_features(self):
         model_features = self.get_model_features()
         if self.fuse_image_data:
-            self.fuse_image_data_with_model_features(model_features)
+            return self.fuse_image_data_with_model_features(model_features)
         else:
             return model_features
 
     def fuse_image_data_with_model_features(self, model_features):
         print("Fusing image data with model features...")
+        print("Original Model Features Shape: ", model_features.shape)
         image_data_size = self.flat_image_data.shape[1]
         model_features_size = model_features.shape[1]
         num_model_features_repeats = int(self.fuse_image_data_size_prop * image_data_size/model_features_size)
@@ -86,11 +87,9 @@ class FeatureModel(object):
         self.model_feature_ending_index = self.model_feature_starting_index + model_features.shape[1]
 
         fused_data = np.hstack((self.flat_image_data, model_features))
-        print(f"Image data shape: {self.flat_image_data.shape}")
-        print(f"Model features shape: {model_features.shape}")
-        print(f"fused_data data shape: {fused_data.shape}")
+        print(f"Model features shape after repeats: {model_features.shape}")
+        print(f"Fused features shape: {fused_data.shape}")
         return fused_data
-
 
     def get_model_features(self):
         return self.image_features
