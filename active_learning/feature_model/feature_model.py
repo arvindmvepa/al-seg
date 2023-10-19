@@ -77,7 +77,7 @@ class FeatureModel(object):
             fused_data = np.hstack((self.flat_image_data, model_features))
             print(f"Image data shape: {self.flat_image_data.shape}")
             print(f"Model features shape: {model_features.shape}")
-            print(f"fused_data data shape: {self.fused_data.shape}")
+            print(f"fused_data data shape: {fused_data.shape}")
             return fused_data
         else:
             return model_features
