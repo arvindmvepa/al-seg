@@ -35,13 +35,22 @@ class BaseCoreset(BaseDataGeometry):
         self.all_train_full_im_paths = None
     
     def setup(self, exp_dir, data_root, all_train_im_files):
-        self.setup_data(exp_dir, data_root, all_train_im_files)
+        self.setup_feature_model(exp_dir)
+        self.setup_data(data_root, all_train_im_files)
         self.setup_alg()
-        self.setup_feature_model()
+
+    def setup_feature_model(self, exp_dir):
+        self.exp_dir = exp_dir
+        if self.feature_model_params is None:
+            self.feature_model_params = {}
+        self.feature_model = FeatureModelFactory.create_feature_model(model=self.feature_model,
+                                                                      contrastive=self.contrastive,
+                                                                      gpus=self.gpus,
+                                                                      exp_dir=self.exp_dir,
+                                                                      **self.feature_model_params)
 
     def setup_data(self, exp_dir, data_root, all_train_im_files):
         print("Initializing Training pool X for coreset sampling!")
-        self.exp_dir = exp_dir
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
@@ -56,15 +65,6 @@ class BaseCoreset(BaseDataGeometry):
             self.coreset_cls = coreset_algs[self.alg_string]
         else:
             raise ValueError(f"No coreset alg found for {self.alg_string}")
-
-    def setup_feature_model(self):
-        if self.feature_model_params is None:
-            self.feature_model_params = {}
-        self.feature_model = FeatureModelFactory.create_feature_model(model=self.feature_model,
-                                                                      contrastive=self.contrastive,
-                                                                      gpus=self.gpus,
-                                                                      exp_dir=self.exp_dir,
-                                                                      **self.feature_model_params)
 
     def get_features(self):
         return self.feature_model.get_features()
