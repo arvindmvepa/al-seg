@@ -112,6 +112,7 @@ class ContrastiveFeatureModel(FeatureModel):
     def train(self, model, data):
         if os.path.exists(self.cl_model_save_path):
             model.load_state_dict(torch.load(self.cl_model_save_path))
+            print("Loaded contrastive feature model from disk")
             return
         else:
             print("Unable to load contrastive feature model, training from scratch...")
