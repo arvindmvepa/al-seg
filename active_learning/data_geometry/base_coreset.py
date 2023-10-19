@@ -35,12 +35,14 @@ class BaseCoreset(BaseDataGeometry):
         self.all_train_full_im_paths = None
     
     def setup(self, exp_dir, data_root, all_train_im_files):
+        print("Setting up Coreset Class...")
         self.setup_feature_model(exp_dir)
         self.setup_data(data_root, all_train_im_files)
         self.setup_alg()
+        print("Done setting up Coreset Class.")
 
     def setup_feature_model(self, exp_dir):
-        print("Set up feature model")
+        print("Setting up feature model...")
         self.exp_dir = exp_dir
         if self.feature_model_params is None:
             self.feature_model_params = {}
@@ -49,28 +51,35 @@ class BaseCoreset(BaseDataGeometry):
                                                                       gpus=self.gpus,
                                                                       exp_dir=self.exp_dir,
                                                                       **self.feature_model_params)
+        print("Done setting up feature model.")
 
     def setup_data(self, data_root, all_train_im_files):
-        print("Set up data")
+        print("Setting up data")
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
         self.setup_image_features()
+        print("Done setting up data")
 
     def setup_image_features(self):
-        print("Set up image features")
+        print("Setting up image features...")
         image_data = self._get_data()
         self.feature_model.init_image_features(image_data)
+        print("Done setting up image features")
 
     def setup_alg(self):
-        print("Set up coreset alg")
+        print("Setting up coreset alg...")
         if self.alg_string in coreset_algs:
             self.coreset_cls = coreset_algs[self.alg_string]
         else:
             raise ValueError(f"No coreset alg found for {self.alg_string}")
+        print("Done setting up coreset alg")
 
     def get_features(self):
-        return self.feature_model.get_features()
+        print("Getting features...")
+        features = self.feature_model.get_features()
+        print("Done getting features")
+        return features
 
     def create_coreset_inst(self, processed_data):
         return self.coreset_cls(processed_data, metric=self.metric, seed=self.seed)
@@ -85,7 +94,6 @@ class BaseCoreset(BaseDataGeometry):
             coreset_inst = self.create_coreset_inst(feat)
         else:
             feat = self.get_features()
-            print("Finished getting model features")
             coreset_inst = self.create_coreset_inst(feat)
         return coreset_inst, feat
 
