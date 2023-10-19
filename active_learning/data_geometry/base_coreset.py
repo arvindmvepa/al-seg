@@ -40,6 +40,7 @@ class BaseCoreset(BaseDataGeometry):
         self.setup_alg()
 
     def setup_feature_model(self, exp_dir):
+        print("Set up feature model")
         self.exp_dir = exp_dir
         if self.feature_model_params is None:
             self.feature_model_params = {}
@@ -49,18 +50,20 @@ class BaseCoreset(BaseDataGeometry):
                                                                       exp_dir=self.exp_dir,
                                                                       **self.feature_model_params)
 
-    def setup_data(self, exp_dir, data_root, all_train_im_files):
-        print("Initializing Training pool X for coreset sampling!")
+    def setup_data(self, data_root, all_train_im_files):
+        print("Set up data")
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
         self.setup_image_features()
 
     def setup_image_features(self):
+        print("Set up image features")
         image_data = self._get_data()
         self.feature_model.init_image_features(image_data)
 
     def setup_alg(self):
+        print("Set up coreset alg")
         if self.alg_string in coreset_algs:
             self.coreset_cls = coreset_algs[self.alg_string]
         else:
