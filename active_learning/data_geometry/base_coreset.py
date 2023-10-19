@@ -34,8 +34,8 @@ class BaseCoreset(BaseDataGeometry):
         self.all_train_im_files = None
         self.all_train_full_im_paths = None
     
-    def setup(self, data_root, all_train_im_files):
-        self.setup_data(data_root, all_train_im_files)
+    def setup(self, exp_dir, data_root, all_train_im_files):
+        self.setup_data(exp_dir, data_root, all_train_im_files)
         self.setup_alg()
         self.setup_feature_model()
 

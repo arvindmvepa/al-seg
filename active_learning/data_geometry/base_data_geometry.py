@@ -10,7 +10,7 @@ class BaseDataGeometry(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def setup(self, data_root, all_train_im_files):
+    def setup(self, exp_dir, data_root, all_train_im_files):
         raise NotImplementedError()
 
 
@@ -20,7 +20,7 @@ class NoDataGeometry(BaseDataGeometry):
         super().__init__()
         self.kwargs = kwargs
 
-    def setup(self, data_root, all_train_im_files):
+    def setup(self, exp_dir, data_root, all_train_im_files):
         pass
 
     def calculate_representativeness(self, im_score_file, num_samples, prev_round_dir, train_logits_path,
