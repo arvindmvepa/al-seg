@@ -8,6 +8,7 @@ import os
 from active_learning.data_geometry.base_data_geometry import BaseDataGeometry
 from active_learning.feature_model.feature_model_factory import FeatureModelFactory
 from active_learning.data_geometry import coreset_algs
+import json
 
 
 class BaseCoreset(BaseDataGeometry):
@@ -104,15 +105,29 @@ class BaseCoreset(BaseDataGeometry):
         train_logits_path = os.path.join(prev_round_dir, "*", train_logits_path)
         print(f"Looking for model features in {train_logits_path}")
         train_results = sorted(list(glob(train_logits_path)))
-        if len(train_results) == 0:
+        if len(train_results) == 1:
+            train_result = train_results[0]
+            print(f"Found {train_result}")
+        elif len(train_results) > 1:
+            best_perf = 0
+            best_index = None
+            for index, train_result in enumerate(train_results):
+                model_dir = os.path.dirname(train_result)
+                val_file = os.path.join(model_dir, "val_metrics.json")
+                with open(val_file, "r") as json_file:
+                    val_metrics = json.load(json_file)
+                if val_metrics["val_acc"] > best_perf:
+                    best_perf = val_metrics["val_acc"]
+                    best_index = index
+            train_result = [train_results[best_index]]
+            print(f"Found best {train_result}")
+        else:
             raise ValueError("No model features found!")
-        if len(train_results) > 1:
-            raise ValueError(f"More than one prediction file found: {train_results}")
-        train_results = train_results[0]
+
         # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
         preds_arrs = []
         for im_file in tqdm(self.all_train_im_files):
-            preds_arr = np.load(train_results, mmap_mode='r')[os.path.basename(im_file)]
+            preds_arr = np.load(train_result, mmap_mode='r')[os.path.basename(im_file)]
             preds_arrs.append(preds_arr)
         preds_arrs = np.stack(preds_arrs, axis=0)
         # flatten array except for first dim
