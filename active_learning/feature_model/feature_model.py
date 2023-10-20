@@ -211,7 +211,7 @@ class NoFeatureModel(FeatureModel):
         super().__init__(encoder=None)
 
     def init_model_features(self):
-        self.image_features = self.image_data
+        self.image_features = self.flat_image_data
 
     def get_encoder(self):
         return None
