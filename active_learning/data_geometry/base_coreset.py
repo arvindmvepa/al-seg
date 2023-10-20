@@ -120,7 +120,7 @@ class BaseCoreset(BaseDataGeometry):
                 if val_result> best_perf:
                     best_perf = val_result
                     best_index = index
-            train_result = [train_results[best_index]]
+            train_result = train_results[best_index]
             print(f"Found best {train_result}")
         else:
             raise ValueError("No model features found!")
