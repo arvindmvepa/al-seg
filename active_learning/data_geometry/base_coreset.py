@@ -136,7 +136,8 @@ class BaseCoreset(BaseDataGeometry):
 
         # after obtaining features, delete the *.npz files for the round
         if delete_preds:
-            os.remove(train_results)
+            for train_result_ in train_results:
+                os.remove(train_result_)
 
         return preds_arrs
 
