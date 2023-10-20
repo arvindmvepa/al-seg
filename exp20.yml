@@ -3,6 +3,7 @@ model:
   ann_type: "scribble"
   ensemble_size: 5
   gpus: "cuda:0"
+  inf_train_type: "features"
 policy:
   policy_type: ranked
   seed: 2
@@ -12,5 +13,11 @@ policy:
   rounds: [[.01, 0], [.04, 0], [.05, 0], [.05, 0], [.05, 0], [.20]]
 data_geometry:
   data_geometry_type: kcenter_greedy
+  contrastive: True
+  feature_model: True
+  use_model_features: True
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 8
   seed: 2
-exp_dir: "DMPLS_exp2_coreset_v6"
+exp_dir: "DMPLS_exp2_coreset_cl_bs8_mdl_ft_v6"
