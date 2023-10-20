@@ -116,7 +116,7 @@ class BaseCoreset(BaseDataGeometry):
                 val_file = os.path.join(model_dir, "val_metrics.json")
                 with open(val_file, "r") as json_file:
                     val_metrics = json.load(json_file)
-                if val_metrics["val_acc"] > best_perf:
+                if val_metrics["performance"] > best_perf:
                     best_perf = val_metrics["val_acc"]
                     best_index = index
             train_result = [train_results[best_index]]
