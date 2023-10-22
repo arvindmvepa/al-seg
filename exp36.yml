@@ -1,0 +1,20 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.04, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 0
+  extra_feature_wt: 1.0
+  slice_pos_wt: 20.0
+  patient_wt: 20.0
+  phase_wt: 20.0
+exp_dir: "DMPLS_exp0_coreset_slice_pos20_patient20_phase20_v7"
