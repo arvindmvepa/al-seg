@@ -12,7 +12,7 @@ policy:
   rounds: [[.003, 0], [.003, 0], [.003, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  metric: eucliden
+  metric: euclidean
   extra_feature_wt: 1.0
   patient_wt: 1.0
 exp_dir: "DMPLS_w_coreset_custom_metric_test_run"
