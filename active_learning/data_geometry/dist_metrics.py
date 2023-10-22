@@ -18,11 +18,11 @@ def metric_w_config(image_vec1, image_vec2, image_metric, num_im_features, patie
         image_metric = lambda x,y: metric_inst.pairwise([x], [y])[0]
     metric_val = image_metric(image_vec1[:num_im_features], image_vec2[:num_im_features])
     patient_score = 1 - np.sum(image_vec1[patient_starting_index:patient_ending_index] == image_vec2[patient_starting_index:patient_ending_index])
-    phase_score = 1 - np.abs(image_vec1[phase_starting_index:phase_ending_index] - image_vec2[phase_starting_index:phase_ending_index])
+    phase_score = np.abs(image_vec1[phase_starting_index:phase_ending_index] - image_vec2[phase_starting_index:phase_ending_index])
     group_score = 1 - np.dot(image_vec1[group_starting_index:group_ending_index], image_vec2[group_starting_index:group_ending_index])
     height_score = np.abs(image_vec1[height_starting_index:height_ending_index] - image_vec2[height_starting_index:height_ending_index])
     weight_score = np.abs(image_vec1[weight_starting_index:weight_ending_index] - image_vec2[weight_starting_index:weight_ending_index])
-    slice_pos_score = 1 - np.abs(image_vec1[slice_rel_pos_starting_index:slice_rel_pos_ending_index] - image_vec2[slice_rel_pos_starting_index:slice_rel_pos_ending_index])
+    slice_pos_score = np.abs(image_vec1[slice_rel_pos_starting_index:slice_rel_pos_ending_index] - image_vec2[slice_rel_pos_starting_index:slice_rel_pos_ending_index])
     return metric_val + extra_feature_wt * (patient_score*patient_wt + phase_score*phase_wt + group_score*group_wt + height_score*height_wt + weight_score*weight_wt + slice_pos_score*slice_pos_wt)
 
 
