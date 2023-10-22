@@ -168,7 +168,7 @@ class BaseCoreset(BaseDataGeometry):
         features = np.concatenate([processed_data, cfgs_arr], axis=1)
         coreset_metric = partial(metric_w_config, image_metric=self.metric, num_im_features= num_im_features,
                                  patient_starting_index=num_im_features + self.cfg_indices['patient_starting_index'],
-                                 atient_ending_index=self.cfg_indices['patient_ending_index'],
+                                 patient_ending_index=self.cfg_indices['patient_ending_index'],
                                  phase_starting_index=self.cfg_indices['phase_starting_index'],
                                  phase_ending_index=self.cfg_indices['phase_ending_index'],
                                  group_starting_index=self.cfg_indices['group_starting_index'],
