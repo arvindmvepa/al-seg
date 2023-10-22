@@ -15,8 +15,7 @@ def metric_w_config(image_vec1, image_vec2, image_metric, num_im_features, patie
         image_metric = lambda x,y: -np.dot(x,y)
     else:
         metric_inst = DistanceMetric.get_metric(image_metric)
-        image_metric = lambda x,y: metric_inst.pairwise([[x], [y]])[0]
-    print(f"image_vec1: {image_vec1.shape}, image_vec2: {image_vec2.shape}")
+        image_metric = lambda x,y: metric_inst.pairwise([x], [y])[0]
     metric_val = image_metric(image_vec1[:num_im_features], image_vec2[:num_im_features])
     patient_score = 1 - np.sum(image_vec1[patient_starting_index:patient_ending_index] == image_vec2[patient_starting_index:patient_ending_index])
     phase_score = 1 - np.abs(image_vec1[phase_starting_index:phase_ending_index] - image_vec2[phase_starting_index:phase_ending_index])
