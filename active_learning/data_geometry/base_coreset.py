@@ -76,9 +76,12 @@ class BaseCoreset(BaseDataGeometry):
 
     def setup_image_features(self):
         print("Setting up image features...")
+        print("Getting data")
         image_data, self.image_cfgs =  self._get_data(self.all_train_full_im_paths)
+        print("Processing cfgs...")
         self.image_cfgs_arr = self._process_cfgs()
         self._update_cfg_indices()
+        print("Initializing image features for feature model...")
         self.feature_model.init_image_features(image_data)
         print("Done setting up image features")
 
@@ -97,8 +100,12 @@ class BaseCoreset(BaseDataGeometry):
         return features
 
     def create_coreset_inst(self, processed_data):
-        coreset_metric, features = self.get_coreset_metric(processed_data, cfgs_arr=self.image_cfgs_arr)
-        return self.coreset_cls(features, file_names=self.all_train_im_files, metric=coreset_metric, seed=self.seed)
+        print("Creating coreset instance...")
+        print("Getting coreset metric and features...")
+        coreset_metric, features = self.get_coreset_metric_and_features(processed_data, cfgs_arr=self.image_cfgs_arr)
+        coreset_inst = self.coreset_cls(features, file_names=self.all_train_im_files, metric=coreset_metric, seed=self.seed)
+        print("Done coreset instance!")
+        return coreset_inst
 
     def get_coreset_inst_and_features_for_round(self, round_dir, train_logits_path, delete_preds=True):
         if self.use_model_features:
@@ -324,7 +331,7 @@ class BaseCoreset(BaseDataGeometry):
         patient_num_start_index = patient_prefix_index + patient_prefix_len
         return patient_num_start_index
 
-    def _get_patient_num_start_index(self, im_path):
+    def _get_patient_num_end_index(self, im_path):
         patient_num_len = 3
         patient_num_start_index = self._get_patient_num_start_index(im_path)
         return patient_num_start_index + patient_num_len
