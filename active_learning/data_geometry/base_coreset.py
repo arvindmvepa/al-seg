@@ -5,29 +5,26 @@ import numpy as np
 from tqdm import tqdm
 from numpy.random import RandomState
 from collections import defaultdict
+from functools import partial
 import os
 from active_learning.data_geometry.base_data_geometry import BaseDataGeometry
 from active_learning.feature_model.feature_model_factory import FeatureModelFactory
 from active_learning.data_geometry import coreset_algs
 import json
+from active_learning.data_geometry.dist_metrics import metric_w_config
 
 
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', extra_feature_weight=1.0, phase_weight=1.0,
-                 group_weight=1.0, height_weight=1.0, weight_weight=1.0, slice_pos_weight=1.0, patch_size=(256, 256),
-                 feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False, seed=0,
-                 gpus="cuda:0", **kwargs):
+    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', extra_feature_wt=0.0,
+                 patient_wt=1.0, phase_wt=1.0, group_wt=1.0, height_wt=1.0, weight_wt=1.0, slice_pos_wt=1.0,
+                 patch_size=(256, 256), feature_model=False, feature_model_params=None, contrastive=False,
+                 use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
-        self.extra_feature_weight = extra_feature_weight
-        self.phase_weight = phase_weight
-        self.group_weight = group_weight
-        self.height_weight = height_weight
-        self.weight_weight = weight_weight
-        self.slice_pos_weight = slice_pos_weight
+
         self.patch_size = patch_size
         self.contrastive = contrastive
         self.gpus = gpus
@@ -45,6 +42,10 @@ class BaseCoreset(BaseDataGeometry):
         self.image_features = None
         self.image_cfgs = None
         self.image_cfgs_arr = None
+        self.cfg_wts = None
+        self.cfg_indices = None
+        self._update_cfg_wts(extra_feature_wt=extra_feature_wt, patient_wt=patient_wt, phase_wt=phase_wt,
+                              group_wt=group_wt, height_wt=height_wt, weight_wt=weight_wt, slice_pos_wt=slice_pos_wt)
     
     def setup(self, exp_dir, data_root, all_train_im_files):
         print("Setting up Coreset Class...")
@@ -77,7 +78,7 @@ class BaseCoreset(BaseDataGeometry):
         print("Setting up image features...")
         image_data, self.image_cfgs =  self._get_data(self.all_train_full_im_paths)
         self.image_cfgs_arr = self._process_cfgs()
-        self._update_cfgs_arr_indices()
+        self._update_cfg_indices()
         self.feature_model.init_image_features(image_data)
         print("Done setting up image features")
 
@@ -96,23 +97,8 @@ class BaseCoreset(BaseDataGeometry):
         return features
 
     def create_coreset_inst(self, processed_data):
-        return self.coreset_cls(processed_data, file_names=self.all_train_im_files, cfgs_arr=self.image_cfgs_arr,
-                                metric=self.metric, phase_starting_index=self.phase_starting_index,
-                                phase_ending_index=self.phase_ending_index,
-                                group_starting_index=self.group_starting_index,
-                                group_ending_index=self.group_ending_index,
-                                height_starting_index=self.height_starting_index,
-                                height_ending_index=self.height_ending_index,
-                                weight_starting_index=self.weight_starting_index,
-                                weight_ending_index=self.weight_ending_index,
-                                slice_rel_pos_starting_index=self.slice_rel_pos_starting_index,
-                                slice_rel_pos_ending_index=self.slice_rel_pos_ending_index,
-                                slice_pos_starting_index=self.slice_pos_starting_index,
-                                slice_pos_ending_index=self.slice_pos_ending_index,
-                                extra_feature_weight=self.extra_feature_weight,
-                                phase_weight=self.phase_weight, group_weight=self.group_weight,
-                                height_weight=self.height_weight, weight_weight=self.weight_weight,
-                                slice_pos_weight=self.slice_pos_weight, seed=self.seed)
+        coreset_metric, features = self.get_coreset_metric(processed_data, cfgs_arr=self.image_cfgs_arr)
+        return self.coreset_cls(features, file_names=self.all_train_im_files, metric=coreset_metric, seed=self.seed)
 
     def get_coreset_inst_and_features_for_round(self, round_dir, train_logits_path, delete_preds=True):
         if self.use_model_features:
@@ -169,6 +155,29 @@ class BaseCoreset(BaseDataGeometry):
                 os.remove(train_result_)
 
         return preds_arrs
+
+    def get_coreset_metric_and_features(self, processed_data, cfgs_arr):
+        num_im_features = processed_data.shape[1]
+        features = np.concatenate([self.features, cfgs_arr], axis=1)
+        coreset_metric = partial(metric_w_config, image_metric=self.metric, num_im_features= num_im_features,
+                                 patient_starting_index=num_im_features + self.cfg_indices['patient_starting_index'],
+                                 atient_ending_index=self.cfg_indices['patient_ending_index'],
+                                 phase_starting_index=self.cfg_indices['phase_starting_index'],
+                                 phase_ending_index=self.cfg_indices['phase_ending_index'],
+                                 group_starting_index=self.cfg_indices['group_starting_index'],
+                                 group_ending_index=self.cfg_indices['group_ending_index'],
+                                 height_starting_index=self.cfg_indices['height_starting_index'],
+                                 height_ending_index=self.cfg_indices['height_ending_index'],
+                                 weight_starting_index=self.cfg_indices['weight_starting_index'],
+                                 weight_ending_index=self.cfg_indices['weight_ending_index'],
+                                 slice_rel_pos_starting_index=self.cfg_indices['slice_rel_pos_starting_index'],
+                                 slice_rel_pos_ending_index=self.cfg_indices['slice_rel_pos_ending_index'],
+                                 slice_pos_starting_index=self.cfg_indices['slice_pos_starting_index'],
+                                 slice_pos_ending_index=self.cfg_indices['slice_pos_ending_index'],
+                                 extra_feature_wt=self.cfg_wts['extra_feature_wt'], patient_wt=self.cfg_wts['patient_wt'],
+                                 phase_wt=self.cfg_wts['phase_wt'], group_wt=self.cfg_wts['group_wt'], height_wt=self.cfg_wts['height_wt'],
+                                 weight_wt=self.cfg_wts['weight_wt'],slice_pos_wt=self.cfg_wts['slice_pos_wt'])
+        return coreset_metric, features
 
     @staticmethod
     def _patch_im(im, patch_size):
@@ -248,6 +257,9 @@ class BaseCoreset(BaseDataGeometry):
         extra_features_lst = []
         for im_cfg, file_name in zip(self.image_cfgs, self.all_train_im_files):
             extra_features = []
+            # add patient number
+            patient_num = self._extract_patient_num(file_name)
+            extra_features.append(patient_num)
             # add if frame is ED or ES (one hot encoded)
             patient_frame_no = self._extract_patient_frame_no_str(file_name)
             frame_num = self._extract_frame_no(file_name)
@@ -279,22 +291,46 @@ class BaseCoreset(BaseDataGeometry):
 
         return np.array(extra_features_lst)
 
-    def _update_cfgs_arr_indices(self):
-        self.phase_starting_index = 0
-        self.phase_ending_index = self.phase_starting_index + 1
-        self.group_starting_index = self.phase_ending_index
-        self.group_ending_index = self.group_starting_index + self.num_groups
-        self.height_starting_index = self.group_ending_index
-        self.height_ending_index = self.height_starting_index + 1
-        self.weight_starting_index = self.height_ending_index
-        self.weight_ending_index = self.weight_starting_index + 1
-        self.slice_rel_pos_starting_index = self.weight_ending_index
-        self.slice_rel_pos_ending_index = self.slice_rel_pos_starting_index + 1
-        self.slice_pos_starting_index = self.slice_rel_pos_ending_index
-        self.slice_pos_ending_index = self.slice_pos_starting_index + 1
+    def _update_cfg_wts(self,extra_feature_wt=None, patient_wt=None, phase_wt=None, group_wt=None, height_wt=None,
+                        weight_wt=None, slice_pos_wt=None):
+        self.cfg_wts = {'extra_feature_wt': extra_feature_wt, 'patient_wt': patient_wt, 'phase_wt': phase_wt,
+                           'group_wt': group_wt, 'height_wt': height_wt, 'weight_wt': weight_wt,
+                           'slice_pos_wt': slice_pos_wt}
+
+    def _update_cfg_indices(self):
+        self.cfg_indices = dict()
+        self.cfg_indices['patient_starting_index'] = 0
+        self.cfg_indices['patient_ending_index'] = self.cfg_indices['patient_starting_index'] + 1
+        self.cfg_indices['phase_starting_index'] = self.cfg_indices['patient_ending_index']
+        self.cfg_indices['phase_ending_index'] = self.cfg_indices['phase_starting_index'] + 1
+        self.cfg_indices['group_starting_index'] = self.cfg_indices['phase_ending_index']
+        self.cfg_indices['group_ending_index'] = self.cfg_indices['group_starting_index']  + self.num_groups
+        self.cfg_indices['height_starting_index'] = self.cfg_indices['group_ending_index']
+        self.cfg_indices['height_ending_index'] = self.cfg_indices['height_starting_index'] + 1
+        self.cfg_indices['weight_starting_index'] = self.cfg_indices['height_ending_index']
+        self.cfg_indices['weight_ending_index'] = self.cfg_indices['weight_starting_index']  + 1
+        self.cfg_indices['slice_rel_pos_starting_index'] = self.cfg_indices['weight_ending_index']
+        self.cfg_indices['slice_rel_pos_ending_index'] = self.cfg_indices['slice_rel_pos_starting_index'] + 1
+        self.cfg_indices['slice_pos_starting_index'] = self.cfg_indices['slice_rel_pos_ending_index']
+        self.cfg_indices['slice_pos_ending_index'] = self.cfg_indices['slice_pos_starting_index'] + 1
 
     def _extract_patient_frame_no_str(self, im_path):
         return self._extract_patient_prefix(im_path) + "_" + str(self._extract_frame_no(im_path))
+
+    def _get_patient_num_start_index(self, im_path):
+        patient_prefix = "patient"
+        patient_prefix_len = len(patient_prefix)
+        patient_prefix_index = im_path.index(patient_prefix)
+        patient_num_start_index = patient_prefix_index + patient_prefix_len
+        return patient_num_start_index
+
+    def _get_patient_num_start_index(self, im_path):
+        patient_num_len = 3
+        patient_num_start_index = self._get_patient_num_start_index(im_path)
+        return patient_num_start_index + patient_num_len
+
+    def _extract_patient_num(self, im_path):
+        return int(im_path[self._get_patient_num_start_index(im_path):self._get_patient_num_end_index(im_path)])
 
     def _extract_patient_prefix(self, im_path):
         patient_prefix_end_index = self._get_patient_prefix_end_index(im_path)

@@ -6,8 +6,6 @@ from sklearn.metrics import pairwise_distances
 from numpy.random import RandomState
 import abc
 import numpy as np
-from functools import partial
-from active_learning.data_geometry.dist_metrics import euclidean_w_config
 
 
 class SamplingMethod(object):
@@ -50,57 +48,14 @@ class kCenterGreedy(SamplingMethod):
        Can be extended to a robust k centers algorithm that ignores a certain number of
        outlier datapoints.  Resulting centers are solution to multiple integer program.
         """
-    def __init__(self, X, file_names, cfgs_arr, phase_starting_index, phase_ending_index, group_starting_index,
-                 group_ending_index, height_starting_index, height_ending_index, weight_starting_index,
-                 weight_ending_index, slice_rel_pos_starting_index, slice_rel_pos_ending_index,
-                 slice_pos_starting_index, slice_pos_ending_index,metric="euclidean", extra_feature_weight=1.0, phase_weight=1.0,
-                 group_weight=1.0, height_weight=1.0, weight_weight=1.0, slice_pos_weight=1.0, seed=None):
+    def __init__(self, X, file_names, metric, seed=None):
         self.X = X
         self.flat_X = self.flatten_X()
         self.file_names = file_names
         self.random_state = RandomState(seed=seed)
         self.name = "kcenter"
         self.features = self.flat_X
-        if metric == "euclidean_w_config":
-            self.num_im_features = self.features.shape[1]
-            self.features = np.concatenate([self.features, cfgs_arr], axis=1)
-            self.num_extra_features = self.features.shape[1] - self.num_im_features
-            self.phase_starting_index = self.get_index_w_im_features(phase_starting_index)
-            self.phase_ending_index = self.get_index_w_im_features(phase_ending_index)
-            self.group_starting_index = self.get_index_w_im_features(group_starting_index)
-            self.group_ending_index = self.get_index_w_im_features(group_ending_index)
-            self.height_starting_index = self.get_index_w_im_features(height_starting_index)
-            self.height_ending_index = self.get_index_w_im_features(height_ending_index)
-            self.weight_starting_index = self.get_index_w_im_features(weight_starting_index)
-            self.weight_ending_index = self.get_index_w_im_features(weight_ending_index)
-            self.slice_rel_pos_starting_index = self.get_index_w_im_features(slice_rel_pos_starting_index)
-            self.slice_rel_pos_ending_index = self.get_index_w_im_features(slice_rel_pos_ending_index)
-            self.slice_pos_starting_index = self.get_index_w_im_features(slice_pos_starting_index)
-            self.slice_pos_ending_index = self.get_index_w_im_features(slice_pos_ending_index)
-            self.extra_feature_weight = extra_feature_weight
-            self.phase_weight = phase_weight
-            self.group_weight = group_weight
-            self.height_weight = height_weight
-            self.weight_weight = weight_weight
-            self.slice_pos_weight = slice_pos_weight
-            self.metric = partial(euclidean_w_config, num_im_features=self.num_im_features,
-                                  phase_starting_index=self.phase_starting_index,
-                                  phase_ending_index=self.phase_ending_index,
-                                  group_starting_index=self.group_starting_index,
-                                  group_ending_index=self.group_ending_index,
-                                  height_starting_index=self.height_starting_index,
-                                  height_ending_index=self.height_ending_index,
-                                  weight_starting_index=self.weight_starting_index,
-                                  weight_ending_index=self.weight_ending_index,
-                                  slice_pos_starting_index=self.slice_pos_starting_index,
-                                  slice_pos_ending_index=self.slice_pos_ending_index,
-                                  extra_feature_weight=self.extra_feature_weight,
-                                  phase_weight=self.phase_weight, group_weight=self.group_weight,
-                                  height_weight=self.height_weight, weight_weight=self.weight_weight,
-                                  slice_pos_weight=self.slice_pos_weight)
-        else:
-            self.metric = metric
-        print(f"Using {metric} as distance metric.")
+        self.metric = metric
         self.min_distances = None
         self.max_distances = None
         self.n_obs = self.X.shape[0]
