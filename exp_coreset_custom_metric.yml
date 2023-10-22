@@ -9,8 +9,10 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: False
-  rounds: [[.001, 0], [.001, 0], [.001, 0]]
+  rounds: [[.003, 0], [.003, 0], [.003, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  metric: euclidean_w_config
+  metric: eucliden
+  extra_feature_wt: 1.0
+  patient_wt: 1.0
 exp_dir: "DMPLS_w_coreset_custom_metric_test_run"
