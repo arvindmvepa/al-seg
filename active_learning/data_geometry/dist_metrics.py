@@ -26,12 +26,13 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     slice_pos_score = np.abs(image_vec1[slice_rel_pos_starting_index:slice_rel_pos_ending_index] - image_vec2[slice_rel_pos_starting_index:slice_rel_pos_ending_index])
 
     # scale all the weights to be less than max_dist * wt_max_dist_mult
-    patient_wt = np.min(patient_wt, max_dist * wt_max_dist_mult)
-    phase_wt = np.min(phase_wt, max_dist * wt_max_dist_mult)
-    group_wt = np.min(group_wt, max_dist * wt_max_dist_mult)
-    height_wt = np.min(height_wt, max_dist * wt_max_dist_mult)
-    weight_wt = np.min(weight_wt, max_dist * wt_max_dist_mult)
-    slice_pos_wt = np.min(slice_pos_wt, max_dist * wt_max_dist_mult)
+    if max_dist is not None:
+        patient_wt = np.min(patient_wt, max_dist * wt_max_dist_mult)
+        phase_wt = np.min(phase_wt, max_dist * wt_max_dist_mult)
+        group_wt = np.min(group_wt, max_dist * wt_max_dist_mult)
+        height_wt = np.min(height_wt, max_dist * wt_max_dist_mult)
+        weight_wt = np.min(weight_wt, max_dist * wt_max_dist_mult)
+        slice_pos_wt = np.min(slice_pos_wt, max_dist * wt_max_dist_mult)
 
     return metric_val + extra_feature_wt * (patient_score*patient_wt + phase_score*phase_wt + group_score*group_wt + height_score*height_wt + weight_score*weight_wt + slice_pos_score*slice_pos_wt)
 
