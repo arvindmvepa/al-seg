@@ -140,6 +140,8 @@ class BaseActiveLearningPolicy:
                                                                 prev_round_dir=self.prev_round_dir,
                                                                 train_logits_path=self.model.model_params['train_logits_path'],
                                                                 **geometry_kwargs)
+            else:
+                print(f"Skipping calculating data geometry")
             self.cur_im_score_file = im_score_file
             inf_train = self.data_geometry.use_model_features
         else:
@@ -169,6 +171,8 @@ class BaseActiveLearningPolicy:
             # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
             if (not self.resume) or (not os.path.exists(im_score_file)):
                 self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
+            else:
+                print(f"Skipping calculating model uncertainty")
             self.cur_im_score_file = im_score_file
 
     def _data_split(self, splt_func):
