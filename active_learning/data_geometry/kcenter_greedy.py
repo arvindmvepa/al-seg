@@ -133,7 +133,7 @@ class kCenterGreedy(SamplingMethod):
 
         self.already_selected = already_selected
 
-        return new_batch
+        return new_batch, max(self.min_distances)
 
     def get_index_w_im_features(self, extra_feature_index):
         return self.num_im_features + extra_feature_index

@@ -17,13 +17,15 @@ from active_learning.data_geometry.dist_metrics import metric_w_config
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', extra_feature_wt=0.0,
+    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', wt_max_dist_mult=1.0, extra_feature_wt=0.0,
                  patient_wt=1.0, phase_wt=1.0, group_wt=1.0, height_wt=1.0, weight_wt=1.0, slice_pos_wt=1.0,
                  patch_size=(256, 256), feature_model=False, feature_model_params=None, contrastive=False,
                  use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
+        self.max_dist = None
+        self.wt_max_dist_mult = wt_max_dist_mult
 
         self.patch_size = patch_size
         self.contrastive = contrastive
@@ -166,7 +168,8 @@ class BaseCoreset(BaseDataGeometry):
     def get_coreset_metric_and_features(self, processed_data, cfgs_arr):
         num_im_features = processed_data.shape[1]
         features = np.concatenate([processed_data, cfgs_arr], axis=1)
-        coreset_metric = partial(metric_w_config, image_metric=self.metric, num_im_features= num_im_features,
+        coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist,
+                                 wt_max_dist_mult=self.wt_max_dist_mult, num_im_features= num_im_features,
                                  patient_starting_index=num_im_features + self.cfg_indices['patient_starting_index'],
                                  patient_ending_index=self.cfg_indices['patient_ending_index'],
                                  phase_starting_index=self.cfg_indices['phase_starting_index'],

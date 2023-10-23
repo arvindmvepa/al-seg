@@ -42,8 +42,9 @@ class CoreGCN(BaseCoreset):
             print(f"Calculating KCenterGreedyCoreset until we obtain {self.starting_sample} samples..")
             already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
             num_samples_coreset = min(self.starting_sample - len(already_selected), num_samples)
-            sample_indices += coreset_inst.select_batch_(already_selected=already_selected_indices,
+            sample_indices_,_ = coreset_inst.select_batch_(already_selected=already_selected_indices,
                                                                    N=num_samples_coreset)
+            sample_indices += sample_indices_
             num_samples = num_samples - num_samples_coreset
             # add the just labeled samples to already_selected
             already_selected += [self.all_train_im_files[i] for i in sample_indices]
@@ -103,7 +104,8 @@ class CoreGCN(BaseCoreset):
 
                 feat = feat.detach().cpu().numpy()
                 coreset_inst = self.create_coreset_inst(feat)
-                sample_indices += coreset_inst.select_batch_(lbl.tolist(), num_samples)
+                sample_indices_, self.max_dist = coreset_inst.select_batch_(lbl.tolist(), num_samples)
+                sample_indices += sample_indices_
 
                 print("Max confidence value: ", torch.max(scores.data).item())
                 print("Mean confidence value: ", torch.mean(scores.data).item())
