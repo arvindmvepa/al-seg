@@ -146,7 +146,7 @@ class BaseActiveLearningPolicy:
             inf_train = self.data_geometry.use_model_features
         else:
             inf_train = calculate_model_uncertainty
-        if (not self.resume) or (not self._check_round_files_created):
+        if (not self.resume) or (not self._check_round_files_created()):
             new_ann_ims = self.data_split()
             for im_type, files in new_ann_ims.items():
                 print(f"Old length of {im_type} data: {len(self.cur_oracle_ims[im_type])}")
