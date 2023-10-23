@@ -54,7 +54,7 @@ class BaseActiveLearningPolicy:
     """
 
     def __init__(self, model, model_uncertainty=None, data_geometry=None, ensemble_kwargs=None,
-                 uncertainty_kwargs=None, geometry_kwargs=None, rounds=(),
+                 uncertainty_kwargs=None, geometry_kwargs=None, resume=False, rounds=(),
                  exp_dir="test", save_im_score_file="scores.txt", pseudolabels=False,
                  tag="", seed=0):
         self.model = model
@@ -64,6 +64,7 @@ class BaseActiveLearningPolicy:
         self.uncertainty_kwargs = uncertainty_kwargs if isinstance(uncertainty_kwargs, dict) else dict()
         self.geometry_kwargs = geometry_kwargs if isinstance(geometry_kwargs, dict) else dict()
         self.num_rounds = len(rounds)
+        self.resume = resume
         self.rounds = iter(rounds)
         self._round_num = None
         self.round_dir = None
@@ -131,37 +132,43 @@ class BaseActiveLearningPolicy:
         geometry_kwargs.update(self.geometry_kwargs)
         # calculate data geoemtry
         if calculate_data_geometry:
-            self.data_geometry.calculate_representativeness(im_score_file=im_score_file,
-                                                            num_samples=self._get_unann_num_samples(),
-                                                            already_selected=self.cur_oracle_ims[self.im_key],
-                                                            prev_round_dir=self.prev_round_dir,
-                                                            train_logits_path=self.model.model_params['train_logits_path'],
-                                                            **geometry_kwargs)
+            # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
+            if (not self.resume) or (not os.path.exists(im_score_file)):
+                self.data_geometry.calculate_representativeness(im_score_file=im_score_file,
+                                                                num_samples=self._get_unann_num_samples(),
+                                                                already_selected=self.cur_oracle_ims[self.im_key],
+                                                                prev_round_dir=self.prev_round_dir,
+                                                                train_logits_path=self.model.model_params['train_logits_path'],
+                                                                **geometry_kwargs)
             self.cur_im_score_file = im_score_file
             inf_train = self.data_geometry.use_model_features
         else:
             inf_train = calculate_model_uncertainty
-
-        new_ann_ims = self.data_split()
-        for im_type, files in new_ann_ims.items():
-            print(f"Old length of {im_type} data: {len(self.cur_oracle_ims[im_type])}")
-            print(f"Added length of {im_type} data: {len(files)}")
-        # add the newly annotated files to our list of annotated files
-        for key in self.file_keys:
-            self.cur_oracle_ims[key] = self.cur_oracle_ims[key] + new_ann_ims[key]
+        if not self.resume:
+            new_ann_ims = self.data_split()
+            for im_type, files in new_ann_ims.items():
+                print(f"Old length of {im_type} data: {len(self.cur_oracle_ims[im_type])}")
+                print(f"Added length of {im_type} data: {len(files)}")
+            # add the newly annotated files to our list of annotated files
+            for key in self.file_keys:
+                self.cur_oracle_ims[key] = self.cur_oracle_ims[key] + new_ann_ims[key]
+        else:
+            self._load_round_files()
         if ensemble_kwargs is None:
             ensemble_kwargs = dict()
         ensemble_kwargs["inf_train"] = inf_train
         ensemble_kwargs.update(self.ensemble_kwargs)
         # train ensemble
         self.model.train_ensemble(round_dir=self.round_dir, cur_total_oracle_split=self.cur_total_oracle_split,
-                                  cur_total_pseudo_split=self.cur_total_pseudo_split, **ensemble_kwargs)
+                                  cur_total_pseudo_split=self.cur_total_pseudo_split, resume=self.resume, **ensemble_kwargs)
         if uncertainty_kwargs is None:
             uncertainty_kwargs = dict()
         uncertainty_kwargs.update(self.uncertainty_kwargs)
         # calculate model uncertainty
         if calculate_model_uncertainty and (self._round_num < (self.num_rounds - 1)):
-            self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
+            # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
+            if (not self.resume) or (not os.path.exists(im_score_file)):
+                self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
             self.cur_im_score_file = im_score_file
 
     def _data_split(self, splt_func):
@@ -177,6 +184,14 @@ class BaseActiveLearningPolicy:
             with open(new_train_file_path, 'w') as new_file:
                 new_file.write('\n'.join(sampled_unann_ims + self.cur_oracle_ims[key]))
         return sampled_unann_im_dict
+
+    def _load_round_files(self):
+        train_file_paths = self.model.get_round_train_file_paths(self.round_dir, self.cur_total_oracle_split)
+        for key in self.file_keys:
+            train_file_path = train_file_paths[key]
+            with open(train_file_path, 'r') as new_file:
+                train_files = new_file.read().splitlines()
+            self.cur_oracle_ims[key] = [train_file.strip() for train_file in train_files]
 
     def _random_sample_unann_files(self):
         num_samples = self._get_unann_num_samples()
