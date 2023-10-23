@@ -1,0 +1,21 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 2
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.04, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 2
+  extra_feature_wt: 1.0
+  slice_pos_wt: 50.0
+  patient_wt: 50.0
+  phase_wt: 50.0
+  wt_max_dist_mult: .5
+exp_dir: "DMPLS_exp0_coreset_slice_pos50_patient50_phase50_mult5_v7"
