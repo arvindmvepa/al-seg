@@ -13,5 +13,5 @@ policy:
 data_geometry:
   data_geometry_type: kcenter_greedy
   seed: 0
-  metric: dot
-exp_dir: "DMPLS_exp0_coreset_metric_dot_v7"
+  metric: cosine
+exp_dir: "DMPLS_exp0_coreset_metric_cosine_v7"

@@ -13,11 +13,11 @@ policy:
 data_geometry:
   data_geometry_type: kcenter_greedy
   seed: 1
-  metric: dot
+  metric: cosine
   contrastive: True
   feature_model: True
   feature_model_params:
     encoder: resnet18
     batch_size: 8
     fuse_image_data: True
-exp_dir: "DMPLS_exp1_coreset_fuse10_metric_dot_v7"
+exp_dir: "DMPLS_exp1_coreset_fuse10_metric_cosine_v7"
