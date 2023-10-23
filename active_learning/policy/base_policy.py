@@ -146,7 +146,7 @@ class BaseActiveLearningPolicy:
             inf_train = self.data_geometry.use_model_features
         else:
             inf_train = calculate_model_uncertainty
-        if not self.resume:
+        if (not self.resume) or (not self._check_round_files_created):
             new_ann_ims = self.data_split()
             for im_type, files in new_ann_ims.items():
                 print(f"Old length of {im_type} data: {len(self.cur_oracle_ims[im_type])}")
@@ -188,6 +188,13 @@ class BaseActiveLearningPolicy:
             with open(new_train_file_path, 'w') as new_file:
                 new_file.write('\n'.join(sampled_unann_ims + self.cur_oracle_ims[key]))
         return sampled_unann_im_dict
+
+    def _check_round_files_created(self):
+        for key in self.file_keys:
+            train_file_path = self.model.get_round_train_file_paths(self.round_dir, self.cur_total_oracle_split)[key]
+            if not os.path.exists(train_file_path):
+                return False
+        return True
 
     def _load_round_files(self):
         train_file_paths = self.model.get_round_train_file_paths(self.round_dir, self.cur_total_oracle_split)

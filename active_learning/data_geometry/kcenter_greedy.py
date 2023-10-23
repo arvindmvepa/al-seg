@@ -127,13 +127,14 @@ class kCenterGreedy(SamplingMethod):
 
             self.update_distances([ind], only_new=True, reset_dist=False)
             new_batch.append(ind)
+        max_dist = max(self.min_distances)
         print(
-            "Maximum distance from cluster centers is %0.2f" % max(self.min_distances)
+            "Maximum distance from cluster centers is %0.2f" % max_dist
         )
 
         self.already_selected = already_selected
 
-        return new_batch, max(self.min_distances)
+        return new_batch, max_dist
 
     def get_index_w_im_features(self, extra_feature_index):
         return self.num_im_features + extra_feature_index
