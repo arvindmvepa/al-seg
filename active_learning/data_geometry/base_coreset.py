@@ -17,14 +17,14 @@ from active_learning.data_geometry.dist_metrics import metric_w_config
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', wt_max_dist_mult=1.0, extra_feature_wt=0.0,
-                 patient_wt=1.0, phase_wt=1.0, group_wt=1.0, height_wt=1.0, weight_wt=1.0, slice_pos_wt=1.0,
-                 patch_size=(256, 256), feature_model=False, feature_model_params=None, contrastive=False,
-                 use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
+    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', max_dist=None, wt_max_dist_mult=1.0,
+                 extra_feature_wt=0.0, patient_wt=1.0, phase_wt=1.0, group_wt=1.0, height_wt=1.0, weight_wt=1.0,
+                 slice_pos_wt=1.0, patch_size=(256, 256), feature_model=False, feature_model_params=None,
+                 contrastive=False, use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
-        self.max_dist = None
+        self.max_dist = max_dist
         self.wt_max_dist_mult = wt_max_dist_mult
 
         self.patch_size = patch_size
