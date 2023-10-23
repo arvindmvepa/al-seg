@@ -190,10 +190,13 @@ class BaseActiveLearningPolicy:
         return sampled_unann_im_dict
 
     def _check_round_files_created(self):
+        print("Checking if round files already created")
+        train_file_paths = self.model.get_round_train_file_paths(self.round_dir, self.cur_total_oracle_split)
         for key in self.file_keys:
-            train_file_path = self.model.get_round_train_file_paths(self.round_dir, self.cur_total_oracle_split)[key]
+            train_file_path = train_file_paths[key]
             if not os.path.exists(train_file_path):
                 return False
+        print("Files were created")
         return True
 
     def _load_round_files(self):

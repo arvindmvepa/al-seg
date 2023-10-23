@@ -27,7 +27,6 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
 
     # scale all the weights to be less than max_dist * wt_max_dist_mult
     if max_dist is not None:
-        print(f"max_dist: {max_dist}, wt_max_dist_mult: {wt_max_dist_mult}, patient_wt: {patient_wt}, phase_wt: {phase_wt}, group_wt: {group_wt}, height_wt: {height_wt}, weight_wt: {weight_wt}, slice_pos_wt: {slice_pos_wt}")
         patient_wt = min(patient_wt, max_dist * wt_max_dist_mult)
         phase_wt = min(phase_wt, max_dist * wt_max_dist_mult)
         group_wt = min(group_wt, max_dist * wt_max_dist_mult)
