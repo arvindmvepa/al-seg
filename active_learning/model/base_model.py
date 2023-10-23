@@ -104,15 +104,15 @@ class BaseModel(ABC):
                 os.makedirs(snapshot_dir)
             if resume:
                 if resume_on_test:
-                    if not os.path.exists(os.path.join(snapshot_dir, "test_metrics.json")):
+                    if os.path.exists(os.path.join(snapshot_dir, "test_metrics.json")):
                         print(f"Skip Training Model {model_no}")
                         continue
                 elif resume_on_val:
-                    if not os.path.exists(os.path.join(snapshot_dir, "val_metrics.json")):
+                    if os.path.exists(os.path.join(snapshot_dir, "val_metrics.json")):
                         print(f"Skip Training Model {model_no}")
                         continue
                 else:
-                    raise ValueError("resume_on_val or resume_on_test must be True")
+                    print(f"Not skipping training model {model_no}")
             if train:
                 self.train_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
                                  cur_total_oracle_split=cur_total_oracle_split,
