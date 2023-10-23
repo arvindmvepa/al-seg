@@ -64,35 +64,36 @@ class BaseModel(ABC):
     @abstractmethod
     def train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
-    
+
     @abstractmethod
     def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
-    
+
     @abstractmethod
     def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
-    
+
     def inf_test_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
-    
+
     def inf_train(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         self.inf_train_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
-                             cur_total_oracle_split=cur_total_oracle_split, 
+                             cur_total_oracle_split=cur_total_oracle_split,
                              cur_total_pseudo_split=cur_total_pseudo_split)
 
     def inf_val(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         self.inf_val_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
                            cur_total_oracle_split=cur_total_oracle_split,
                            cur_total_pseudo_split=cur_total_pseudo_split)
-    
+
     def inf_test(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         self.inf_test_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
                             cur_total_oracle_split=cur_total_oracle_split,
                             cur_total_pseudo_split=cur_total_pseudo_split)
 
-    def train_ensemble(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0, skip=False, 
-                       train=True, inf_train=False, inf_val=True, inf_test=False):
+    def train_ensemble(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0, resume=False,
+                       resume_on_val=True, resume_on_test=False, skip=False, train=True, inf_train=False, inf_val=True,
+                       inf_test=False):
         if skip:
             print("Skip Training Ensemble")
             return
@@ -101,21 +102,32 @@ class BaseModel(ABC):
             snapshot_dir = os.path.join(round_dir, str(model_no))
             if not os.path.exists(snapshot_dir):
                 os.makedirs(snapshot_dir)
+            if resume:
+                if resume_on_test:
+                    if not os.path.exists(os.path.join(snapshot_dir, "test_metrics.json")):
+                        print(f"Skip Training Model {model_no}")
+                        continue
+                elif resume_on_val:
+                    if not os.path.exists(os.path.join(snapshot_dir, "val_metrics.json")):
+                        print(f"Skip Training Model {model_no}")
+                        continue
+                else:
+                    raise ValueError("resume_on_val or resume_on_test must be True")
             if train:
-                self.train_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, 
-                                 cur_total_oracle_split=cur_total_oracle_split, 
+                self.train_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
+                                 cur_total_oracle_split=cur_total_oracle_split,
                                  cur_total_pseudo_split=cur_total_pseudo_split)
             if inf_train:
-                self.inf_train(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, 
-                               cur_total_oracle_split=cur_total_oracle_split, 
+                self.inf_train(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
+                               cur_total_oracle_split=cur_total_oracle_split,
                                cur_total_pseudo_split=cur_total_pseudo_split)
-            if inf_val: 
-                self.inf_val(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, 
-                             cur_total_oracle_split=cur_total_oracle_split, 
+            if inf_val:
+                self.inf_val(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
+                             cur_total_oracle_split=cur_total_oracle_split,
                              cur_total_pseudo_split=cur_total_pseudo_split)
             if inf_test:
-                self.inf_test(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir, 
-                              cur_total_oracle_split=cur_total_oracle_split, 
+                self.inf_test(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
+                              cur_total_oracle_split=cur_total_oracle_split,
                               cur_total_pseudo_split=cur_total_pseudo_split)
         print("Finished Training Ensemble")
 
