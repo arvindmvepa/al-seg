@@ -43,6 +43,3 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
                                             height_score*height_wt + weight_score*weight_wt + \
                                             slice_rel_pos_score*slice_rel_pos_wt + slice_mid_score*slice_mid_wt + \
                                             slice_pos_score * slice_pos_wt)
-
-
-
