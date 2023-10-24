@@ -30,14 +30,14 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     # scale all the weights to be less than max_dist * wt_max_dist_mult
     if max_dist is not None:
         wt_max_dist = max_dist * wt_max_dist_mult
-        patient_wt = max(min(patient_wt, wt_max_dist) -wt_max_dist)
-        phase_wt = max(min(phase_wt, wt_max_dist) -wt_max_dist)
-        group_wt = max(min(group_wt, wt_max_dist) -wt_max_dist)
-        height_wt = max(min(height_wt, wt_max_dist) -wt_max_dist)
-        weight_wt = max(min(weight_wt, wt_max_dist) -wt_max_dist)
-        slice_mid_wt= max(min(slice_mid_wt, wt_max_dist) - wt_max_dist)
-        slice_rel_pos_wt = max(min(slice_rel_pos_wt, wt_max_dist) -wt_max_dist)
-        slice_pos_wt = max(min(slice_pos_wt, wt_max_dist) -wt_max_dist)
+        patient_wt = max(min(patient_wt, wt_max_dist), -wt_max_dist)
+        phase_wt = max(min(phase_wt, wt_max_dist), -wt_max_dist)
+        group_wt = max(min(group_wt, wt_max_dist), -wt_max_dist)
+        height_wt = max(min(height_wt, wt_max_dist), -wt_max_dist)
+        weight_wt = max(min(weight_wt, wt_max_dist), -wt_max_dist)
+        slice_mid_wt= max(min(slice_mid_wt, wt_max_dist), - wt_max_dist)
+        slice_rel_pos_wt = max(min(slice_rel_pos_wt, wt_max_dist), -wt_max_dist)
+        slice_pos_wt = max(min(slice_pos_wt, wt_max_dist), -wt_max_dist)
 
     return metric_val + extra_feature_wt * (patient_score*patient_wt + phase_score*phase_wt + group_score*group_wt + \
                                             height_score*height_wt + weight_score*weight_wt + \
