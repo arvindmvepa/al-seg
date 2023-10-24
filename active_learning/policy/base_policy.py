@@ -209,7 +209,7 @@ class BaseActiveLearningPolicy:
 
     def _random_sample_unann_files(self):
         num_samples = self._get_unann_num_samples()
-        indices = list(range(num_samples))
+        indices = list(range(self.total_samples))
         return self.random_gen.sample(indices, num_samples)
 
     def _get_unann_train_file_paths(self):
@@ -231,6 +231,11 @@ class BaseActiveLearningPolicy:
         cur_ann_ims = self.cur_oracle_ims[self.im_key]
         unann_ims = self._get_unann_files(self.im_key)
         return int(len(unann_ims + cur_ann_ims) * self.cur_total_oracle_split) - len(cur_ann_ims)
+
+    @property
+    def total_samples(self):
+        all_ims = self.all_train_files_dict[self.im_key]
+        return len(all_ims)
 
     def _setup_round(self):
         round_params = next(self.rounds)
