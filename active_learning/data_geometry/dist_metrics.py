@@ -11,7 +11,7 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
                     extra_feature_wt=-0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
                     slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0):
     if image_metric == "cosine":
-        image_metric = lambda x,y: (1 - cosine(x,y))
+        image_metric = lambda x,y: cosine(x,y)
     elif image_metric == "dot":
         image_metric = lambda x,y: -np.dot(x,y)
     else:
