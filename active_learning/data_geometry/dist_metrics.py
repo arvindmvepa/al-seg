@@ -13,7 +13,7 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
                     slice_pos_wt=0.0, uncertainty_wt=0.0):
     assert image_vec1.shape == image_vec2.shape
     if image_metric == "cosine":
-        image_metric = lambda x,y: (1 - cosine(x,y))
+        image_metric = lambda x,y: cosine(x,y)
     elif image_metric == "dot":
         image_metric = lambda x,y: -np.dot(x,y)
     else:
