@@ -54,7 +54,7 @@ class RankedPolicy(BaseActiveLearningPolicy):
         return self._data_split(self._ranked_sample_unann_indices)
 
     def _ranked_sample_unann_indices(self):
-        unann_im_dict, num_samples = self._get_unann_train_file_paths(), self._get_unann_num_samples()
+        unann_im_dict, num_samples = self._get_unann_train_file_paths(), self._get_unann_num_to_sample()
         # get the scores per image from the score file in this format: img_name, score
         im_scores_list = open(self.cur_im_score_file).readlines()
         im_scores_list = [im_score.strip().split(",") for im_score in im_scores_list]

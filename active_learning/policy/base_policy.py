@@ -135,7 +135,7 @@ class BaseActiveLearningPolicy:
             # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
             if (not self.resume) or (not os.path.exists(im_score_file)):
                 self.data_geometry.calculate_representativeness(im_score_file=im_score_file,
-                                                                num_samples=self._get_unann_num_samples(),
+                                                                num_samples=self._get_unann_num_to_sample(),
                                                                 already_selected=self.cur_oracle_ims[self.im_key],
                                                                 prev_round_dir=self.prev_round_dir,
                                                                 train_logits_path=self.model.model_params['train_logits_path'],
@@ -208,9 +208,9 @@ class BaseActiveLearningPolicy:
             self.cur_oracle_ims[key] = [train_file.strip() for train_file in train_files]
 
     def _random_sample_unann_files(self):
-        num_samples = self._get_unann_num_samples()
-        indices = list(range(self.total_samples))
-        return self.random_gen.sample(indices, num_samples)
+        num_to_sample = self._get_unann_num_to_sample()
+        indices = list(range(self._get_unann_num()))
+        return self.random_gen.sample(indices, num_to_sample)
 
     def _get_unann_train_file_paths(self):
         unann_im_dict = {key: [] for key in self.file_keys}
@@ -226,16 +226,15 @@ class BaseActiveLearningPolicy:
         unann_ims = [im for im in all_ims if im not in cur_ann_ims]
         return unann_ims
 
-    def _get_unann_num_samples(self):
+    def _get_unann_num(self):
+        unann_ims = self._get_unann_files(self.im_key)
+        return len(unann_ims)
+
+    def _get_unann_num_to_sample(self):
         """num samples = prop * (unannotated images + annotated images) - (annotated images)"""
         cur_ann_ims = self.cur_oracle_ims[self.im_key]
         unann_ims = self._get_unann_files(self.im_key)
         return int(len(unann_ims + cur_ann_ims) * self.cur_total_oracle_split) - len(cur_ann_ims)
-
-    @property
-    def total_samples(self):
-        all_ims = self.all_train_files_dict[self.im_key]
-        return len(all_ims)
 
     def _setup_round(self):
         round_params = next(self.rounds)
