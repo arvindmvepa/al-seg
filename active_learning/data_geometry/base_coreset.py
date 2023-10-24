@@ -18,9 +18,10 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', max_dist=None, wt_max_dist_mult=1.0,
-                 extra_feature_wt=0.0, patient_wt=1.0, phase_wt=1.0, group_wt=1.0, height_wt=1.0, weight_wt=1.0,
-                 slice_pos_wt=1.0, patch_size=(256, 256), feature_model=False, feature_model_params=None,
-                 contrastive=False, use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
+                 extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
+                 slice_rel_pos_wt=0.0, slice_pos_wt=0.0, patch_size=(256, 256), feature_model=False,
+                 feature_model_params=None, contrastive=False, use_model_features=False, seed=0, gpus="cuda:0",
+                 **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -47,7 +48,8 @@ class BaseCoreset(BaseDataGeometry):
         self.cfg_wts = None
         self.cfg_indices = None
         self._update_cfg_wts(extra_feature_wt=extra_feature_wt, patient_wt=patient_wt, phase_wt=phase_wt,
-                              group_wt=group_wt, height_wt=height_wt, weight_wt=weight_wt, slice_pos_wt=slice_pos_wt)
+                              group_wt=group_wt, height_wt=height_wt, weight_wt=weight_wt,
+                             slice_rel_pos_wt=slice_rel_pos_wt, slice_pos_wt=slice_pos_wt)
     
     def setup(self, exp_dir, data_root, all_train_im_files):
         print("Setting up Coreset Class...")
@@ -185,8 +187,10 @@ class BaseCoreset(BaseDataGeometry):
                                  slice_pos_starting_index=self.cfg_indices['slice_pos_starting_index'],
                                  slice_pos_ending_index=self.cfg_indices['slice_pos_ending_index'],
                                  extra_feature_wt=self.cfg_wts['extra_feature_wt'], patient_wt=self.cfg_wts['patient_wt'],
-                                 phase_wt=self.cfg_wts['phase_wt'], group_wt=self.cfg_wts['group_wt'], height_wt=self.cfg_wts['height_wt'],
-                                 weight_wt=self.cfg_wts['weight_wt'],slice_pos_wt=self.cfg_wts['slice_pos_wt'])
+                                 phase_wt=self.cfg_wts['phase_wt'], group_wt=self.cfg_wts['group_wt'],
+                                 height_wt=self.cfg_wts['height_wt'], weight_wt=self.cfg_wts['weight_wt'],
+                                 slice_rel_pos_wt=self.cfg_wts['slice_rel_pos_wt'],
+                                 slice_pos_wt=self.cfg_wts['slice_pos_wt'])
         return coreset_metric, features
 
     @staticmethod
@@ -302,10 +306,10 @@ class BaseCoreset(BaseDataGeometry):
         return np.array(extra_features_lst)
 
     def _update_cfg_wts(self,extra_feature_wt=None, patient_wt=None, phase_wt=None, group_wt=None, height_wt=None,
-                        weight_wt=None, slice_pos_wt=None):
+                        weight_wt=None, slice_rel_pos_wt=None, slice_pos_wt=None):
         self.cfg_wts = {'extra_feature_wt': extra_feature_wt, 'patient_wt': patient_wt, 'phase_wt': phase_wt,
-                           'group_wt': group_wt, 'height_wt': height_wt, 'weight_wt': weight_wt,
-                           'slice_pos_wt': slice_pos_wt}
+                        'group_wt': group_wt, 'height_wt': height_wt, 'weight_wt': weight_wt,
+                        'slice_rel_pos_wt': slice_rel_pos_wt, 'slice_pos_wt': slice_pos_wt}
 
     def _update_cfg_indices(self):
         self.cfg_indices = dict()

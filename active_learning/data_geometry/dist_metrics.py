@@ -9,7 +9,7 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
                     weight_starting_index, weight_ending_index, slice_rel_pos_starting_index,
                     slice_rel_pos_ending_index, slice_pos_starting_index, slice_pos_ending_index,
                     extra_feature_wt=-0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
-                    slice_pos_wt=0.0):
+                    slice_rel_pos_wt=0.0, slice_pos_wt=0.0):
     if image_metric == "cosine":
         image_metric = lambda x,y: (1 - cosine(x,y))
     elif image_metric == "dot":
@@ -23,7 +23,8 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     group_score = 1 - np.dot(image_vec1[group_starting_index:group_ending_index], image_vec2[group_starting_index:group_ending_index])
     height_score = np.abs(image_vec1[height_starting_index:height_ending_index] - image_vec2[height_starting_index:height_ending_index])
     weight_score = np.abs(image_vec1[weight_starting_index:weight_ending_index] - image_vec2[weight_starting_index:weight_ending_index])
-    slice_pos_score = np.abs(image_vec1[slice_rel_pos_starting_index:slice_rel_pos_ending_index] - image_vec2[slice_rel_pos_starting_index:slice_rel_pos_ending_index])
+    slice_rel_pos_score = np.abs(image_vec1[slice_rel_pos_starting_index:slice_rel_pos_ending_index] - image_vec2[slice_rel_pos_starting_index:slice_rel_pos_ending_index])
+    slice_pos_score = 1 - np.sum(image_vec1[slice_pos_starting_index:slice_pos_ending_index] == image_vec2[slice_pos_starting_index:slice_pos_ending_index])
 
     # scale all the weights to be less than max_dist * wt_max_dist_mult
     if max_dist is not None:
@@ -32,9 +33,12 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
         group_wt = min(group_wt, max_dist * wt_max_dist_mult)
         height_wt = min(height_wt, max_dist * wt_max_dist_mult)
         weight_wt = min(weight_wt, max_dist * wt_max_dist_mult)
+        slice_rel_pos_wt = min(slice_rel_pos_wt, max_dist * wt_max_dist_mult)
         slice_pos_wt = min(slice_pos_wt, max_dist * wt_max_dist_mult)
 
-    return metric_val + extra_feature_wt * (patient_score*patient_wt + phase_score*phase_wt + group_score*group_wt + height_score*height_wt + weight_score*weight_wt + slice_pos_score*slice_pos_wt)
+    return metric_val + extra_feature_wt * (patient_score*patient_wt + phase_score*phase_wt + group_score*group_wt + \
+                                            height_score*height_wt + weight_score*weight_wt + \
+                                            slice_rel_pos_score*slice_rel_pos_wt + slice_pos_score * slice_pos_wt)
 
 
 
