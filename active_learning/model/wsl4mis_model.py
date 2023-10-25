@@ -16,14 +16,13 @@ import torch
 class WSL4MISModel(SoftmaxMixin, BaseModel):
     """WSL4MIS Model class"""
 
-    def __init__(self, ann_type="scribble", data_root="wsl4mis_data/ACDC", ensemble_size=1,
-                 seg_model='unet_cct', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000,
+    def __init__(self, dataset="ACDC", ann_type="scribble", ensemble_size=1,
+                 seg_model='unet_cct', batch_size=6, base_lr=0.01, max_iterations=60000,
                  deterministic=1, patch_size=(256, 256), inf_train_type="preds", feature_decoder_index=0, seed=0,
                  gpus="0", tag=""):
-        super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
+        super().__init__(ann_type=ann_type, dataset=dataset, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
         self.seg_model = seg_model
-        self.num_classes = num_classes
         self.batch_size = batch_size
         self.max_iterations = max_iterations
         self.deterministic = deterministic
@@ -122,16 +121,16 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         return {self.file_keys[0]: new_train_im_list_file}
 
     def _init_train_file_info(self):
-        self.orig_train_im_list_file = self.model_params['train_file']
+        self.orig_train_im_list_file = self.data_params['train_file']
         self.all_train_files_dict = dict()
         with open(self.orig_train_im_list_file, "r") as f:
             self.all_train_files_dict[self.file_keys[0]] = f.read().splitlines()
 
     def _init_val_file_info(self):
-        self.orig_val_im_list_file = self.model_params["val_file"]
+        self.orig_val_im_list_file = self.data_params["val_file"]
 
     def _init_test_file_info(self):
-        self.orig_test_im_list_file = self.model_params["test_file"]
+        self.orig_test_im_list_file = self.data_params["test_file"]
 
     def max_iter(self, cur_total_oracle_split, cur_total_pseudo_split):
         return int(self.max_iterations * (cur_total_oracle_split + cur_total_pseudo_split))

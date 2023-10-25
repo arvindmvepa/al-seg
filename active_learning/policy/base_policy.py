@@ -135,7 +135,7 @@ class BaseActiveLearningPolicy:
                                                             num_samples=self._get_unann_num_samples(),
                                                             already_selected=self.cur_oracle_ims[self.im_key],
                                                             prev_round_dir=self.prev_round_dir,
-                                                            train_logits_path=self.model.model_params['train_logits_path'],
+                                                            train_logits_path=self.model.data_params['train_logits_path'],
                                                             **geometry_kwargs)
             self.cur_im_score_file = im_score_file
             inf_train = self.data_geometry.use_model_features

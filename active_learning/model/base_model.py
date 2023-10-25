@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from active_learning.model.model_params import model_params
+from active_learning.model.data_params import data_params
 import os
 from random import Random
 from tqdm import tqdm
@@ -44,10 +44,12 @@ class BaseModel(ABC):
 
     """
 
-    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, gpus="0", tag=""):
-        self.model_params = model_params[self.model_string][ann_type]
+    def __init__(self, ann_type="box", dataset="ACDC", ensemble_size=1,  seed=0, gpus="0", tag=""):
+        self.dataset = dataset 
+        self.data_params = data_params[self.dataset][ann_type]
         self.ann_type = ann_type
-        self.data_root = data_root
+        self.data_root = data_params[self.dataset][ann_type]["data_root"]
+        self.num_classes = data_params[self.dataset][ann_type]["num_classes"]
         self.ensemble_size = ensemble_size
         self.seed = seed
         self.random_gen = Random(seed)
@@ -230,7 +232,7 @@ class SoftmaxMixin:
 
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
         f = open(im_score_file, "w")
-        train_logits_path = os.path.join(round_dir, "*", self.model_params['train_logits_path'])
+        train_logits_path = os.path.join(round_dir, "*", self.data_params['train_logits_path'])
         train_results = sorted(list(glob(train_logits_path)))
         im_files = sorted(np.load(train_results[0], mmap_mode='r').files)
         filtered_im_files = [im_file for im_file in im_files if im_file not in ignore_ims_dict[self.im_key]]
