@@ -4,8 +4,8 @@ from active_learning.data_geometry.base_coreset import BaseCoreset
 class KCenterGreedyCoreset(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
-    def __init__(self, patch_size=(256, 256), **kwargs):
-        super().__init__(alg_string="kcenter_greedy", patch_size=patch_size, **kwargs)
+    def __init__(self, alg_string="kcenter_greedy", patch_size=(256, 256), **kwargs):
+        super().__init__(alg_string=alg_string, patch_size=patch_size, **kwargs)
         
     def calculate_representativeness(self, im_score_file, num_samples, prev_round_dir, train_logits_path,
                                      already_selected=[], skip=False, delete_preds=True, **kwargs):
@@ -15,8 +15,10 @@ class KCenterGreedyCoreset(BaseCoreset):
 
         print("Calculating KCenterGreedyCoreset..")
         already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
-        coreset_inst, _ = self.get_coreset_inst_and_features_for_round(prev_round_dir, train_logits_path, delete_preds=delete_preds)
-        core_set_indices, self.max_dist = coreset_inst.select_batch_(already_selected=already_selected_indices, N=num_samples)
+        coreset_inst, _ = self.get_coreset_inst_and_features_for_round(prev_round_dir, train_logits_path,
+                                                                       delete_preds=delete_preds)
+        core_set_indices, self.max_dist = coreset_inst.select_batch_(already_selected=already_selected_indices,
+                                                                     N=num_samples)
 
         # write score file
         with open(im_score_file, "w") as f:

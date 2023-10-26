@@ -139,3 +139,81 @@ class kCenterGreedy(SamplingMethod):
     def get_index_w_im_features(self, extra_feature_index):
         return self.num_im_features + extra_feature_index
 
+
+class ProbkCenterGreedy(kCenterGreedy):
+    def __init__(self, temp_init=1.0, temp_scale=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = "prob_kcenter"
+        self.temp_init = temp_init
+        self.temp_scale = temp_scale
+        self._temp = temp_init
+        self._iter = 0
+        print("Initialized ProbkCenterGreedy!")
+
+    def select_batch_(self, already_selected, N, **kwargs):
+        """
+        Diversity promoting active learning method that greedily forms a batch
+        to minimize the maximum distance to a cluster center among all unlabeled
+        datapoints.
+        Args:
+          model: model with scikit-like API with decision_function implemented
+          already_selected: index of datapoints already selected
+          N: batch size
+        Returns:
+          indices of points selected to minimize distance to cluster centers
+        """
+        assert isinstance(already_selected, list)
+
+        try:
+            print("Getting features...")
+            print("Calculating distances...")
+            self.update_distances(already_selected, only_new=False, reset_dist=True)
+        except Exception as error:
+            print(f"Previous attempt generated error: {error}")
+            print("Getting features...")
+            print("Calculating distances...")
+            self.update_distances(already_selected, only_new=True, reset_dist=False)
+
+        new_batch = []
+
+        combined_already_selected = already_selected + self.already_selected
+        for i in range(N):
+            if not combined_already_selected and (i == 0):
+                # Initialize centers with a randomly selected datapoint
+                ind = self.random_state.choice(np.arange(self.n_obs))
+            else:
+                unselected_mask = np.ones(self.min_distances.shape[0], dtype=bool)
+                unselected_mask[already_selected] = False
+                min_distances = self.min_distances[unselected_mask]
+                unselected_probs = self.generate_probs(min_distances)
+                all_indices = np.arange(self.n_obs)
+                unselected_indices = all_indices[unselected_mask]
+                ind = self.random_state.choice(unselected_indices, unselected_probs)
+            assert ind not in already_selected
+            self.update_distances([ind], only_new=True, reset_dist=False)
+            self.update_iter_temp()
+            new_batch.append(ind)
+        max_dist = max(self.min_distances)
+        print(
+            "Maximum distance from cluster centers is %0.2f" % max_dist
+        )
+
+        self.already_selected = already_selected
+
+        return new_batch, max_dist
+
+    def update_iter_temp(self):
+        self._iter += 1
+        self.update_temp()
+
+    def update_temp(self):
+        if self.temp_scale == "inv_iter":
+            self._temp = self.temp_init / self._iter
+
+    def generate_probs(self, min_distances):
+        probs = self.softmax(min_distances, )
+        return probs
+
+    def softmax(self, x):
+        return np.exp(x/self._temp) / sum(np.exp(x/self._temp))
+
