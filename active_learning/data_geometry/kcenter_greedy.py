@@ -177,6 +177,8 @@ class ProbkCenterGreedy(kCenterGreedy):
         new_batch = []
 
         combined_already_selected = already_selected + self.already_selected
+        # set iter based on how many points have already been selected and set temp accordingly
+        self.update_iter_temp(len(combined_already_selected))
         for i in range(N):
             if not combined_already_selected and (i == 0):
                 # Initialize centers with a randomly selected datapoint
@@ -202,8 +204,13 @@ class ProbkCenterGreedy(kCenterGreedy):
 
         return new_batch, max_dist
 
-    def update_iter_temp(self):
-        self._iter += 1
+    def update_iter_temp(self, init_iter=None):
+        if init_iter is None:
+            self._iter += 1
+        elif isinstance(init_iter, int) and init_iter >= 0:
+            self._iter = init_iter
+        else:
+            raise ValueError("init_iter must be a non-negative integer.")
         self.update_temp()
 
     def update_temp(self):
