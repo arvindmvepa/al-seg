@@ -146,8 +146,6 @@ class ProbkCenterGreedy(kCenterGreedy):
         self.name = "prob_kcenter"
         self.temp_init = temp_init
         self.temp_scale = temp_scale
-        self._temp = temp_init
-        self._iter = 0
         print("Initialized ProbkCenterGreedy!")
 
     def select_batch_(self, already_selected, N, **kwargs):
@@ -177,18 +175,20 @@ class ProbkCenterGreedy(kCenterGreedy):
         new_batch = []
 
         combined_already_selected = already_selected + self.already_selected
-        # set iter based on how many points have already been selected and set temp accordingly
-        self.update_iter_temp(len(combined_already_selected))
-        print(f"Starting iteration {self._iter}, temperature {self._temp}")
-        for i in range(N):
-            if not combined_already_selected and (i == 0):
+        # set iter based on how many points have already been selected
+        start_iter = len(combined_already_selected)
+        temp = None
+        print(f"Starting iteration {self.start_iter}, temperature {self.get_temp(start_iter)}")
+        for iter in range(start_iter, N):
+            if not combined_already_selected and (iter == 0):
                 # Initialize centers with a randomly selected datapoint
                 ind = self.random_state.choice(np.arange(self.n_obs))
             else:
                 unselected_mask = np.ones(self.min_distances.shape[0], dtype=bool)
                 unselected_mask[already_selected] = False
                 min_distances = self.min_distances[unselected_mask]
-                unselected_probs = self.generate_probs(min_distances)
+                temp = self.get_temp(iter)
+                unselected_probs = self.generate_probs(min_distances, temp)
                 all_indices = np.arange(self.n_obs)
                 unselected_indices = all_indices[unselected_mask]
                 ind = self.random_state.choice(unselected_indices, unselected_probs)
@@ -196,7 +196,7 @@ class ProbkCenterGreedy(kCenterGreedy):
             self.update_distances([ind], only_new=True, reset_dist=False)
             self.update_iter_temp()
             new_batch.append(ind)
-        print(f"Ending iteration {self._iter}, temperature {self._temp}")
+        print(f"Ending iteration {iter}, temperature {temp}")
         max_dist = max(self.min_distances)
         print(
             "Maximum distance from cluster centers is %0.2f" % max_dist
@@ -206,23 +206,18 @@ class ProbkCenterGreedy(kCenterGreedy):
 
         return new_batch, max_dist
 
-    def update_iter_temp(self, init_iter=None):
-        if init_iter is None:
-            self._iter += 1
-        elif isinstance(init_iter, int) and init_iter >= 0:
-            self._iter = init_iter
-        else:
-            raise ValueError("init_iter must be a non-negative integer.")
-        self.update_temp()
-
-    def update_temp(self):
+    def get_temp(self, iter):
         if self.temp_scale == "inv_iter":
-            self._temp = self.temp_init / self._iter
+            return self.temp_init / (iter + 1)
+        else:
+            return self.temp_init
 
-    def generate_probs(self, min_distances):
-        probs = self.softmax(min_distances, )
+
+    def generate_probs(self, min_distances, temp):
+        probs = self.softmax(min_distances, temp)
         return probs
 
-    def softmax(self, x):
-        return np.exp(x/self._temp) / sum(np.exp(x/self._temp))
+    @staticmethod
+    def softmax(self, x, temp):
+        return np.exp(x/temp) / sum(np.exp(x/temp))
 
