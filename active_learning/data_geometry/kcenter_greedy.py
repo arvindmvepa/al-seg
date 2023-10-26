@@ -194,7 +194,6 @@ class ProbkCenterGreedy(kCenterGreedy):
                 ind = self.random_state.choice(unselected_indices, unselected_probs)
             assert ind not in already_selected
             self.update_distances([ind], only_new=True, reset_dist=False)
-            self.update_iter_temp()
             new_batch.append(ind)
         print(f"Ending iteration {iter}, temperature {temp}")
         max_dist = max(self.min_distances)
