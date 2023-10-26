@@ -178,7 +178,7 @@ class ProbkCenterGreedy(kCenterGreedy):
         # set iter based on how many points have already been selected
         start_iter = len(combined_already_selected)
         temp = None
-        print(f"Starting iteration {self.start_iter}, temperature {self.get_temp(start_iter)}")
+        print(f"Starting iteration {start_iter}, temperature {self.get_temp(start_iter)}")
         for iter in range(start_iter, N):
             if not combined_already_selected and (iter == 0):
                 # Initialize centers with a randomly selected datapoint
