@@ -17,14 +17,20 @@ from active_learning.data_geometry.dist_metrics import metric_w_config
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', max_dist=None, wt_max_dist_mult=1.0,
-                 extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
-                 slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, patch_size=(256, 256), feature_model=False,
-                 feature_model_params=None, contrastive=False, use_model_features=False, seed=0, gpus="cuda:0",
-                 **kwargs):
+    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, max_dist=None,
+                 wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0,
+                 weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, patch_size=(256, 256),
+                 feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False, seed=0,
+                 gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
+        if coreset_kwargs is None:
+            self.coreset_kwargs = {}
+        elif isinstance(coreset_kwargs, dict):
+            self.coreset_kwargs = coreset_kwargs
+        else:
+            raise ValueError("coreset_kwargs must be a dict or None")
         self.max_dist = max_dist
         self.wt_max_dist_mult = wt_max_dist_mult
 
@@ -107,8 +113,9 @@ class BaseCoreset(BaseDataGeometry):
         print("Creating coreset instance...")
         print("Getting coreset metric and features...")
         coreset_metric, features = self.get_coreset_metric_and_features(processed_data, cfgs_arr=self.image_cfgs_arr)
-        coreset_inst = self.coreset_cls(features, file_names=self.all_train_im_files, metric=coreset_metric, seed=self.seed)
-        print("Done coreset instance!")
+        coreset_inst = self.coreset_cls(X=features, file_names=self.all_train_im_files, metric=coreset_metric,
+                                        **self.coreset_kwargs)
+        print(f"Created {coreset_inst.name} inst!")
         return coreset_inst
 
     def get_coreset_inst_and_features_for_round(self, round_dir, train_logits_path, delete_preds=True):
