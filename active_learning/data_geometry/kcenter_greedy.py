@@ -191,7 +191,7 @@ class ProbkCenterGreedy(kCenterGreedy):
                 temp = self.get_temp(iter)
                 unselected_probs = self.generate_probs(min_distances, temp)
                 unselected_indices = all_indices[unselected_mask]
-                ind = self.random_state.choice(unselected_indices, np.array(unselected_probs))
+                ind = self.random_state.choice(unselected_indices, p=unselected_probs)
             assert ind not in already_selected
             self.update_distances([ind], only_new=True, reset_dist=False)
             new_batch.append(ind)
