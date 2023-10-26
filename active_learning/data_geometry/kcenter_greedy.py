@@ -217,6 +217,6 @@ class ProbkCenterGreedy(kCenterGreedy):
         return probs
 
     @staticmethod
-    def softmax(self, x, temp):
+    def softmax(x, temp):
         return np.exp(x/temp) / sum(np.exp(x/temp))
 
