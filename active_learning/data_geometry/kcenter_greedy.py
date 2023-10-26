@@ -219,5 +219,14 @@ class ProbkCenterGreedy(kCenterGreedy):
 
     @staticmethod
     def softmax(x, temp):
-        return np.exp(x/temp) / sum(np.exp(x/temp))
+        if temp <= 0:
+            raise ValueError("Temperature must be a positive scalar.")
+
+        # Shift the logits to avoid numerical overflows.
+        x_shifted = x - np.max(x)
+
+        # Compute the exponentials of the shifted logits.
+        exps = np.exp(x_shifted / temp)
+
+        return exps / np.sum(exps)
 
