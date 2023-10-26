@@ -180,18 +180,18 @@ class ProbkCenterGreedy(kCenterGreedy):
         temp = None
         print(f"Starting iteration {start_iter}, temperature {self.get_temp(start_iter)}")
         for iter in range(start_iter, N):
+            all_indices = np.arange(self.n_obs)
             if not combined_already_selected and (iter == 0):
                 # Initialize centers with a randomly selected datapoint
-                ind = self.random_state.choice(np.arange(self.n_obs))
+                ind = self.random_state.choice(all_indices)
             else:
                 unselected_mask = np.ones(self.min_distances.shape[0], dtype=bool)
                 unselected_mask[already_selected] = False
                 min_distances = self.min_distances[unselected_mask]
                 temp = self.get_temp(iter)
                 unselected_probs = self.generate_probs(min_distances, temp)
-                all_indices = np.arange(self.n_obs)
                 unselected_indices = all_indices[unselected_mask]
-                ind = self.random_state.choice(unselected_indices, unselected_probs)
+                ind = self.random_state.choice(unselected_indices, np.array(unselected_probs))
             assert ind not in already_selected
             self.update_distances([ind], only_new=True, reset_dist=False)
             new_batch.append(ind)
