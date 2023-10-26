@@ -189,7 +189,7 @@ class ProbkCenterGreedy(kCenterGreedy):
                 unselected_mask[already_selected] = False
                 min_distances = self.min_distances[unselected_mask]
                 temp = self.get_temp(iter)
-                unselected_probs = self.generate_probs(min_distances, temp)
+                unselected_probs = np.squeeze(self.generate_probs(min_distances, temp))
                 unselected_indices = all_indices[unselected_mask]
                 print(f"unselected_probs.shape: {unselected_probs.shape}")
                 ind = self.random_state.choice(unselected_indices, p=unselected_probs)
