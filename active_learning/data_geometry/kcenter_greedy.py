@@ -191,7 +191,6 @@ class ProbkCenterGreedy(kCenterGreedy):
                 temp = self.get_temp(iter)
                 unselected_probs = np.squeeze(self.generate_probs(min_distances, temp))
                 unselected_indices = all_indices[unselected_mask]
-                print(f"unselected_probs.shape: {unselected_probs.shape}")
                 ind = self.random_state.choice(unselected_indices, p=unselected_probs)
             assert ind not in already_selected
             self.update_distances([ind], only_new=True, reset_dist=False)
