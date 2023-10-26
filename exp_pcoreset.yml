@@ -12,6 +12,6 @@ policy:
   rounds: [[.001, 0], [.001, 0], [.001, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  alg_type: pkcenter_greedy
+  alg_string: pkcenter_greedy
   seed: 0
 exp_dir: "DMPLS_w_pcoreset_test_run"
