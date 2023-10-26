@@ -179,6 +179,7 @@ class ProbkCenterGreedy(kCenterGreedy):
         combined_already_selected = already_selected + self.already_selected
         # set iter based on how many points have already been selected and set temp accordingly
         self.update_iter_temp(len(combined_already_selected))
+        print(f"Starting iteration {self._iter}, temperature {self._temp}")
         for i in range(N):
             if not combined_already_selected and (i == 0):
                 # Initialize centers with a randomly selected datapoint
@@ -195,6 +196,7 @@ class ProbkCenterGreedy(kCenterGreedy):
             self.update_distances([ind], only_new=True, reset_dist=False)
             self.update_iter_temp()
             new_batch.append(ind)
+        print(f"Ending iteration {self._iter}, temperature {self._temp}")
         max_dist = max(self.min_distances)
         print(
             "Maximum distance from cluster centers is %0.2f" % max_dist
