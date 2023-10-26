@@ -15,6 +15,6 @@ data_geometry:
   alg_string: pkcenter_greedy
   seed: 0
   coreset_kwargs:
-    inv_iter: True
+    temp_scale: inv_iter
     temp_init: 2.0
 exp_dir: "DMPLS_w_pcoreset_test_run"
