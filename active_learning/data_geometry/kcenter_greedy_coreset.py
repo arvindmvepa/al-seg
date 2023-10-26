@@ -32,3 +32,7 @@ class KCenterGreedyCoreset(BaseCoreset):
                 f.write(f"{im_file},{score}\n")
 
         return [self.all_train_im_files[i] for i in core_set_indices]
+
+    def get_coreset_inst_and_features_for_round(self, round_dir, train_logits_path, delete_preds=True):
+        return super().get_coreset_inst_and_features_for_round(round_dir, train_logits_path, seed=self.seed,
+                                                               delete_preds=delete_preds)

@@ -118,17 +118,17 @@ class BaseCoreset(BaseDataGeometry):
         print(f"Created {coreset_inst.name} inst!")
         return coreset_inst
 
-    def get_coreset_inst_and_features_for_round(self, round_dir, train_logits_path, delete_preds=True):
+    def get_coreset_inst_and_features_for_round(self, round_dir, train_logits_path, seed=None, delete_preds=True):
         if self.use_model_features:
             print("Using Model Features")
             feat = self.get_model_features(round_dir, train_logits_path, delete_preds=delete_preds)
             if feat is None:
                 print("Model features not found. Using image features instead")
                 feat = self.get_features()
-            coreset_inst = self.create_coreset_inst(feat)
+            coreset_inst = self.create_coreset_inst(feat, seed=seed)
         else:
             feat = self.get_features()
-            coreset_inst = self.create_coreset_inst(feat)
+            coreset_inst = self.create_coreset_inst(feat, seed=seed)
         return coreset_inst, feat
 
     def get_model_features(self, prev_round_dir, train_logits_path, delete_preds=True):

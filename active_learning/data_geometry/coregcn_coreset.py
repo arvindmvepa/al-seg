@@ -130,6 +130,13 @@ class CoreGCN(BaseCoreset):
 
         return [self.all_train_im_files[i] for i in sample_indices]
 
+    def create_coreset_inst(self, processed_data, unused=None):
+        return super().create_coreset_inst(processed_data, seed=self.seed)
+
+    def get_coreset_inst_and_features_for_round(self, round_dir, train_logits_path, delete_preds=True):
+        return super().get_coreset_inst_and_features_for_round(round_dir, train_logits_path, seed=self.seed,
+                                                               delete_preds=delete_preds)
+
 
     def aff_to_adj(self, x, y=None, eps=1e-10):
         num_ims = len(self.all_train_im_files)
