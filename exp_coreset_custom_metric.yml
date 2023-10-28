@@ -15,4 +15,5 @@ data_geometry:
   metric: euclidean
   extra_feature_wt: 1.0
   patient_wt: 1.0
+  uncertainty_wt: 1.0
 exp_dir: "DMPLS_w_coreset_custom_metric_test_run"

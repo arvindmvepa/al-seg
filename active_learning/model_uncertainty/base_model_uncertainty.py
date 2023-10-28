@@ -15,5 +15,5 @@ class BaseModelUncertainty(ABC):
 class NoModelUncertainty(BaseModelUncertainty):
     """Placeholder class for no model uncertainty"""
 
-    def calculate_uncertainty(self, im_score_file, round_dir, ignore_ims_dict):
+    def calculate_uncertainty(self, im_score_file, round_dir, ignore_ims_dict, skip=False, **kwargs):
         pass

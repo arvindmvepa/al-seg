@@ -12,14 +12,16 @@ from active_learning.feature_model.feature_model_factory import FeatureModelFact
 from active_learning.data_geometry import coreset_algs
 import json
 from active_learning.data_geometry.dist_metrics import metric_w_config
+from active_learning.model_uncertainty.model_uncertainty_factory import ModelUncertaintyFactory
 
 
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, max_dist=None,
-                 wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0,
-                 weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, patch_size=(256, 256),
+    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, use_uncertainty=False,
+                 uncertainty_score_file="entropy.txt", uncertainty_kwargs=None, max_dist=None, wt_max_dist_mult=1.0,
+                 extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
+                 slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0, patch_size=(256, 256),
                  feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False, seed=0,
                  gpus="cuda:0", **kwargs):
         super().__init__()
@@ -31,6 +33,14 @@ class BaseCoreset(BaseDataGeometry):
             self.coreset_kwargs = coreset_kwargs
         else:
             raise ValueError("coreset_kwargs must be a dict or None")
+        self.use_uncertainty = use_uncertainty
+        self.uncertainty_score_file = uncertainty_score_file
+        if uncertainty_kwargs is None:
+            self.uncertainty_kwargs = {"model_uncertainty_type": "pass"}
+        elif isinstance(uncertainty_kwargs, dict):
+            self.uncertainty_kwargs = uncertainty_kwargs
+        else:
+            raise ValueError("uncertainty_kwargs must be a dict or None")
         self.max_dist = max_dist
         self.wt_max_dist_mult = wt_max_dist_mult
 
@@ -43,6 +53,7 @@ class BaseCoreset(BaseDataGeometry):
         self.seed = seed
         self.random_state = RandomState(seed=self.seed)
         self.basic_coreset_alg = None
+        self.model_uncertainty = None
         self.exp_dir = None
         self.data_root = None
         self.all_train_im_files = None
@@ -51,18 +62,26 @@ class BaseCoreset(BaseDataGeometry):
         self.image_features = None
         self.image_cfgs = None
         self.image_cfgs_arr = None
-        self.cfg_wts = None
-        self.cfg_indices = None
-        self._update_cfg_wts(extra_feature_wt=extra_feature_wt, patient_wt=patient_wt, phase_wt=phase_wt,
-                              group_wt=group_wt, height_wt=height_wt, weight_wt=weight_wt,
-                             slice_rel_pos_wt=slice_rel_pos_wt, slice_mid_wt=slice_mid_wt, slice_pos_wt=slice_pos_wt)
+        self.non_image_wts = None
+        self.non_image_indices = None
+        self._update_non_image_wts(extra_feature_wt=extra_feature_wt, patient_wt=patient_wt, phase_wt=phase_wt,
+                                   group_wt=group_wt, height_wt=height_wt, weight_wt=weight_wt,
+                                   slice_rel_pos_wt=slice_rel_pos_wt, slice_mid_wt=slice_mid_wt, slice_pos_wt=slice_pos_wt,
+                                   uncertainty_wt=uncertainty_wt, wt_max_dist_mult=wt_max_dist_mult)
     
     def setup(self, exp_dir, data_root, all_train_im_files):
         print("Setting up Coreset Class...")
+        if self.use_uncertainty:
+            self.setup_model_uncertainty()
         self.setup_feature_model(exp_dir)
         self.setup_data(data_root, all_train_im_files)
         self.setup_alg()
         print("Done setting up Coreset Class.")
+
+    def setup_model_uncertainty(self):
+        print("Setting up model uncertainty...")
+        self.model_uncertainty = ModelUncertaintyFactory.create_model_uncertainty(**self.uncertainty_kwargs)
+        print("Done setting up model uncertainty.")
 
     def setup_feature_model(self, exp_dir):
         print("Setting up feature model...")
@@ -90,7 +109,7 @@ class BaseCoreset(BaseDataGeometry):
         image_data, self.image_cfgs =  self._get_data(self.all_train_full_im_paths)
         print("Processing cfgs...")
         self.image_cfgs_arr = self._process_cfgs()
-        self._update_cfg_indices()
+        self._update_non_image_indices()
         print("Initializing image features for feature model...")
         self.feature_model.init_image_features(image_data)
         print("Done setting up image features")
@@ -118,6 +137,7 @@ class BaseCoreset(BaseDataGeometry):
         print(f"Created {coreset_inst.name} inst!")
         return coreset_inst
 
+
     def get_coreset_inst_and_features_for_round(self, round_dir, train_logits_path, delete_preds=True):
         if self.use_model_features:
             print("Using Model Features")
@@ -125,10 +145,9 @@ class BaseCoreset(BaseDataGeometry):
             if feat is None:
                 print("Model features not found. Using image features instead")
                 feat = self.get_features()
-            coreset_inst = self.create_coreset_inst(feat)
         else:
             feat = self.get_features()
-            coreset_inst = self.create_coreset_inst(feat)
+        coreset_inst = self.create_coreset_inst(feat)
         return coreset_inst, feat
 
     def get_model_features(self, prev_round_dir, train_logits_path, delete_preds=True):
@@ -174,26 +193,23 @@ class BaseCoreset(BaseDataGeometry):
 
         return preds_arrs
 
-    def get_coreset_metric_and_features(self, processed_data, cfgs_arr):
+    def get_coreset_metric_and_features(self, processed_data, cfgs_arr, round_dir=None):
         num_im_features = processed_data.shape[1]
         features = np.concatenate([processed_data, cfgs_arr], axis=1)
-        coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist,
-                                 wt_max_dist_mult=self.wt_max_dist_mult, num_im_features= num_im_features,
-                                 patient_starting_index=num_im_features + self.cfg_indices['patient_starting_index'],
-                                 patient_ending_index=self.cfg_indices['patient_ending_index'],
-                                 phase_starting_index=self.cfg_indices['phase_starting_index'],
-                                 phase_ending_index=self.cfg_indices['phase_ending_index'],
-                                 group_starting_index=self.cfg_indices['group_starting_index'],
-                                 group_ending_index=self.cfg_indices['group_ending_index'],
-                                 height_starting_index=self.cfg_indices['height_starting_index'],
-                                 height_ending_index=self.cfg_indices['height_ending_index'],
-                                 weight_starting_index=self.cfg_indices['weight_starting_index'],
-                                 weight_ending_index=self.cfg_indices['weight_ending_index'],
-                                 slice_rel_pos_starting_index=self.cfg_indices['slice_rel_pos_starting_index'],
-                                 slice_rel_pos_ending_index=self.cfg_indices['slice_rel_pos_ending_index'],
-                                 slice_pos_starting_index=self.cfg_indices['slice_pos_starting_index'],
-                                 slice_pos_ending_index=self.cfg_indices['slice_pos_ending_index'],
-                                 **self.cfg_wts)
+        if self.use_uncertainty:
+            uncertainty_round_score_file = os.path.join(round_dir, self.uncertainty_score_file)
+            self.model_uncertainty.calculate_uncertainty(im_score_file=uncertainty_round_score_file,
+                                                         **self.uncertainty_kwargs)
+            uncertainty_features = self._extract_uncertainty_features(uncertainty_round_score_file)
+            assert uncertainty_features.shape[0] == features.shape[0]
+            features = np.concatenate([features, uncertainty_features], axis=1)
+        non_image_kwargs = {}
+        if self.non_image_indices is not None:
+            non_image_kwargs.update(self.non_image_indices)
+        if self.non_image_wts is not None:
+            non_image_kwargs.update(self.non_image_wts)
+        coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist, num_im_features=num_im_features,
+                                 **non_image_kwargs)
         return coreset_metric, features
 
     @staticmethod
@@ -308,29 +324,44 @@ class BaseCoreset(BaseDataGeometry):
 
         return np.array(extra_features_lst)
 
-    def _update_cfg_wts(self,extra_feature_wt=None, patient_wt=None, phase_wt=None, group_wt=None, height_wt=None,
-                        weight_wt=None, slice_rel_pos_wt=None, slice_mid_wt=None, slice_pos_wt=None):
-        self.cfg_wts = {'extra_feature_wt': extra_feature_wt, 'patient_wt': patient_wt, 'phase_wt': phase_wt,
-                        'group_wt': group_wt, 'height_wt': height_wt, 'weight_wt': weight_wt,
-                        'slice_rel_pos_wt': slice_rel_pos_wt, 'slice_mid_wt': slice_mid_wt,
-                        'slice_pos_wt': slice_pos_wt}
+    def _update_non_image_wts(self, extra_feature_wt=None, patient_wt=None, phase_wt=None, group_wt=None, height_wt=None,
+                              weight_wt=None, slice_rel_pos_wt=None, slice_mid_wt=None, slice_pos_wt=None, uncertainty_wt=None,
+                              wt_max_dist_mult=None):
+        self.non_image_wts = {'extra_feature_wt': extra_feature_wt, 'patient_wt': patient_wt, 'phase_wt': phase_wt,
+                               'group_wt': group_wt, 'height_wt': height_wt, 'weight_wt': weight_wt,
+                               'slice_rel_pos_wt': slice_rel_pos_wt, 'slice_mid_wt': slice_mid_wt,
+                               'slice_pos_wt': slice_pos_wt, "uncertainty_wt": uncertainty_wt,
+                               "wt_max_dist_mult": wt_max_dist_mult}
 
-    def _update_cfg_indices(self):
-        self.cfg_indices = dict()
-        self.cfg_indices['patient_starting_index'] = 0
-        self.cfg_indices['patient_ending_index'] = self.cfg_indices['patient_starting_index'] + 1
-        self.cfg_indices['phase_starting_index'] = self.cfg_indices['patient_ending_index']
-        self.cfg_indices['phase_ending_index'] = self.cfg_indices['phase_starting_index'] + 1
-        self.cfg_indices['group_starting_index'] = self.cfg_indices['phase_ending_index']
-        self.cfg_indices['group_ending_index'] = self.cfg_indices['group_starting_index']  + self.num_groups
-        self.cfg_indices['height_starting_index'] = self.cfg_indices['group_ending_index']
-        self.cfg_indices['height_ending_index'] = self.cfg_indices['height_starting_index'] + 1
-        self.cfg_indices['weight_starting_index'] = self.cfg_indices['height_ending_index']
-        self.cfg_indices['weight_ending_index'] = self.cfg_indices['weight_starting_index']  + 1
-        self.cfg_indices['slice_rel_pos_starting_index'] = self.cfg_indices['weight_ending_index']
-        self.cfg_indices['slice_rel_pos_ending_index'] = self.cfg_indices['slice_rel_pos_starting_index'] + 1
-        self.cfg_indices['slice_pos_starting_index'] = self.cfg_indices['slice_rel_pos_ending_index']
-        self.cfg_indices['slice_pos_ending_index'] = self.cfg_indices['slice_pos_starting_index'] + 1
+    def _update_non_image_indices(self):
+        self.non_image_indices = dict()
+        self.non_image_indices['patient_starting_index'] = 0
+        self.non_image_indices['patient_ending_index'] = self.non_image_indices['patient_starting_index'] + 1
+        self.non_image_indices['phase_starting_index'] = self.non_image_indices['patient_ending_index']
+        self.non_image_indices['phase_ending_index'] = self.non_image_indices['phase_starting_index'] + 1
+        self.non_image_indices['group_starting_index'] = self.non_image_indices['phase_ending_index']
+        self.non_image_indices['group_ending_index'] = self.non_image_indices['group_starting_index'] + self.num_groups
+        self.non_image_indices['height_starting_index'] = self.non_image_indices['group_ending_index']
+        self.non_image_indices['height_ending_index'] = self.non_image_indices['height_starting_index'] + 1
+        self.non_image_indices['weight_starting_index'] = self.non_image_indices['height_ending_index']
+        self.non_image_indices['weight_ending_index'] = self.non_image_indices['weight_starting_index'] + 1
+        self.non_image_indices['slice_rel_pos_starting_index'] = self.non_image_indices['weight_ending_index']
+        self.non_image_indices['slice_rel_pos_ending_index'] = self.non_image_indices['slice_rel_pos_starting_index'] + 1
+        self.non_image_indices['slice_pos_starting_index'] = self.non_image_indices['slice_rel_pos_ending_index']
+        self.non_image_indices['slice_pos_ending_index'] = self.non_image_indices['slice_pos_starting_index'] + 1
+        self.non_image_indices['uncertainty_starting_index'] = self.non_image_indices['slice_pos_ending_index']
+        self.non_image_indices['uncertainty_ending_index'] = self.non_image_indices['uncertainty_starting_index'] + 1
+
+    def _extract_uncertainty_features(self, score_file):
+        # get the scores per image from the score file in this format: img_name, score
+        im_scores_list = open(score_file).readlines()
+        im_scores_list = [im_score.strip().split(",") for im_score in im_scores_list]
+        im_scores_list = [(im_score[0], float(im_score[1])) for im_score in im_scores_list]
+        sorted_im_scores_list = sorted(im_scores_list, key=lambda x: x[0])
+        sorted_score_list = [im_score[1] for im_score in sorted_im_scores_list]
+
+        return np.array(sorted_score_list).reshape(-1, 1)
+
 
     def _extract_patient_frame_no_str(self, im_path):
         return self._extract_patient_prefix(im_path) + "_" + str(self._extract_frame_no(im_path))
