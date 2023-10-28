@@ -31,7 +31,7 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     slice_pos_score = 1 - np.sum(non_image_vec1[slice_pos_starting_index:slice_pos_ending_index] == non_image_vec2[slice_pos_starting_index:slice_pos_ending_index])
     uncertainty_score = np.sum((non_image_vec1[uncertainty_starting_index:uncertainty_ending_index] + non_image_vec2[uncertainty_starting_index:uncertainty_ending_index])/2.0)
 
-    print(f"before weighting, metric_val: {metric_val}, patient_score: {patient_score}, phase_score: {phase_score}, group_score: {group_score}, height_score: {height_score}, weight_score: {weight_score}, slice_rel_pos_score: {slice_rel_pos_score}, slice_mid_score: {slice_mid_score}, slice_pos_score: {slice_pos_score}, uncertainty_score: {uncertainty_score}")
+    #print(f"before weighting, metric_val: {metric_val}, patient_score: {patient_score}, phase_score: {phase_score}, group_score: {group_score}, height_score: {height_score}, weight_score: {weight_score}, slice_rel_pos_score: {slice_rel_pos_score}, slice_mid_score: {slice_mid_score}, slice_pos_score: {slice_pos_score}, uncertainty_score: {uncertainty_score}")
 
     # scale all the weights to be less than max_dist * wt_max_dist_mult
     if max_dist is not None:
@@ -57,10 +57,10 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     slice_pos_score = slice_pos_score * slice_pos_wt
     uncertainty_score = uncertainty_score * uncertainty_wt
 
-    print(f"after weighting, metric_val: {metric_val}, patient_score: {patient_score}, phase_score: {phase_score}, group_score: {group_score}, height_score: {height_score}, weight_score: {weight_score}, slice_rel_pos_score: {slice_rel_pos_score}, slice_mid_score: {slice_mid_score}, slice_pos_score: {slice_pos_score}, uncertainty_score: {uncertainty_score}")
+    #print(f"after weighting, metric_val: {metric_val}, patient_score: {patient_score}, phase_score: {phase_score}, group_score: {group_score}, height_score: {height_score}, weight_score: {weight_score}, slice_rel_pos_score: {slice_rel_pos_score}, slice_mid_score: {slice_mid_score}, slice_pos_score: {slice_pos_score}, uncertainty_score: {uncertainty_score}")
 
     non_image_score = extra_feature_wt * (patient_score + phase_score + group_score + height_score + weight_score + slice_rel_pos_score + slice_mid_score + slice_pos_score + uncertainty_score)
 
-    print(f"after weighting, metric_val: {metric_val}, non_image_score: {non_image_score}")
+    #print(f"after weighting, metric_val: {metric_val}, non_image_score: {non_image_score}")
 
     return metric_val + non_image_score
