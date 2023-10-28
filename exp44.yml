@@ -18,4 +18,4 @@ data_geometry:
   patient_wt: 50.0
   phase_wt: 50.0
   wt_max_dist_mult: .5
-exp_dir: "DMPLS_exp0_coreset_slice_pos50_patient50_phase50_mult5_v7"
+exp_dir: "DMPLS_exp0_coreset_slice_pos50_patient50_phase50_mult5_fixed_v7"

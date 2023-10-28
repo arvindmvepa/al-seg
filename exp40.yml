@@ -17,4 +17,4 @@ data_geometry:
   slice_pos_wt: 50.0
   patient_wt: 50.0
   phase_wt: 50.0
-exp_dir: "DMPLS_exp1_coreset_slice_pos50_patient50_phase50_v7"
+exp_dir: "DMPLS_exp1_coreset_slice_pos50_patient50_phase50_fixed_v7"

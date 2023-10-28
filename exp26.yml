@@ -15,4 +15,4 @@ data_geometry:
   seed: 2
   extra_feature_wt: 1.0
   slice_pos_wt: 10.0
-exp_dir: "DMPLS_exp1_coreset_slice_pos10_v7"
+exp_dir: "DMPLS_exp1_coreset_slice_pos10_fixed_v7"

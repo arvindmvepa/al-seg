@@ -24,4 +24,4 @@ data_geometry:
     encoder: resnet18
     batch_size: 8
     fuse_image_data: True
-exp_dir: "DMPLS_exp0_coreset_slice_pos20_patient20_phase20_mult5_fuse10_v7"
+exp_dir: "DMPLS_exp0_coreset_slice_pos20_patient20_phase20_mult5_fuse10_fixed_v7"
