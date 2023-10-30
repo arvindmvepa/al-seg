@@ -1,0 +1,18 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 2
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.04, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 2
+  extra_feature_wt: 1.0
+  uncertainty_wt: 50.0
+exp_dir: "DMPLS_exp2_coreset_uncertainty50_v7"

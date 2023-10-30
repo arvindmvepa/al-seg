@@ -1,0 +1,30 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.04, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  alg_string: pkcenter_greedy
+  seed: 0
+  coreset_kwargs:
+    temp_init: 0.1
+  extra_feature_wt: 1.0
+  slice_pos_wt: 10.0
+  patient_wt: 10.0
+  phase_wt: 10.0
+  wt_max_dist_mult: .5
+  contrastive: True
+  feature_model: True
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 8
+    fuse_image_data: True
+exp_dir: "DMPLS_exp0_pcoreset_temp01_pos10_patient10_phase10_mult5_fuse10_v7"
