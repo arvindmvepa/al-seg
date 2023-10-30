@@ -16,4 +16,7 @@ data_geometry:
   extra_feature_wt: 1.0
   uncertainty_wt: 1.0
   use_uncertainty: True
+model_uncertainty:
+  model_uncertainty_type: ensemble
+  score_func: entropy_w_label_probs
 exp_dir: "DMPLS_exp1_coreset_uncertainty1_v7"
