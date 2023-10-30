@@ -1,7 +1,7 @@
 model:
   model_type: "dmpls"
   ann_type: "scribble"
-  ensemble_size: 1
+  ensemble_size: 5
   gpus: "cuda:0"
 policy:
   policy_type: ranked
@@ -9,7 +9,7 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: False
-  rounds: [[.003, 0], [.003, 0], [.003, 0]]
+  rounds: [[.001, 0], [.003, 0], [.003, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
   metric: euclidean
