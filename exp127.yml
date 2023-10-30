@@ -15,4 +15,5 @@ data_geometry:
   seed: 1
   extra_feature_wt: 1.0
   uncertainty_wt: 1.0
+  use_uncertainty: True
 exp_dir: "DMPLS_exp1_coreset_uncertainty1_v7"
