@@ -34,6 +34,7 @@ class BaseCoreset(BaseDataGeometry):
             raise ValueError("coreset_kwargs must be a dict or None")
         self.use_uncertainty = use_uncertainty
         self.model_uncertainty = model_uncertainty
+        print(f"model_uncertainty: {self.model_uncertainty}")
         self.uncertainty_score_file = uncertainty_score_file
         self.max_dist = max_dist
         self.wt_max_dist_mult = wt_max_dist_mult
