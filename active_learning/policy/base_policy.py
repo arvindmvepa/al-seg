@@ -134,6 +134,9 @@ class BaseActiveLearningPolicy:
         if geometry_kwargs is None:
             geometry_kwargs = dict()
         geometry_kwargs.update(self.geometry_kwargs)
+        if uncertainty_kwargs is None:
+            uncertainty_kwargs = dict()
+        uncertainty_kwargs.update(self.uncertainty_kwargs)
         # calculate data geoemtry
         if calculate_data_geometry:
             # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
@@ -143,6 +146,7 @@ class BaseActiveLearningPolicy:
                                                                 already_selected=self.cur_oracle_ims[self.im_key],
                                                                 prev_round_dir=self.prev_round_dir,
                                                                 train_logits_path=self.model.model_params['train_logits_path'],
+                                                                uncertainty_kwargs=uncertainty_kwargs,
                                                                 **geometry_kwargs)
             else:
                 print(f"Skipping calculating data geometry")
@@ -167,9 +171,6 @@ class BaseActiveLearningPolicy:
         # train ensemble
         self.model.train_ensemble(round_dir=self.round_dir, cur_total_oracle_split=self.cur_total_oracle_split,
                                   cur_total_pseudo_split=self.cur_total_pseudo_split, resume=self.resume, **ensemble_kwargs)
-        if uncertainty_kwargs is None:
-            uncertainty_kwargs = dict()
-        uncertainty_kwargs.update(self.uncertainty_kwargs)
         # calculate model uncertainty
         if calculate_model_uncertainty and (self._round_num < (self.num_rounds - 1)):
             # calculate scores if resume option is off or, if it is on, if the score file doesn't exist

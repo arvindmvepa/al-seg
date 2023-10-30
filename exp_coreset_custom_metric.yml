@@ -1,7 +1,7 @@
 model:
   model_type: "dmpls"
   ann_type: "scribble"
-  ensemble_size: 2
+  ensemble_size: 1
   gpus: "cuda:0"
 policy:
   policy_type: ranked

@@ -114,18 +114,20 @@ class BaseCoreset(BaseDataGeometry):
         print("Done getting features")
         return features
 
-    def create_coreset_inst(self, processed_data, prev_round_dir=None):
+    def create_coreset_inst(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
         print("Creating coreset instance...")
         print("Getting coreset metric and features...")
         coreset_metric, features = self.get_coreset_metric_and_features(processed_data, cfgs_arr=self.image_cfgs_arr,
-                                                                        prev_round_dir=prev_round_dir)
+                                                                        prev_round_dir=prev_round_dir,
+                                                                        uncertainty_kwargs=uncertainty_kwargs)
         coreset_inst = self.coreset_cls(X=features, file_names=self.all_train_im_files, metric=coreset_metric,
                                         **self.coreset_kwargs)
         print(f"Created {coreset_inst.name} inst!")
         return coreset_inst
 
 
-    def get_coreset_inst_and_features_for_round(self, prev_round_dir, train_logits_path, delete_preds=True):
+    def get_coreset_inst_and_features_for_round(self, prev_round_dir, train_logits_path, uncertainty_kwargs=None,
+                                                delete_preds=True):
         if self.use_model_features:
             print("Using Model Features")
             feat = self.get_model_features(prev_round_dir, train_logits_path, delete_preds=delete_preds)
@@ -134,7 +136,8 @@ class BaseCoreset(BaseDataGeometry):
                 feat = self.get_features()
         else:
             feat = self.get_features()
-        coreset_inst = self.create_coreset_inst(feat, prev_round_dir=prev_round_dir)
+        coreset_inst = self.create_coreset_inst(feat, prev_round_dir=prev_round_dir,
+                                                uncertainty_kwargs=uncertainty_kwargs)
         return coreset_inst, feat
 
     def get_model_features(self, prev_round_dir, train_logits_path, delete_preds=True):
@@ -180,14 +183,15 @@ class BaseCoreset(BaseDataGeometry):
 
         return preds_arrs
 
-    def get_coreset_metric_and_features(self, processed_data, cfgs_arr, prev_round_dir=None):
+    def get_coreset_metric_and_features(self, processed_data, cfgs_arr, prev_round_dir=None, uncertainty_kwargs=None):
         num_im_features = processed_data.shape[1]
         features = np.concatenate([processed_data, cfgs_arr], axis=1)
         if self.use_uncertainty and (prev_round_dir is not None):
+            if uncertainty_kwargs is None:
+                uncertainty_kwargs = dict()
             uncertainty_round_score_file = os.path.join(prev_round_dir, self.uncertainty_score_file)
             self.model_uncertainty.calculate_uncertainty(im_score_file=uncertainty_round_score_file,
-                                                         round_dir=prev_round_dir,
-                                                         **self.uncertainty_kwargs)
+                                                         round_dir=prev_round_dir, **uncertainty_kwargs)
             uncertainty_features = self._extract_uncertainty_features(uncertainty_round_score_file)
             assert uncertainty_features.shape[0] == features.shape[0]
             features = np.concatenate([features, uncertainty_features], axis=1)
