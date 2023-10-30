@@ -34,7 +34,6 @@ class BaseCoreset(BaseDataGeometry):
             raise ValueError("coreset_kwargs must be a dict or None")
         self.use_uncertainty = use_uncertainty
         self.model_uncertainty = model_uncertainty
-        print(f"model_uncertainty: {self.model_uncertainty}")
         self.uncertainty_score_file = uncertainty_score_file
         self.max_dist = max_dist
         self.wt_max_dist_mult = wt_max_dist_mult
@@ -48,7 +47,6 @@ class BaseCoreset(BaseDataGeometry):
         self.seed = seed
         self.random_state = RandomState(seed=self.seed)
         self.basic_coreset_alg = None
-        self.model_uncertainty = None
         self.exp_dir = None
         self.data_root = None
         self.all_train_im_files = None
