@@ -9,6 +9,7 @@ class DataGeometryFactory:
 
     @staticmethod
     def create_data_geometry(data_geometry_type, **geometry_kwargs):
+        print(geometry_kwargs)
         if data_geometry_type == "pass":
             geometry = NoDataGeometry(**geometry_kwargs)
         elif data_geometry_type == "kcenter_greedy":
