@@ -193,8 +193,7 @@ class BaseCoreset(BaseDataGeometry):
             assert uncertainty_features.shape[0] == features.shape[0]
             features = np.concatenate([features, uncertainty_features], axis=1)
         elif self.use_uncertainty:
-            print("No model features for first round!")
-            return None
+            print("No uncertainty features for first round!")
         non_image_kwargs = {}
         if self.non_image_indices is not None:
             non_image_kwargs.update(self.non_image_indices)
