@@ -19,7 +19,7 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, use_uncertainty=False,
-                 uncertainty_score_file="entropy.txt", uncertainty_kwargs=None, max_dist=None, wt_max_dist_mult=1.0,
+                 model_uncertainty=None, uncertainty_score_file="entropy.txt", max_dist=None, wt_max_dist_mult=1.0,
                  extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
                  slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0, patch_size=(256, 256),
                  feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False, seed=0,
@@ -34,13 +34,8 @@ class BaseCoreset(BaseDataGeometry):
         else:
             raise ValueError("coreset_kwargs must be a dict or None")
         self.use_uncertainty = use_uncertainty
+        self.model_uncertainty = model_uncertainty
         self.uncertainty_score_file = uncertainty_score_file
-        if uncertainty_kwargs is None:
-            self.uncertainty_kwargs = {"model_uncertainty_type": "pass"}
-        elif isinstance(uncertainty_kwargs, dict):
-            self.uncertainty_kwargs = uncertainty_kwargs
-        else:
-            raise ValueError("uncertainty_kwargs must be a dict or None")
         self.max_dist = max_dist
         self.wt_max_dist_mult = wt_max_dist_mult
 
@@ -71,17 +66,10 @@ class BaseCoreset(BaseDataGeometry):
     
     def setup(self, exp_dir, data_root, all_train_im_files):
         print("Setting up Coreset Class...")
-        if self.use_uncertainty:
-            self.setup_model_uncertainty()
         self.setup_feature_model(exp_dir)
         self.setup_data(data_root, all_train_im_files)
         self.setup_alg()
         print("Done setting up Coreset Class.")
-
-    def setup_model_uncertainty(self):
-        print("Setting up model uncertainty...")
-        self.model_uncertainty = ModelUncertaintyFactory.create_model_uncertainty(**self.uncertainty_kwargs)
-        print("Done setting up model uncertainty.")
 
     def setup_feature_model(self, exp_dir):
         print("Setting up feature model...")

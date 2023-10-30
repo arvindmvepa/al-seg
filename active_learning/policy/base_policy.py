@@ -112,9 +112,13 @@ class BaseActiveLearningPolicy:
         ensemble_kwargs = {}
         model_uncertainty_kwargs = {"ignore_ims_dict": self.cur_oracle_ims,
                                     "round_dir": self.round_dir}
+        calculate_data_geometry = self.data_geometry is not None
+        # calculate model uncertainty only if not calculating data geometry
+        calculate_model_uncertainty = (self.model_uncertainty is not None) and (not calculate_data_geometry)
+
         self._run_round_models(im_score_file=im_score_file, ensemble_kwargs=ensemble_kwargs,
-                               calculate_model_uncertainty=self.model_uncertainty is not None,
-                               calculate_data_geometry=self.data_geometry is not None,
+                               calculate_data_geometry=calculate_data_geometry,
+                               calculate_model_uncertainty=calculate_model_uncertainty,
                                uncertainty_kwargs=model_uncertainty_kwargs)
 
     def _run_round_models(self, im_score_file=None, calculate_model_uncertainty=False, calculate_data_geometry=False,
