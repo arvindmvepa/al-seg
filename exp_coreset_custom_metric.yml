@@ -8,6 +8,7 @@ policy:
   seed: 0
   ensemble_kwargs:
     skip: False
+    inf_train: True
     inf_test: False
   rounds: [[.001, 0], [.003, 0], [.003, 0]]
 data_geometry:
