@@ -195,6 +195,8 @@ class BaseCoreset(BaseDataGeometry):
             labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
             # check that number of pixels in image is equal to those in labels
             assert processed_data.shape[1] == labels.shape[1]
+            print(np.unique(labels, return_counts=True))
+            print(np.unique(labels != 4, return_counts=True))
             label_mask = np.where(labels != 4, self.label_wt, 1)
             processed_data = processed_data * label_mask
         features = np.concatenate([processed_data, cfgs_arr], axis=1)
