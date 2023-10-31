@@ -18,11 +18,11 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, use_uncertainty=False,
-                 model_uncertainty=None, uncertainty_score_file="entropy.txt", max_dist=None, wt_max_dist_mult=1.0,
-                 extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
-                 slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0, patch_size=(256, 256),
-                 feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False, seed=0,
-                 gpus="cuda:0", **kwargs):
+                 model_uncertainty=None, uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0,
+                 max_dist=None, wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0,
+                 height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0,
+                 uncertainty_wt=0.0, patch_size=(256, 256), feature_model=False, feature_model_params=None,
+                 contrastive=False, use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -35,6 +35,9 @@ class BaseCoreset(BaseDataGeometry):
         self.use_uncertainty = use_uncertainty
         self.model_uncertainty = model_uncertainty
         self.uncertainty_score_file = uncertainty_score_file
+        self.ann_type = ann_type
+        self.use_labels = use_labels
+        self.label_wt = label_wt
         self.max_dist = max_dist
         self.wt_max_dist_mult = wt_max_dist_mult
 
@@ -92,7 +95,7 @@ class BaseCoreset(BaseDataGeometry):
     def setup_image_features(self):
         print("Setting up image features...")
         print("Getting data")
-        image_data, self.image_cfgs =  self._get_data(self.all_train_full_im_paths)
+        image_data, self.image_labels_arr, self.image_cfgs =  self._get_data(self.all_train_full_im_paths)
         print("Processing cfgs...")
         self.image_cfgs_arr = self._process_cfgs()
         self._update_non_image_indices()
@@ -111,6 +114,7 @@ class BaseCoreset(BaseDataGeometry):
     def get_features(self):
         print("Getting features...")
         features = self.feature_model.get_features()
+        # assert len(features.shape) == 2
         print("Done getting features")
         return features
 
@@ -131,6 +135,7 @@ class BaseCoreset(BaseDataGeometry):
         if self.use_model_features:
             print("Using Model Features")
             feat = self.get_model_features(prev_round_dir, train_logits_path, delete_preds=delete_preds)
+            # assert len(feat.shape) == 2
             if feat is None:
                 print("Model features not found. Using image features instead")
                 feat = self.get_features()
@@ -185,6 +190,13 @@ class BaseCoreset(BaseDataGeometry):
 
     def get_coreset_metric_and_features(self, processed_data, cfgs_arr, prev_round_dir=None, uncertainty_kwargs=None):
         num_im_features = processed_data.shape[1]
+        if self.use_labels:
+            print(f"Using labels with weight {self.label_wt}")
+            labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
+            # check that number of pixels in image is equal to those in labels
+            assert processed_data.shape[1] == labels.shape[1]
+            label_mask = np.where(labels != 4, self.label_wt, 1)
+            processed_data = processed_data * label_mask
         features = np.concatenate([processed_data, cfgs_arr], axis=1)
         if self.use_uncertainty and (prev_round_dir is not None):
             if uncertainty_kwargs is None:
@@ -212,11 +224,17 @@ class BaseCoreset(BaseDataGeometry):
         image = zoom(im, (patch_size[0] / x, patch_size[1] / y), order=0)
         return image
 
-    def _load_image(self, case):
+    def _load_image_and_label(self, case):
         h5f = h5py.File(case, 'r')
         image = h5f['image'][:]
         patched_image = self._patch_im(image, self.patch_size)
-        return patched_image[np.newaxis,]
+        patched_image = patched_image[np.newaxis,]
+        if self.use_labels:
+            label = h5f[self.ann_type][:]
+            patched_label = self._patch_im(label, self.patch_size)
+            return patched_image, patched_label[np.newaxis,]
+        else:
+            return patched_image, None
 
     def _load_cfg(self, cfg_file):
         cfg = {}
@@ -232,15 +250,18 @@ class BaseCoreset(BaseDataGeometry):
 
     def _get_data(self, all_train_full_im_paths):
         cases = []
+        labels = []
         cfgs = []
         for im_path in tqdm(all_train_full_im_paths):
-            image = self._load_image(im_path)
+            image, label = self._load_image_and_label(im_path)
             cfg_path = self._get_cfg_path(im_path)
             cfg = self._load_cfg(cfg_path)
             cases.append(image)
+            labels.append(label)
             cfgs.append(cfg)
         cases_arr = np.concatenate(cases, axis=0)
-        return cases_arr, cfgs
+        labels_arr = np.concatenate(labels, axis=0)
+        return cases_arr, labels_arr, cfgs
 
     def _get_cfg_path(self, im_path):
         cfg_path = self._extract_patient_prefix(im_path) + ".cfg"
