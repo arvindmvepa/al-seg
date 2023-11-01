@@ -350,7 +350,7 @@ class PatientPhaseSliceBatchSampler(Sampler):
                                                             non_matching_patient_group_meta_indices=None):
         if len(patient_group_meta_indices) == 0:
             return None, None
-        if all(index in patient_group_meta_indices for index in non_matching_patient_group_meta_indices) and len(patient_group_meta_indices) == len(non_matching_patient_group_meta_indices):
+        if (non_matching_patient_group_meta_indices is not None) and (len(patient_group_meta_indices) <= len(non_matching_patient_group_meta_indices)):
             return None, None
         random_patient_group_meta_index = self.random_state.choice(patient_group_meta_indices)
         if random_patient_group_meta_index in non_matching_patient_group_meta_indices:
