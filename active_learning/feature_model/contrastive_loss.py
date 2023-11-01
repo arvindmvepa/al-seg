@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from itertools import combinations
 
 
 class ContrastiveLoss(nn.Module):
@@ -75,7 +76,7 @@ class NT_Xent_Groups(NT_Xent):
         self.use_patient = use_patient
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
-        self.num_positives_per_batch = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
+        self.num_grouped_per_batch = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
         print(f"Debug custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
         super().__init__(**kwargs)
         print(f"Done setting up custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
@@ -84,13 +85,12 @@ class NT_Xent_Groups(NT_Xent):
         N = 2 * batch_size
         mask = torch.ones((N, N), dtype=bool)
         mask = mask.fill_diagonal_(0)
-        print("batch_size ", batch_size)
-        print("num_positives_per_batch ", self.num_positives_per_batch)
-        for i in range(batch_size):
-            for j in range(self.num_positives_per_batch):
-                init_index = i+j
-                mask[init_index, batch_size + init_index] = 0
-                mask[batch_size + init_index, init_index] = 0
+        for main_index in range(batch_size // self.num_grouped_per_batch):
+            grouped_indices = [(main_index*self.num_grouped_per_batch)+grouped_index for grouped_index in range(self.num_grouped_per_batch)]
+            grouped_indices_with_augs = grouped_indices + [batch_size + index for index in grouped_indices]
+            for grouped_index1, grouped_index2 in list(combinations(grouped_indices_with_augs, 2)):
+                mask[grouped_index1, grouped_index2] = 0
+                mask[grouped_index2, grouped_index1] = 0
         return mask
 
 

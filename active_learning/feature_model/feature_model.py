@@ -294,15 +294,15 @@ class PatientPhaseSliceBatchSampler(Sampler):
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
         assert self.use_patient or self.use_phase or self.use_slice_pos, "Must use at least one of patient, phase, or slice position"
-        self.num_positives_per_batch = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
-        assert self.batch_size % self.num_positives_per_batch == 0, "Batch size must be divisible by the number of positives per batch"
-        assert self.batch_size > self.num_positives_per_batch, "Batch size must be greater than the number of positives per batch"
+        self.num_grouped_per_batch = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
+        assert self.batch_size % self.num_grouped_per_batch == 0, "Batch size must be divisible by the number of positives per batch"
+        assert self.batch_size > self.num_grouped_per_batch, "Batch size must be greater than the number of positives per batch"
         self.batches = None
         self.setup()
-        print(f"Done setting up custom batch sampler with {len(self.batches)} batches that uses {self.num_positives_per_batch} positives per batch and use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}, data length of {len(self.flat_data)}, and total number of samples {len(self)}")
+        print(f"Done setting up custom batch sampler with {len(self.batches)} batches that uses {self.num_grouped_per_batch} grouped per batch and use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}, data length of {len(self.flat_data)}, and total number of samples {len(self)}")
 
     def __len__(self):
-        return len(self.flat_data) * self.num_positives_per_batch
+        return len(self.flat_data) * self.num_grouped_per_batch
 
     def __iter__(self):
         for batch in self.batches:
@@ -321,40 +321,46 @@ class PatientPhaseSliceBatchSampler(Sampler):
                 nested_by_patient_index_groups)
             if random_patient_index_group1 is None:
                 break
-            random_patient_index_group2, _ = self.get_valid_random_patient_index_group_and_meta_index(
-                patient_group_meta_indices,
-                nested_by_patient_index_groups,
-                non_matching_patient_group_meta_index=random_patient_group_meta_index1)
-            if random_patient_index_group2 is None:
+            non_matching_patient_group_meta_indices = [random_patient_group_meta_index1]
+            new_batch_patient_index_groups = [random_patient_index_group1]
+            # generate random unique patient groups get slice groups from
+            while (len(new_batch_patient_index_groups) * self.num_grouped_per_batch) < self.batch_size:
+                random_patient_index_group_adtl, random_patient_group_adtl_meta_index = self.get_valid_random_patient_index_group_and_meta_index(
+                    patient_group_meta_indices,
+                    nested_by_patient_index_groups,
+                    non_matching_patient_group_meta_indices=non_matching_patient_group_meta_indices)
+                if random_patient_index_group_adtl is None:
+                    break
+                new_batch_patient_index_groups.append(random_patient_index_group_adtl)
+                non_matching_patient_group_meta_indices.append(random_patient_group_adtl_meta_index)
+            if (len(new_batch_patient_index_groups) * self.num_grouped_per_batch) < self.batch_size:
                 break
-
-            new_batch, random_slice_index_group1, random_slice_index_group2 = self.create_random_batch(random_patient_index_group1, random_patient_index_group2)
+            new_batch = self.create_random_batch(new_batch_patient_index_groups)
             self.batches.append(new_batch)
 
-            random_patient_index_group1.remove(random_slice_index_group1)
-            random_patient_index_group2.remove(random_slice_index_group2)
-
-    def create_random_batch(self, patient_index_group1, patient_index_group2):
-        random_slice_index_group1 = self.get_random_slice_index_group(patient_index_group1)
-        random_slice_index_group2 = self.get_random_slice_index_group(patient_index_group2)
-        new_batch = random_slice_index_group1 + random_slice_index_group2
-        return new_batch, random_slice_index_group1, random_slice_index_group2
+    def create_random_batch(self, new_batch_patient_index_groups):
+        new_batch = []
+        for patient_index_group in new_batch_patient_index_groups:
+            random_slice_index_group = self.get_random_slice_index_group(patient_index_group)
+            patient_index_group.remove(random_slice_index_group)
+            new_batch.extend(random_slice_index_group)
+        return new_batch
 
     def get_valid_random_patient_index_group_and_meta_index(self, patient_group_meta_indices, nested_by_patient_index_groups,
-                                                            non_matching_patient_group_meta_index=None):
+                                                            non_matching_patient_group_meta_indices=None):
         if len(patient_group_meta_indices) == 0:
             return None, None
-        if (non_matching_patient_group_meta_index in patient_group_meta_indices) and len(patient_group_meta_indices) == 1:
+        if all(index in patient_group_meta_indices for index in non_matching_patient_group_meta_indices) and len(patient_group_meta_indices) == len(non_matching_patient_group_meta_indices):
             return None, None
         random_patient_group_meta_index = self.random_state.choice(patient_group_meta_indices)
-        if random_patient_group_meta_index == non_matching_patient_group_meta_index:
+        if random_patient_group_meta_index in non_matching_patient_group_meta_indices:
             return self.get_valid_random_patient_index_group_and_meta_index(patient_group_meta_indices, nested_by_patient_index_groups,
-                                                                            non_matching_patient_group_meta_index)
+                                                                            non_matching_patient_group_meta_indices)
         random_patient_index_group = nested_by_patient_index_groups[random_patient_group_meta_index]
         if len(random_patient_index_group) == 0:
             patient_group_meta_indices.remove(random_patient_group_meta_index)
             return self.get_valid_random_patient_index_group_and_meta_index(patient_group_meta_indices, nested_by_patient_index_groups,
-                                                                            non_matching_patient_group_meta_index)
+                                                                            non_matching_patient_group_meta_indices)
         else:
             return random_patient_index_group, random_patient_group_meta_index
 
