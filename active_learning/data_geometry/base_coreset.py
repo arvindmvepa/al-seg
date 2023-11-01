@@ -250,10 +250,11 @@ class BaseCoreset(BaseDataGeometry):
 
     def _get_data(self, all_train_full_im_paths):
         if self.use_labels:
-            return self._get_image_and_label_data(all_train_full_im_paths)
+            cases_arr, labels_arr, cfgs = self._get_image_and_label_data(all_train_full_im_paths)
         else:
+            labels_arr = None
             cases_arr, cfgs = self._get_image_data(all_train_full_im_paths)
-            return cases_arr, cfgs, None
+        return cases_arr, labels_arr, cfgs
 
     def _get_image_data(self, all_train_full_im_paths):
         cases = []
