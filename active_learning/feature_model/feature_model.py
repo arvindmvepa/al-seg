@@ -381,7 +381,7 @@ class PatientPhaseSliceBatchSampler(Sampler):
                         current_data_group.append(random_slice_in_phase)
                     if self.use_patient:
                         # randomly pick a slice in the same patient
-                        if slice_list == phase_1:
+                        if slice_list is phase_1:
                             current_patient_flat_index = current_flat_index - i
                         else:
                             current_patient_flat_index = current_flat_index - i - len(phase_1)
