@@ -243,9 +243,9 @@ class ContrastiveFeatureModel(FeatureModel):
         print(f"data.shape = {data.shape}, cfgs_arr.shape = {cfgs_arr.shape}, len(cfg_indices) = {len(cfg_indices)}")
         hierarchical_image_data_dict = {}
         for (datam, cfg_arr) in zip(data, cfgs_arr):
-            patient_id = cfgs_arr[cfg_indices['patient_ending_index']:cfg_indices['patient_starting_index']][0]
+            patient_id = cfgs_arr[cfg_indices['patient_starting_index']:cfg_indices['patient_ending_index']][0]
             patient_dict = hierarchical_image_data_dict.get(patient_id, {})
-            group_id = cfgs_arr[cfg_indices['phase_ending_index']:cfg_indices['phase_starting_index']][0]
+            group_id = cfgs_arr[cfg_indices['phase_starting_index']:cfg_indices['phase_ending_index']][0]
             group_dict = patient_dict.get(group_id, {})
             slice_pos = cfgs_arr[cfg_indices['slice_pos_starting_index']:cfg_indices['slice_pos_ending_index']][0]
             group_dict[slice_pos] = datam
