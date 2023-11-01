@@ -107,7 +107,7 @@ class ContrastiveFeatureModel(FeatureModel):
     def __init__(self, lr=3e-4, batch_size=64, weight_decay=1.0e-6, temperature=0.5, projection_dim=64,
                  num_epochs=100, patch_size=(256,256), loss="nt_xent", extra_loss=None, extra_loss_wt=0.1, patience=5,
                  tol=.01, cl_model_save_name="cl_feature_model.pt", use_patient=False, use_phase=False,
-                 use_slice_pos=False, seed=0, **kwargs):
+                 use_slice_pos=False, reset_sampler_every_epoch=False, seed=0, **kwargs):
         super().__init__(**kwargs)
         self.lr = lr
         self.batch_size = batch_size
@@ -125,6 +125,7 @@ class ContrastiveFeatureModel(FeatureModel):
         self.use_patient = use_patient
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
+        self.reset_sampler_every_epoch = reset_sampler_every_epoch
         self.seed = seed
         self._hierarchical_image_data = None
         self._hierarchical_flat_image_data = None
@@ -182,6 +183,7 @@ class ContrastiveFeatureModel(FeatureModel):
             sampler = PatientPhaseSliceBatchSampler(hierarchical_data=self._hierarchical_image_data,
                                                     flat_data=self._hierarchical_flat_image_data,
                                                     batch_size=self.batch_size, seed=self.seed,
+                                                    reset_every_epoch=self.reset_sampler_every_epoch,
                                                     use_patient=self.use_patient, use_phase=self.use_phase,
                                                     use_slice_pos=self.use_slice_pos)
             data = self._hierarchical_flat_image_data
@@ -191,7 +193,7 @@ class ContrastiveFeatureModel(FeatureModel):
 
         contrastive_dataset = ContrastiveAugmentedDataSet(data, transform=get_contrastive_augmentation(
             patch_size=self.patch_size))
-        contrastive_dataloader = DataLoader(contrastive_dataset, batch_size=self.batch_size, shuffle=True,
+        contrastive_dataloader = DataLoader(contrastive_dataset, batch_size=self.batch_size, shuffle=self.extra_loss is None,
                                             drop_last=True, sampler=sampler, pin_memory=True)
         criterion = losses[self.loss](batch_size=self.batch_size, temperature=self.temperature)
         if self.extra_loss is not None:
@@ -281,11 +283,12 @@ class NoFeatureModel(FeatureModel):
 
 class PatientPhaseSliceBatchSampler(Sampler):
 
-    def __init__(self, flat_data, hierarchical_data, batch_size, seed=0, use_patient=False, use_phase=False, use_slice_pos=False):
+    def __init__(self, flat_data, hierarchical_data, batch_size, seed=0, use_patient=False, use_phase=False, use_slice_pos=False, reset_every_epoch=False):
         """Data is stored in a hierarchical list structure based on patient, phase, and slice position"""
         self.flat_data = flat_data
         self.hierarchical_data = hierarchical_data
         self.batch_size = batch_size
+        self.reset_every_epoch = reset_every_epoch
         self.random_state = RandomState(seed=seed)
         self.use_patient = use_patient
         self.use_phase = use_phase
@@ -304,6 +307,9 @@ class PatientPhaseSliceBatchSampler(Sampler):
     def __iter__(self):
         for batch in self.batches:
             yield batch
+        if self.reset_every_epoch:
+            print("Resetting batch sampler every epoch")
+            self.setup()
 
     def setup(self):
         nested_by_patient_index_groups, flat_index_groups = self.generate_nested_and_flat_patient_data_groups()
