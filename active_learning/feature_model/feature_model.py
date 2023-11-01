@@ -308,7 +308,7 @@ class PatientPhaseSliceBatchSampler(Sampler):
     def setup(self):
         nested_by_patient_index_groups, flat_index_groups = self.generate_nested_and_flat_patient_data_groups()
         self.batches = []
-        patient_group_meta_indices = np.arange(len(nested_by_patient_index_groups))
+        patient_group_meta_indices = np.arange(len(nested_by_patient_index_groups)).tolist()
         while len(flat_index_groups) > 1 and len(patient_group_meta_indices) > 1:
             random_patient_index_group1, random_patient_group_meta_index1 = self.get_valid_random_patient_index_group_and_meta_index(
                 patient_group_meta_indices,
