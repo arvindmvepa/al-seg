@@ -350,7 +350,7 @@ class PatientPhaseSliceBatchSampler(Sampler):
             return random_patient_index_group, random_patient_group_meta_index
 
 
-    def generated_nested_and_flat_patient_data_groups(self):
+    def generate_nested_and_flat_patient_data_groups(self):
         flat_index_groups = []
         nested_by_patient_index_groups = []
         current_flat_index = 0
