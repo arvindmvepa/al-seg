@@ -240,6 +240,7 @@ class ContrastiveFeatureModel(FeatureModel):
 
     def _hierarchical_organizing(self, data, cfgs_arr, cfg_indices):
         """Organize the data into a hierarchical list structure based on patient, phase, and slice position"""
+        print(f"data.shape = {data.shape}, cfgs_arr.shape = {cfgs_arr.shape}, len(cfg_indices) = {len(cfg_indices)}")
         hierarchical_image_data_dict = {}
         for (datam, cfg_arr) in zip(data, cfgs_arr):
             patient_id = cfgs_arr[cfg_indices['patient_ending_index']:cfg_indices['patient_starting_index']][0]
