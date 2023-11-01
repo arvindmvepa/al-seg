@@ -100,7 +100,7 @@ class BaseCoreset(BaseDataGeometry):
         self.image_cfgs_arr = self._process_cfgs()
         self._update_non_image_indices()
         print("Initializing image features for feature model...")
-        self.feature_model.init_image_features(image_data)
+        self.feature_model.init_image_features(image_data, self.image_cfgs_arr, self.non_image_indices)
         print("Done setting up image features")
 
     def setup_alg(self):

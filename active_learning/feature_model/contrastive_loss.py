@@ -67,5 +67,30 @@ class NT_Xent(nn.Module):
         return loss
 
 
+class NT_Xent_Groups(NT_Xent):
+
+    def __init__(self, use_patient=False, use_phase=False, use_slice_pos=False, **kwargs):
+        assert use_patient or use_phase or use_slice_pos, "At least one of use_patient, use_phase, use_slice_pos must be True"
+        self.num_sim = 0
+        self.use_patient = use_patient
+        self.use_phase = use_phase
+        self.use_slice_pos = use_slice_pos
+        self.num_positives_per_batch = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
+        super().__init__(**kwargs)
+        print(f"Done setting up custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
+
+    def mask_correlated_samples(self, batch_size):
+        N = 2 * batch_size
+        mask = torch.ones((N, N), dtype=bool)
+        mask = mask.fill_diagonal_(0)
+        for i in range(batch_size):
+            for j in range(self.num_positives_per_batch):
+                init_index = i+j
+                mask[init_index, batch_size + init_index] = 0
+                mask[batch_size + init_index, init_index] = 0
+        return mask
+
+
 losses = {"cl": ContrastiveLoss,
-          "nt_xent": NT_Xent}
+          "nt_xent": NT_Xent,
+          "nt_xent_groups": NT_Xent_Groups}

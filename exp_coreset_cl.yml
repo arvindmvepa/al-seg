@@ -20,4 +20,7 @@ data_geometry:
     patience: 1
     num_epochs: 5
     fuse_image_data: True
+    use_patient: True
+    extra_loss: nt_xent_groups
+    extra_loss_wt: 0.2
 exp_dir: "DMPLS_w_coreset_cl_test_run"
