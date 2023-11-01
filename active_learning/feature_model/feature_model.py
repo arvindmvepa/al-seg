@@ -326,7 +326,7 @@ class PatientPhaseSliceBatchSampler(Sampler):
             self.batches.append(new_batch)
 
             random_patient_index_group1.remove(random_slice_index_group1)
-            random_patient_index_group1.remove(random_slice_index_group2)
+            random_patient_index_group2.remove(random_slice_index_group2)
 
     def create_random_batch(self, patient_index_group1, patient_index_group2):
         random_slice_index_group1 = self.get_random_slice_index_group(patient_index_group1)
