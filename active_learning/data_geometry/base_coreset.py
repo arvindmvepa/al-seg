@@ -249,6 +249,25 @@ class BaseCoreset(BaseDataGeometry):
         return cfg
 
     def _get_data(self, all_train_full_im_paths):
+        if self.use_labels:
+            return self._get_image_and_label_data(all_train_full_im_paths)
+        else:
+            cases_arr, cfgs = self._get_image_data(all_train_full_im_paths)
+            return cases_arr, cfgs, None
+
+    def _get_image_data(self, all_train_full_im_paths):
+        cases = []
+        cfgs = []
+        for im_path in tqdm(all_train_full_im_paths):
+            image, _ = self._load_image_and_label(im_path)
+            cfg_path = self._get_cfg_path(im_path)
+            cfg = self._load_cfg(cfg_path)
+            cases.append(image)
+            cfgs.append(cfg)
+        cases_arr = np.concatenate(cases, axis=0)
+        return cases_arr, cfgs
+
+    def _get_image_and_label_data(self, all_train_full_im_paths):
         cases = []
         labels = []
         cfgs = []
