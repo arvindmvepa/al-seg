@@ -76,6 +76,7 @@ class NT_Xent_Groups(NT_Xent):
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
         self.num_positives_per_batch = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
+        print(f"Debug custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
         super().__init__(**kwargs)
         print(f"Done setting up custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
 
@@ -83,6 +84,8 @@ class NT_Xent_Groups(NT_Xent):
         N = 2 * batch_size
         mask = torch.ones((N, N), dtype=bool)
         mask = mask.fill_diagonal_(0)
+        print("batch_size ", batch_size)
+        print("num_positives_per_batch ", self.num_positives_per_batch)
         for i in range(batch_size):
             for j in range(self.num_positives_per_batch):
                 init_index = i+j
