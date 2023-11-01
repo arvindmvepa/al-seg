@@ -310,26 +310,29 @@ class PatientPhaseSliceBatchSampler(Sampler):
         self.batches = []
         patient_group_meta_indices = np.arange(len(nested_by_patient_index_groups))
         while len(flat_index_groups) > 1 and len(patient_group_meta_indices) > 1:
-            random_patient_index_group, random_patient_group_meta_index = self.get_valid_random_patient_index_group_and_meta_index(
+            random_patient_index_group1, random_patient_group_meta_index1 = self.get_valid_random_patient_index_group_and_meta_index(
                 patient_group_meta_indices,
                 nested_by_patient_index_groups)
-            if random_patient_index_group is None:
+            if random_patient_index_group1 is None:
                 break
-            random_patient_index_group_, _ = self.get_valid_random_patient_index_group_and_meta_index(
+            random_patient_index_group2, _ = self.get_valid_random_patient_index_group_and_meta_index(
                 patient_group_meta_indices,
                 nested_by_patient_index_groups,
-                non_matching_patient_group_meta_index=random_patient_group_meta_index)
-            if random_patient_index_group_ is None:
+                non_matching_patient_group_meta_index=random_patient_group_meta_index1)
+            if random_patient_index_group2 is None:
                 break
 
-            random_slice_index_group = self.random_state.choice(random_patient_index_group)
-            random_slice_index_group_ = self.random_state.choice(random_patient_index_group_)
-            new_batch = random_slice_index_group + random_slice_index_group_
+            new_batch, random_slice_index_group1, random_slice_index_group2 = self.create_random_batch(random_patient_index_group1, random_patient_index_group2)
             self.batches.append(new_batch)
 
-            random_patient_index_group.remove(random_slice_index_group)
-            random_patient_index_group_.remove(random_slice_index_group_)
+            random_patient_index_group1.remove(random_slice_index_group1)
+            random_patient_index_group1.remove(random_slice_index_group2)
 
+    def create_random_batch(self, patient_index_group1, patient_index_group2):
+        random_slice_index_group1 = self.get_random_slice_index_group(patient_index_group1)
+        random_slice_index_group2 = self.get_random_slice_index_group(patient_index_group2)
+        new_batch = random_slice_index_group1 + random_slice_index_group2
+        return new_batch, random_slice_index_group1, random_slice_index_group2
 
     def get_valid_random_patient_index_group_and_meta_index(self, patient_group_meta_indices, nested_by_patient_index_groups,
                                                             non_matching_patient_group_meta_index=None):
@@ -349,6 +352,11 @@ class PatientPhaseSliceBatchSampler(Sampler):
         else:
             return random_patient_index_group, random_patient_group_meta_index
 
+    def get_random_slice_index_group(self, random_patient_index_group):
+        slice_group_meta_indices = np.arange(len(random_patient_index_group))
+        random_slice_meta_index = self.random_state.choice(slice_group_meta_indices)
+        random_slice_index_group = random_patient_index_group[random_slice_meta_index]
+        return random_slice_index_group
 
     def generate_nested_and_flat_patient_data_groups(self):
         flat_index_groups = []
