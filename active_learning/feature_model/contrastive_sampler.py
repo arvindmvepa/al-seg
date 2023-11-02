@@ -6,13 +6,14 @@ from torch.utils.data import Sampler
 class PatientPhaseSliceBatchSampler(Sampler):
 
     def __init__(self, flat_data, flat_cfg_info_data, hierarchical_data, batch_size, seed=0, use_patient=False,
-                 use_phase=False, use_slice_pos=False, reset_every_epoch=False, shuffle=False):
+                 use_phase=False, use_slice_pos=False, reset_every_epoch=False, shuffle=False, debug=False):
         """Data is stored in a hierarchical list structure based on patient, phase, and slice position"""
         self.flat_data = flat_data
         self.flat_cfg_info_data = flat_cfg_info_data
         self.hierarchical_data = hierarchical_data
         self.batch_size = batch_size
         self.reset_every_epoch = reset_every_epoch
+        self.debug = debug
         self.shuffle = shuffle
         self.random_state = RandomState(seed=seed)
         self.use_patient = use_patient
@@ -33,12 +34,13 @@ class PatientPhaseSliceBatchSampler(Sampler):
         if self.shuffle:
             self.random_state.shuffle(self.batches)
         for batch in self.batches:
-            print(f"batch {batch}")
-            for idx in batch:
-                patient_id = self.flat_cfg_info_data[idx]["patient_id"]
-                group_id = self.flat_cfg_info_data[idx]["group_id"]
-                slice_pos = self.flat_cfg_info_data[idx]["slice_pos"]
-                print(f"idx {idx}, patient_id {patient_id}, group_id {group_id}, slice_pos {slice_pos}")
+            if self.debug:
+                print(f"batch {batch}")
+                for idx in batch:
+                    patient_id = self.flat_cfg_info_data[idx]["patient_id"]
+                    group_id = self.flat_cfg_info_data[idx]["group_id"]
+                    slice_pos = self.flat_cfg_info_data[idx]["slice_pos"]
+                    print(f"idx {idx}, patient_id {patient_id}, group_id {group_id}, slice_pos {slice_pos}")
             yield batch
         if self.reset_every_epoch:
             print("Resetting batch sampler every epoch")
@@ -142,7 +144,6 @@ class PatientPhaseSliceBatchSampler(Sampler):
                         while (random_slice_in_patient in current_data_group) or (random_slice_in_patient is None):
                             random_slice_in_patient = current_patient_flat_index + self.random_state.choice(np.arange(len(full_slice_lst)))
                         current_data_group.append(random_slice_in_patient)
-                    print(f"current_data_group: {current_data_group}")
                     patient_data_groups.append(current_data_group)
                     flat_index_groups.append(current_data_group)
                     current_flat_index += 1

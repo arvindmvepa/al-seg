@@ -16,11 +16,14 @@ data_geometry:
   feature_model: True
   feature_model_params:
     encoder: resnet18
-    batch_size: 4
+    batch_size: 8
     patience: 1
     num_epochs: 5
+    debug: True
     fuse_image_data: True
     use_patient: True
+    use_slice: True
+    use_phase: True
     extra_loss: nt_xent_groups
     extra_loss_wt: 0.2
     reset_sampler_every_epoch: True

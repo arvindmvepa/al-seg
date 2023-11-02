@@ -107,7 +107,7 @@ class ContrastiveFeatureModel(FeatureModel):
     def __init__(self, lr=3e-4, batch_size=64, weight_decay=1.0e-6, temperature=0.5, projection_dim=64,
                  num_epochs=100, patch_size=(256,256), loss="nt_xent", extra_loss=None, extra_loss_wt=0.1, patience=5,
                  tol=.01, cl_model_save_name="cl_feature_model.pt", use_patient=False, use_phase=False,
-                 use_slice_pos=False, reset_sampler_every_epoch=False, seed=0, **kwargs):
+                 use_slice_pos=False, reset_sampler_every_epoch=False, seed=0, debug=False, **kwargs):
         super().__init__(**kwargs)
         self.lr = lr
         self.batch_size = batch_size
@@ -127,6 +127,7 @@ class ContrastiveFeatureModel(FeatureModel):
         self.use_slice_pos = use_slice_pos
         self.reset_sampler_every_epoch = reset_sampler_every_epoch
         self.seed = seed
+        self.debug = debug
         self._cfg_indices = None
         self._hierarchical_image_data = None
         self._hierarchical_flat_image_data = None
@@ -189,7 +190,7 @@ class ContrastiveFeatureModel(FeatureModel):
                                                     batch_size=self.batch_size, seed=self.seed,
                                                     reset_every_epoch=self.reset_sampler_every_epoch,
                                                     use_patient=self.use_patient, use_phase=self.use_phase,
-                                                    use_slice_pos=self.use_slice_pos,
+                                                    use_slice_pos=self.use_slice_pos, debug=self.debug,
                                                     shuffle=True)
             data = self._hierarchical_flat_image_data
         else:
