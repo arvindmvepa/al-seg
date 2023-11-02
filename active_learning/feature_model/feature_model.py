@@ -194,7 +194,7 @@ class ContrastiveFeatureModel(FeatureModel):
         contrastive_dataset = ContrastiveAugmentedDataSet(data, transform=get_contrastive_augmentation(
             patch_size=self.patch_size))
         contrastive_dataloader = DataLoader(contrastive_dataset, batch_size=self.batch_size, shuffle=self.extra_loss is None,
-                                            drop_last=True, sampler=sampler, pin_memory=True)
+                                            drop_last=True, batch_sampler=sampler, pin_memory=True)
         criterion = losses[self.loss](batch_size=self.batch_size, temperature=self.temperature)
         if self.extra_loss is not None:
             extra_criterion = losses[self.extra_loss](use_patient=self.use_patient, use_phase=self.use_phase,
