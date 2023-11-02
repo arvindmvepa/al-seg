@@ -129,6 +129,7 @@ class ContrastiveFeatureModel(FeatureModel):
         self.seed = seed
         self._hierarchical_image_data = None
         self._hierarchical_flat_image_data = None
+        self._hierarchical_flat_cfg_data = None
 
     def init_image_features(self, data, cfgs_arr, cfg_indices):
         self._hierarchical_organizing(data, cfgs_arr, cfg_indices)
@@ -182,6 +183,7 @@ class ContrastiveFeatureModel(FeatureModel):
             print(f"Create custom sampler for extra loss {self.extra_loss}")
             sampler = PatientPhaseSliceBatchSampler(hierarchical_data=self._hierarchical_image_data,
                                                     flat_data=self._hierarchical_flat_image_data,
+                                                    flat_cfg_data=self._hierarchical_flat_cfg_data,
                                                     batch_size=self.batch_size, seed=self.seed,
                                                     reset_every_epoch=self.reset_sampler_every_epoch,
                                                     use_patient=self.use_patient, use_phase=self.use_phase,
@@ -257,6 +259,7 @@ class ContrastiveFeatureModel(FeatureModel):
             hierarchical_image_data_dict[patient_id] = patient_dict
         hierarchical_image_data_list = []
         hierarchical_flat_image_data_list = []
+        hierarchical_flat_cfg_list = []
         for patient_id in sorted(hierarchical_image_data_dict.keys()):
             patient_dict = hierarchical_image_data_dict[patient_id]
             patient_lst = []
@@ -267,10 +270,12 @@ class ContrastiveFeatureModel(FeatureModel):
                     slice = group_dict[slice_pos]
                     group_lst.append(slice)
                     hierarchical_flat_image_data_list.append(slice)
+                    hierarchical_flat_cfg_list.append(cfg_arr)
                 patient_lst.append(group_lst)
             hierarchical_image_data_list.append(patient_lst)
         self._hierarchical_image_data = hierarchical_image_data_list
         self._hierarchical_flat_image_data = hierarchical_flat_image_data_list
+        self._hierarchical_flat_cfg_data = hierarchical_flat_cfg_list
 
 class NoFeatureModel(FeatureModel):
 

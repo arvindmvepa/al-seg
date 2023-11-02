@@ -5,12 +5,15 @@ from torch.utils.data import Sampler
 
 class PatientPhaseSliceBatchSampler(Sampler):
 
-    def __init__(self, flat_data, hierarchical_data, batch_size, seed=0, use_patient=False, use_phase=False, use_slice_pos=False, reset_every_epoch=False):
+    def __init__(self, flat_data, flat_cfg_data, hierarchical_data, batch_size, seed=0, use_patient=False,
+                 use_phase=False, use_slice_pos=False, reset_every_epoch=False, cfg_indices=None):
         """Data is stored in a hierarchical list structure based on patient, phase, and slice position"""
         self.flat_data = flat_data
         self.hierarchical_data = hierarchical_data
         self.batch_size = batch_size
         self.reset_every_epoch = reset_every_epoch
+        self.flat_cfg_data = flat_cfg_data
+        self.cfg_indices = cfg_indices
         self.random_state = RandomState(seed=seed)
         self.use_patient = use_patient
         self.use_phase = use_phase
@@ -24,13 +27,16 @@ class PatientPhaseSliceBatchSampler(Sampler):
         print(f"Done setting up custom batch sampler with {len(self.batches)} batches that uses {self.num_grouped_per_batch} grouped per batch and use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}, data length of {len(self.flat_data)}, and total number of samples {len(self)}")
 
     def __len__(self):
-        return len(self.flat_data) * self.num_grouped_per_batch
+        return len(self.batches) * self.batch_size
 
     def __iter__(self):
         for batch in self.batches:
             print(f"batch {batch}")
             for idx in batch:
-                print(f"idx {idx}, self.flat_data[idx] {self.flat_data[idx]}")
+                patient_id = self.flat_cfg_data[self.cfg_indices['patient_starting_index']:self.cfg_indices['patient_ending_index']][0]
+                group_id = self.flat_cfg_data[self.cfg_indices['phase_starting_index']:self.cfg_indices['phase_ending_index']][0]
+                slice_pos = self.flat_cfg_data[self.cfg_indices['slice_pos_starting_index']:self.cfg_indices['slice_pos_ending_index']][0]
+                print(f"idx {idx}, patient_id {patient_id}, group_id {group_id}, slice_pos {slice_pos}")
             yield batch
         if self.reset_every_epoch:
             print("Resetting batch sampler every epoch")
