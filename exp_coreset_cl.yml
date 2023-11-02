@@ -22,7 +22,7 @@ data_geometry:
     debug: True
     fuse_image_data: True
     use_patient: True
-    use_slice: True
+    use_slice_pos: True
     use_phase: True
     extra_loss: nt_xent_groups
     extra_loss_wt: 0.2
