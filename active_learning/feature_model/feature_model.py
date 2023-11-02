@@ -130,7 +130,7 @@ class ContrastiveFeatureModel(FeatureModel):
         self._cfg_indices = None
         self._hierarchical_image_data = None
         self._hierarchical_flat_image_data = None
-        self._hierarchical_flat_cfg_data = None
+        self._hierarchical_flat_cfg_info_list = None
 
     def init_image_features(self, data, cfgs_arr, cfg_indices):
         self._cfg_indices = cfg_indices
@@ -185,12 +185,12 @@ class ContrastiveFeatureModel(FeatureModel):
             print(f"Create custom sampler for extra loss {self.extra_loss}")
             sampler = PatientPhaseSliceBatchSampler(hierarchical_data=self._hierarchical_image_data,
                                                     flat_data=self._hierarchical_flat_image_data,
-                                                    flat_cfg_data=self._hierarchical_flat_cfg_data,
-                                                    cfg_indices=self._cfg_indices,
+                                                    flat_cfg_info_data=self._hierarchical_flat_cfg_info_list,
                                                     batch_size=self.batch_size, seed=self.seed,
                                                     reset_every_epoch=self.reset_sampler_every_epoch,
                                                     use_patient=self.use_patient, use_phase=self.use_phase,
-                                                    use_slice_pos=self.use_slice_pos)
+                                                    use_slice_pos=self.use_slice_pos,
+                                                    shuffle=True)
             data = self._hierarchical_flat_image_data
         else:
             sampler = None
@@ -262,7 +262,7 @@ class ContrastiveFeatureModel(FeatureModel):
             hierarchical_image_data_dict[patient_id] = patient_dict
         hierarchical_image_data_list = []
         hierarchical_flat_image_data_list = []
-        hierarchical_flat_cfg_list = []
+        hierarchical_flat_cfg_info_list = []
         for patient_id in sorted(hierarchical_image_data_dict.keys()):
             patient_dict = hierarchical_image_data_dict[patient_id]
             patient_lst = []
@@ -273,12 +273,12 @@ class ContrastiveFeatureModel(FeatureModel):
                     slice = group_dict[slice_pos]
                     group_lst.append(slice)
                     hierarchical_flat_image_data_list.append(slice)
-                    hierarchical_flat_cfg_list.append(cfg_arr)
+                    hierarchical_flat_cfg_info_list.append({"patient_id": patient_id, "group_id": group_id, "slice_pos": slice_pos})
                 patient_lst.append(group_lst)
             hierarchical_image_data_list.append(patient_lst)
         self._hierarchical_image_data = hierarchical_image_data_list
         self._hierarchical_flat_image_data = hierarchical_flat_image_data_list
-        self._hierarchical_flat_cfg_data = hierarchical_flat_cfg_list
+        self._hierarchical_flat_cfg_info_list = hierarchical_flat_cfg_info_list
 
 class NoFeatureModel(FeatureModel):
 
