@@ -33,9 +33,9 @@ class PatientPhaseSliceBatchSampler(Sampler):
         for batch in self.batches:
             print(f"batch {batch}")
             for idx in batch:
-                patient_id = self.flat_cfg_data[self.cfg_indices['patient_starting_index']:self.cfg_indices['patient_ending_index']][0]
-                group_id = self.flat_cfg_data[self.cfg_indices['phase_starting_index']:self.cfg_indices['phase_ending_index']][0]
-                slice_pos = self.flat_cfg_data[self.cfg_indices['slice_pos_starting_index']:self.cfg_indices['slice_pos_ending_index']][0]
+                patient_id = self.flat_cfg_data[idx, self.cfg_indices['patient_starting_index']:self.cfg_indices['patient_ending_index']][0]
+                group_id = self.flat_cfg_data[idx, self.cfg_indices['phase_starting_index']:self.cfg_indices['phase_ending_index']][0]
+                slice_pos = self.flat_cfg_data[idx, self.cfg_indices['slice_pos_starting_index']:self.cfg_indices['slice_pos_ending_index']][0]
                 print(f"idx {idx}, patient_id {patient_id}, group_id {group_id}, slice_pos {slice_pos}")
             yield batch
         if self.reset_every_epoch:
