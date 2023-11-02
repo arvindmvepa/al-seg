@@ -186,7 +186,7 @@ class ContrastiveFeatureModel(FeatureModel):
             sampler = PatientPhaseSliceBatchSampler(hierarchical_data=self._hierarchical_image_data,
                                                     flat_data=self._hierarchical_flat_image_data,
                                                     flat_cfg_data=self._hierarchical_flat_cfg_data,
-                                                    cfg_indices=self.cfg_indices,
+                                                    cfg_indices=self._cfg_indices,
                                                     batch_size=self.batch_size, seed=self.seed,
                                                     reset_every_epoch=self.reset_sampler_every_epoch,
                                                     use_patient=self.use_patient, use_phase=self.use_phase,
@@ -252,11 +252,11 @@ class ContrastiveFeatureModel(FeatureModel):
         """Organize the data into a hierarchical list structure based on patient, phase, and slice position"""
         hierarchical_image_data_dict = {}
         for (datum, cfg_arr) in zip(data, cfgs_arr):
-            patient_id = cfg_arr[self.cfg_indices['patient_starting_index']:self.cfg_indices['patient_ending_index']][0]
+            patient_id = cfg_arr[self._cfg_indices['patient_starting_index']:self._cfg_indices['patient_ending_index']][0]
             patient_dict = hierarchical_image_data_dict.get(patient_id, {})
-            group_id = cfg_arr[self.cfg_indices['phase_starting_index']:self.cfg_indices['phase_ending_index']][0]
+            group_id = cfg_arr[self._cfg_indices['phase_starting_index']:self._cfg_indices['phase_ending_index']][0]
             group_dict = patient_dict.get(group_id, {})
-            slice_pos = cfg_arr[self.cfg_indices['slice_pos_starting_index']:self.cfg_indices['slice_pos_ending_index']][0]
+            slice_pos = cfg_arr[self._cfg_indices['slice_pos_starting_index']:self._cfg_indices['slice_pos_ending_index']][0]
             group_dict[slice_pos] = datum
             patient_dict[group_id] = group_dict
             hierarchical_image_data_dict[patient_id] = patient_dict
