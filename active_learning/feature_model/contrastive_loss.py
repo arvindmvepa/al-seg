@@ -93,7 +93,7 @@ class NT_Xent_Groups(NT_Xent):
                 mask[grouped_index1, grouped_index2] = 0
                 mask[grouped_index2, grouped_index1] = 0
         if self.debug:
-            print(mask)
+            print("mask ", mask)
         return mask
 
 
