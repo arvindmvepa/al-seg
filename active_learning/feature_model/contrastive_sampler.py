@@ -131,7 +131,7 @@ class PatientPhaseSliceBatchSampler(Sampler):
                         else:
                             current_patient_flat_index = current_flat_index - i - len(phase_1)
                         random_slice_in_patient = None
-                        while random_slice_in_patient in current_data_group:
+                        while (random_slice_in_patient in current_data_group) or (random_slice_in_patient is None):
                             random_slice_in_patient = current_patient_flat_index + self.random_state.choice(np.arange(len(full_slice_lst)))
                         current_data_group.append(random_slice_in_patient)
                     print(f"current_data_group: {current_data_group}")
