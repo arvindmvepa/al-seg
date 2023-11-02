@@ -70,13 +70,14 @@ class NT_Xent(nn.Module):
 
 class NT_Xent_Groups(NT_Xent):
 
-    def __init__(self, use_patient=False, use_phase=False, use_slice_pos=False, **kwargs):
+    def __init__(self, use_patient=False, use_phase=False, use_slice_pos=False, debug=False, **kwargs):
         assert use_patient or use_phase or use_slice_pos, "At least one of use_patient, use_phase, use_slice_pos must be True"
         self.num_sim = 0
         self.use_patient = use_patient
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
-        self.num_grouped_per_batch = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
+        self.debug = debug
+        self.group_size = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
         print(f"Debug custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
         super().__init__(**kwargs)
         print(f"Done setting up custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
@@ -85,12 +86,14 @@ class NT_Xent_Groups(NT_Xent):
         N = 2 * batch_size
         mask = torch.ones((N, N), dtype=bool)
         mask = mask.fill_diagonal_(0)
-        for main_index in range(batch_size // self.num_grouped_per_batch):
-            grouped_indices = [(main_index*self.num_grouped_per_batch)+grouped_index for grouped_index in range(self.num_grouped_per_batch)]
+        for main_index in range(batch_size // self.group_size):
+            grouped_indices = [(main_index * self.group_size) + grouped_index for grouped_index in range(self.group_size)]
             grouped_indices_with_augs = grouped_indices + [batch_size + index for index in grouped_indices]
             for grouped_index1, grouped_index2 in list(combinations(grouped_indices_with_augs, 2)):
                 mask[grouped_index1, grouped_index2] = 0
                 mask[grouped_index2, grouped_index1] = 0
+        if self.debug:
+            print(mask)
         return mask
 
 

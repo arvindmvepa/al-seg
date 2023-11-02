@@ -20,12 +20,12 @@ class PatientPhaseSliceBatchSampler(Sampler):
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
         assert self.use_patient or self.use_phase or self.use_slice_pos, "Must use at least one of patient, phase, or slice position"
-        self.num_grouped_per_batch = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
-        assert self.batch_size % self.num_grouped_per_batch == 0, "Batch size must be divisible by the number of positives per batch"
-        assert self.batch_size > self.num_grouped_per_batch, "Batch size must be greater than the number of positives per batch"
+        self.group_size = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
+        assert self.batch_size % self.group_size == 0, "Batch size must be divisible by the number of positives per batch"
+        assert self.batch_size > self.group_size, "Batch size must be greater than the number of positives per batch"
         self.batches = None
         self.setup()
-        print(f"Done setting up custom batch sampler with {len(self.batches)} batches that uses {self.num_grouped_per_batch} grouped per batch and use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}, data length of {len(self.flat_data)}, and total number of samples {len(self)}")
+        print(f"Done setting up custom batch sampler with {len(self.batches)} batches that uses {self.group_size} grouped per batch and use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}, data length of {len(self.flat_data)}, and total number of samples {len(self)}")
 
     def __len__(self):
         return len(self.batches) * self.batch_size
@@ -59,7 +59,7 @@ class PatientPhaseSliceBatchSampler(Sampler):
             non_matching_patient_group_meta_indices = [random_patient_group_meta_index1]
             new_batch_patient_index_groups = [random_patient_index_group1]
             # generate random unique patient groups get slice groups from
-            while (len(new_batch_patient_index_groups) * self.num_grouped_per_batch) < self.batch_size:
+            while (len(new_batch_patient_index_groups) * self.group_size) < self.batch_size:
                 random_patient_index_group_adtl, random_patient_group_adtl_meta_index = self.get_valid_random_patient_index_group_and_meta_index(
                     patient_group_meta_indices,
                     nested_by_patient_index_groups,
@@ -68,7 +68,7 @@ class PatientPhaseSliceBatchSampler(Sampler):
                     break
                 new_batch_patient_index_groups.append(random_patient_index_group_adtl)
                 non_matching_patient_group_meta_indices.append(random_patient_group_adtl_meta_index)
-            if (len(new_batch_patient_index_groups) * self.num_grouped_per_batch) < self.batch_size:
+            if (len(new_batch_patient_index_groups) * self.group_size) < self.batch_size:
                 break
             new_batch = self.create_random_batch(new_batch_patient_index_groups)
             self.batches.append(new_batch)

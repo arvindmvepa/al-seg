@@ -208,7 +208,7 @@ class ContrastiveFeatureModel(FeatureModel):
         if self.extra_loss is not None:
             extra_criterion = losses[self.extra_loss](use_patient=self.use_patient, use_phase=self.use_phase,
                                                       use_slice_pos=self.use_slice_pos, batch_size=self.batch_size,
-                                                      temperature=self.temperature)
+                                                      temperature=self.temperature, debug=self.debug)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=self.lr,
                                      weight_decay=self.weight_decay)
