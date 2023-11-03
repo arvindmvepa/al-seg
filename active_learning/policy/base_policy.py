@@ -88,6 +88,7 @@ class BaseActiveLearningPolicy:
 
         self.current_round_split_method = None
         self.current_round_skip_training = False
+        self.prev_round_skipped = False
 
         self.setup()
 
@@ -185,6 +186,10 @@ class BaseActiveLearningPolicy:
                 else:
                     print(f"Skipping calculating model uncertainty")
                 self.cur_im_score_file = im_score_file
+        if self.current_round_skip_training:
+            self.prev_round_skipped = True
+        else:
+            self.prev_round_skipped = False
 
     def _data_split(self, splt_func):
         new_train_file_paths = self.model.get_round_train_file_paths(self.round_dir, self.cur_total_oracle_split)
@@ -271,7 +276,7 @@ class BaseActiveLearningPolicy:
         print(f"Round {self._round_num}, round params: {round_params}")
 
     def _create_round_dir(self):
-        if not self.current_round_skip_training:
+        if not self.prev_round_skipped:
             self.prev_round_dir = self.round_dir
         self.round_dir = os.path.join(self.exp_dir, f"round_{self._round_num}")
         if not os.path.exists(self.round_dir):
