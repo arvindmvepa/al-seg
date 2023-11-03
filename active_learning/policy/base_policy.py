@@ -140,23 +140,24 @@ class BaseActiveLearningPolicy:
         if uncertainty_kwargs is None:
             uncertainty_kwargs = dict()
         uncertainty_kwargs.update(self.uncertainty_kwargs)
-        # calculate data geoemtry
-        if calculate_data_geometry:
-            # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
-            if (not self.resume) or (not os.path.exists(im_score_file)):
-                self.data_geometry.calculate_representativeness(im_score_file=im_score_file,
-                                                                num_samples=self._get_unann_num_to_sample(),
-                                                                already_selected=self.cur_oracle_ims[self.im_key],
-                                                                prev_round_dir=self.prev_round_dir,
-                                                                train_logits_path=self.model.model_params['train_logits_path'],
-                                                                uncertainty_kwargs=uncertainty_kwargs,
-                                                                **geometry_kwargs)
+        if not self.current_round_skip_training:
+            # calculate data geoemtry
+            if calculate_data_geometry:
+                # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
+                if (not self.resume) or (not os.path.exists(im_score_file)):
+                    self.data_geometry.calculate_representativeness(im_score_file=im_score_file,
+                                                                    num_samples=self._get_unann_num_to_sample(),
+                                                                    already_selected=self.cur_oracle_ims[self.im_key],
+                                                                    prev_round_dir=self.prev_round_dir,
+                                                                    train_logits_path=self.model.model_params['train_logits_path'],
+                                                                    uncertainty_kwargs=uncertainty_kwargs,
+                                                                    **geometry_kwargs)
+                else:
+                    print(f"Skipping calculating data geometry")
+                self.cur_im_score_file = im_score_file
+                inf_train = self.data_geometry.use_model_features
             else:
-                print(f"Skipping calculating data geometry")
-            self.cur_im_score_file = im_score_file
-            inf_train = self.data_geometry.use_model_features
-        else:
-            inf_train = calculate_model_uncertainty
+                inf_train = calculate_model_uncertainty
         if (not self.resume) or (not self._check_round_files_created()):
             new_ann_ims = self.data_split()
             for im_type, files in new_ann_ims.items():
