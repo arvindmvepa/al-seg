@@ -247,6 +247,8 @@ class BaseActiveLearningPolicy:
         return int(len(unann_ims + cur_ann_ims) * self.cur_total_oracle_split) - len(cur_ann_ims)
 
     def _setup_round(self):
+        self.current_round_split_method = None
+        self.current_round_skip_training = False
         round_params = next(self.rounds)
         if len(round_params) == 2:
             round_oracle_split, round_pseudo_split = round_params
