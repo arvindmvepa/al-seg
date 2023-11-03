@@ -9,5 +9,5 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: False
-  rounds: [[.1, 0], [.001, 0], [.001, 0]]
+  rounds: [[.01, 0, random, True], [.001, 0], [.001, 0]]
 exp_dir: "dpmls_random_run"
