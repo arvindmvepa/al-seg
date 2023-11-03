@@ -38,7 +38,9 @@ class RankedPolicy(BaseActiveLearningPolicy):
         self.rank_type = rank_type
 
     def data_split(self):
-        if self.cur_im_score_file:
+        if self.current_round_split_method == "random":
+            return self.random_split()
+        elif self.cur_im_score_file:
             if not os.path.exists(self.cur_im_score_file):
                 raise ValueError(f"Score file {self.cur_im_score_file} does not exist!")
             print("Using ranked split!")

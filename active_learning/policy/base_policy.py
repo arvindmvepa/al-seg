@@ -86,6 +86,9 @@ class BaseActiveLearningPolicy:
         self.cur_oracle_ims = {key: [] for key in self.file_keys}
         self.cur_pseudo_ims = {key: [] for key in self.file_keys}
 
+        self.current_round_split_method = None
+        self.current_round_skip_training = False
+
         self.setup()
 
     def setup(self):
@@ -164,21 +167,23 @@ class BaseActiveLearningPolicy:
                 self.cur_oracle_ims[key] = self.cur_oracle_ims[key] + new_ann_ims[key]
         else:
             self._load_round_files()
-        if ensemble_kwargs is None:
-            ensemble_kwargs = dict()
-        ensemble_kwargs["inf_train"] = inf_train
-        ensemble_kwargs.update(self.ensemble_kwargs)
-        # train ensemble
-        self.model.train_ensemble(round_dir=self.round_dir, cur_total_oracle_split=self.cur_total_oracle_split,
-                                  cur_total_pseudo_split=self.cur_total_pseudo_split, resume=self.resume, **ensemble_kwargs)
-        # calculate model uncertainty
-        if calculate_model_uncertainty and (self._round_num < (self.num_rounds - 1)):
-            # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
-            if (not self.resume) or (not os.path.exists(im_score_file)):
-                self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
-            else:
-                print(f"Skipping calculating model uncertainty")
-            self.cur_im_score_file = im_score_file
+        if not self.current_round_skip_training:
+            if ensemble_kwargs is None:
+                ensemble_kwargs = dict()
+            ensemble_kwargs["inf_train"] = inf_train
+            ensemble_kwargs.update(self.ensemble_kwargs)
+            # train ensemble
+            self.model.train_ensemble(round_dir=self.round_dir, cur_total_oracle_split=self.cur_total_oracle_split,
+                                      cur_total_pseudo_split=self.cur_total_pseudo_split, resume=self.resume,
+                                      **ensemble_kwargs)
+            # calculate model uncertainty
+            if calculate_model_uncertainty and (self._round_num < (self.num_rounds - 1)):
+                # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
+                if (not self.resume) or (not os.path.exists(im_score_file)):
+                    self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
+                else:
+                    print(f"Skipping calculating model uncertainty")
+                self.cur_im_score_file = im_score_file
 
     def _data_split(self, splt_func):
         new_train_file_paths = self.model.get_round_train_file_paths(self.round_dir, self.cur_total_oracle_split)
@@ -243,7 +248,14 @@ class BaseActiveLearningPolicy:
 
     def _setup_round(self):
         round_params = next(self.rounds)
-        round_oracle_split, round_pseudo_split = round_params
+        if len(round_params) == 2:
+            round_oracle_split, round_pseudo_split = round_params
+        elif len(round_params) == 3:
+            round_oracle_split, round_pseudo_split, self.current_round_split_method = round_params
+        elif len(round_params) == 4:
+            round_oracle_split, round_pseudo_split, self.current_round_split_method, self.current_round_skip_training = round_params
+        else:
+            raise ValueError(f"Invalid number of round params: {round_params}")
         self.cur_total_oracle_split += round_oracle_split
         self.cur_total_pseudo_split += round_pseudo_split
 
