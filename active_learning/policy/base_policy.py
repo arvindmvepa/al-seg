@@ -271,7 +271,8 @@ class BaseActiveLearningPolicy:
         print(f"Round {self._round_num}, round params: {round_params}")
 
     def _create_round_dir(self):
-        self.prev_round_dir = self.round_dir
+        if not self.current_round_skip_training:
+            self.prev_round_dir = self.round_dir
         self.round_dir = os.path.join(self.exp_dir, f"round_{self._round_num}")
         if not os.path.exists(self.round_dir):
             os.makedirs(self.round_dir)
