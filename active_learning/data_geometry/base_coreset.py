@@ -193,10 +193,13 @@ class BaseCoreset(BaseDataGeometry):
         if self.use_labels:
             print(f"Using labels with weight {self.label_wt}")
             labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
-            # check that number of pixels in image is equal to those in labels
-            assert processed_data.shape[1] == labels.shape[1]
+            # check that number of pixels in image is greater than number of labels
+            # only update points that are part of the image features
+            assert processed_data.shape[1] >= labels.shape[1]
+            im_features = processed_data[:, :labels.shape[1]]
             label_mask = np.where(labels != 4, self.label_wt, 1)
-            processed_data = processed_data * label_mask
+            im_features = im_features * label_mask
+            processed_data[:, :labels.shape[1]] = im_features
         features = np.concatenate([processed_data, cfgs_arr], axis=1)
         if self.use_uncertainty and (prev_round_dir is not None):
             if uncertainty_kwargs is None:
