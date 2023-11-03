@@ -1,0 +1,36 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 2
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+    inf_train: True
+  rounds: [[.05, 0, random, True], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 2
+  use_labels: True
+  label_wt: 2.0
+  contrastive: True
+  feature_model: True
+  extra_feature_wt: 1.0
+  uncertainty_wt: 1.0
+  use_uncertainty: True
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 8
+    fuse_image_data: True
+    seed: 2
+    use_slice_pos: True
+    extra_loss: nt_xent_groups
+    extra_loss_wt: 0.2
+    reset_sampler_every_epoch: True
+model_uncertainty:
+  model_uncertainty_type: ensemble
+  score_func: entropy_w_label_probs
+exp_dir: "DMPLS_exp2_coreset_fuse10_extra_loss_wt02_use_slice_pos_label2_uncertainty1_v8"
