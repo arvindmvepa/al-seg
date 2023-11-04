@@ -25,6 +25,7 @@ data_geometry:
     use_slice_pos: True
     use_phase: True
     extra_loss: nt_xent_groups
-    extra_loss_wt: 0.2
+    extra_loss_wt: 0.8
+    loss_wt: 0.2
     reset_sampler_every_epoch: True
 exp_dir: "DMPLS_w_coreset_cl_test_run"
