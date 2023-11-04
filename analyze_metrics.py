@@ -6,7 +6,7 @@ from glob import glob
 
 results_csv_file = "results.csv"
 root_dir = "."
-exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*exp*v6*"))))
+exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*exp*v8*"))))
 
 results = []
 for exp_dir in exp_dirs:
@@ -55,7 +55,11 @@ for exp_dir in exp_dirs:
 
 headers = ["exp", "round0_val", "round0_test", "num_models", "round1_val", "round1_test", "num_models",
            "round2_val", "round2_test", "num_models", "round3_val", "round3_test", "num_models",
-           "round4_val", "round4_test", "num_models", "round5_val", "round5_test", "num_models"]
+           "round4_val", "round4_test", "num_models", "round5_val", "round5_test", "num_models",
+           "round6_test", "num_models", "round7_test", "num_models", "round8_test", "num_models",
+           "round9_test", "num_models", "round10_test", "num_models", "round11_test", "num_models",
+           "round12_test", "num_models", "round13_test", "num_models", "round14_test", "num_models",
+           "round15_test", "num_models"]
 
 with open(results_csv_file, mode='w', newline='') as results_fp:
     writer = csv.writer(results_fp)
