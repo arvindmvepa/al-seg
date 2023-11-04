@@ -105,9 +105,9 @@ class FeatureModel(object):
 class ContrastiveFeatureModel(FeatureModel):
 
     def __init__(self, lr=3e-4, batch_size=64, weight_decay=1.0e-6, temperature=0.5, projection_dim=64,
-                 num_epochs=100, patch_size=(256,256), loss="nt_xent", extra_loss=None, extra_loss_wt=0.1, patience=5,
-                 tol=.01, cl_model_save_name="cl_feature_model.pt", use_patient=False, use_phase=False,
-                 use_slice_pos=False, reset_sampler_every_epoch=False, seed=0, debug=False, **kwargs):
+                 num_epochs=100, patch_size=(256,256), loss="nt_xent", loss_wt=1.0, extra_loss=None, extra_loss_wt=0.1,
+                 patience=5, tol=.01, cl_model_save_name="cl_feature_model.pt", use_patient=False,
+                 use_phase=False, use_slice_pos=False, reset_sampler_every_epoch=False, seed=0, debug=False, **kwargs):
         super().__init__(**kwargs)
         self.lr = lr
         self.batch_size = batch_size
@@ -117,6 +117,7 @@ class ContrastiveFeatureModel(FeatureModel):
         self.num_epochs = num_epochs
         self.patch_size = patch_size
         self.loss = loss
+        self.loss_wt = loss_wt
         self.extra_loss = extra_loss
         self.extra_loss_wt = extra_loss_wt
         self.patience = patience
@@ -224,6 +225,7 @@ class ContrastiveFeatureModel(FeatureModel):
                 z_i, z_j = model(x_i, x_j)
 
                 loss = criterion(z_i, z_j)
+                loss *= self.loss_wt
                 if self.extra_loss is not None:
                     extra_loss = extra_criterion(z_i, z_j)
                     loss += self.extra_loss_wt * extra_loss
