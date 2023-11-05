@@ -71,7 +71,6 @@ class NT_Xent_Group_Neg(NT_Xent):
 
     def __init__(self, use_patient=False, use_phase=False, use_slice_pos=False, debug=False, **kwargs):
         assert use_patient or use_phase or use_slice_pos, "At least one of use_patient, use_phase, use_slice_pos must be True"
-        self.num_sim = 0
         self.use_patient = use_patient
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
@@ -98,18 +97,9 @@ class NT_Xent_Group_Neg(NT_Xent):
 
 class NT_Xent_Group_Pos(NT_Xent_Group_Neg):
 
-    def __init__(self, use_patient=False, use_phase=False, use_slice_pos=False, mask_pos=(), debug=False, **kwargs):
-        assert use_patient or use_phase or use_slice_pos, "At least one of use_patient, use_phase, use_slice_pos must be True"
-        self.num_sim = 0
-        self.use_patient = use_patient
-        self.use_phase = use_phase
-        self.use_slice_pos = use_slice_pos
+    def __init__(self, mask_pos=(), **kwargs):
         self.mask_pos = mask_pos
-        self.debug = debug
-        self.group_size = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
-        print(f"Debug custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
         super().__init__(**kwargs)
-        print(f"Done setting up custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
 
     def get_positive_mask(self, batch_size):
         N = 2 * batch_size
