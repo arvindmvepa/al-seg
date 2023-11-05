@@ -18,7 +18,7 @@ class ContrastiveLoss(nn.Module):
 
 
 class NT_Xent(nn.Module):
-    def __init__(self, batch_size, temperature=0.5):
+    def __init__(self, batch_size, temperature=0.5 ):
         super(NT_Xent, self).__init__()
         self.batch_size = batch_size
         self.temperature = temperature
@@ -67,8 +67,7 @@ class NT_Xent(nn.Module):
         loss /= N
         return loss
 
-
-class NT_Xent_Groups(NT_Xent):
+class NT_Xent_Group_Neg(NT_Xent):
 
     def __init__(self, use_patient=False, use_phase=False, use_slice_pos=False, debug=False, **kwargs):
         assert use_patient or use_phase or use_slice_pos, "At least one of use_patient, use_phase, use_slice_pos must be True"
@@ -97,6 +96,63 @@ class NT_Xent_Groups(NT_Xent):
         return mask
 
 
+class NT_Xent_Group_Pos(NT_Xent_Group_Neg):
+
+    def __init__(self, use_patient=False, use_phase=False, use_slice_pos=False, mask_pos=(), debug=False, **kwargs):
+        assert use_patient or use_phase or use_slice_pos, "At least one of use_patient, use_phase, use_slice_pos must be True"
+        self.num_sim = 0
+        self.use_patient = use_patient
+        self.use_phase = use_phase
+        self.use_slice_pos = use_slice_pos
+        self.mask_pos = mask_pos
+        self.debug = debug
+        self.group_size = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
+        print(f"Debug custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
+        super().__init__(**kwargs)
+        print(f"Done setting up custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
+
+    def get_positive_mask(self, batch_size):
+        N = 2 * batch_size
+        mask = torch.ones((N, N), dtype=bool)
+        mask = mask.fill_diagonal_(0)
+        for main_index in range(batch_size // self.group_size):
+            grouped_indices = [(main_index * self.group_size) + grouped_index for grouped_index in range(self.group_size) if grouped_index not in self.mask_pos]
+            grouped_indices_with_augs = grouped_indices + [batch_size + index for index in grouped_indices]
+            for grouped_index1, grouped_index2 in list(combinations(grouped_indices_with_augs, 2)):
+                mask[grouped_index1, grouped_index2] = 1
+                mask[grouped_index2, grouped_index1] = 1
+        if self.debug:
+            print("mask ", mask)
+        return mask
+
+    def forward(self, z_i, z_j):
+        """
+        We do not sample negative examples explicitly.
+        Instead, given a positive pair, similar to (Chen et al., 2017), we treat the other 2(N − 1) augmented examples within a minibatch as negative examples.
+        """
+        N = 2 * self.batch_size
+
+        z = torch.cat((z_i, z_j), dim=0)
+
+        sim = self.similarity_f(z.unsqueeze(1), z.unsqueeze(0)) / self.temperature
+
+        # includes the positive pairs (but don't include main diagonal)
+        positive_samples = sim[self.get_positive_mask()].reshape(-1, 1)
+        # removes elements on main diagonal as well as off diagonal augmentation pairs
+        negative_samples = sim[self.mask].reshape(N, -1)
+
+        # basically a multi-class problem but for each sample
+        # the correct label is the first index for all the samples
+        labels = torch.zeros(N).to(positive_samples.device).long()
+
+        # this is why positive samples goes first in the concat
+        logits = torch.cat((positive_samples, negative_samples), dim=1)
+        loss = self.criterion(logits, labels)
+        loss /= N
+        return loss
+
+
 losses = {"cl": ContrastiveLoss,
           "nt_xent": NT_Xent,
-          "nt_xent_groups": NT_Xent_Groups}
+          "nt_xent_neg": NT_Xent_Group_Neg,
+          "nt_xent_pos": NT_Xent_Group_Pos,}

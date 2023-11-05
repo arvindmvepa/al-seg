@@ -105,7 +105,9 @@ class FeatureModel(object):
 class ContrastiveFeatureModel(FeatureModel):
 
     def __init__(self, lr=3e-4, batch_size=64, weight_decay=1.0e-6, temperature=0.5, projection_dim=64,
-                 num_epochs=100, patch_size=(256,256), loss="nt_xent", loss_wt=1.0, extra_loss=None, extra_loss_wt=0.1,
+                 num_epochs=100, patch_size=(256,256), loss="nt_xent", loss_wt=1.0, neg_loss=None, neg_loss_wt=0.1,
+                 pos_loss1=None, pos_loss1_wt=0.1, pos_loss1_mask=(), pos_loss2=None, pos_loss2_wt=0.1,
+                 pos_loss2_mask=(), pos_loss3=None, pos_loss3_wt=0.1, pos_loss3_mask=(),
                  patience=5, tol=.01, cl_model_save_name="cl_feature_model.pt", use_patient=False,
                  use_phase=False, use_slice_pos=False, reset_sampler_every_epoch=False, seed=0, debug=False, **kwargs):
         super().__init__(**kwargs)
@@ -118,8 +120,21 @@ class ContrastiveFeatureModel(FeatureModel):
         self.patch_size = patch_size
         self.loss = loss
         self.loss_wt = loss_wt
-        self.extra_loss = extra_loss
-        self.extra_loss_wt = extra_loss_wt
+        self.neg_loss = neg_loss
+        self.neg_loss_wt = neg_loss_wt
+        self.pos_loss1 = pos_loss1
+        self.pos_loss1_wt = pos_loss1_wt
+        self.pos_loss1_mask = pos_loss1_mask
+        self.pos_loss2 = pos_loss2
+        self.pos_loss2_wt = pos_loss2_wt
+        self.pos_loss2_mask = pos_loss2_mask
+        self.pos_loss3 = pos_loss3
+        self.pos_loss3_wt = pos_loss3_wt
+        self.pos_loss3_mask = pos_loss3_mask
+        if self.neg_loss or self.pos_loss1 or self.pos_loss2 or self.pos_loss3:
+            self.extra_loss = True
+        else:
+            self.extra_loss = False
         self.patience = patience
         self.tol = tol
         self.cl_model_save_path = os.path.join(self.exp_dir, cl_model_save_name)
@@ -183,8 +198,8 @@ class ContrastiveFeatureModel(FeatureModel):
         print("Training feature model with contrastive loss...")
         model = model.train()
 
-        if self.extra_loss is not None:
-            print(f"Create custom sampler for extra loss {self.extra_loss}")
+        if self.extra_loss:
+            print(f"Create custom sampler")
             sampler = PatientPhaseSliceBatchSampler(hierarchical_data=self._hierarchical_image_data,
                                                     flat_data=self._hierarchical_flat_image_data,
                                                     flat_cfg_info_data=self._hierarchical_flat_cfg_info_list,
@@ -200,16 +215,40 @@ class ContrastiveFeatureModel(FeatureModel):
 
         contrastive_dataset = ContrastiveAugmentedDataSet(data, transform=get_contrastive_augmentation(
             patch_size=self.patch_size))
-        if self.extra_loss is not None:
+        if self.extra_loss:
             contrastive_dataloader = DataLoader(contrastive_dataset, batch_sampler=sampler, pin_memory=True)
         else:
             contrastive_dataloader = DataLoader(contrastive_dataset, batch_size=self.batch_size,
                                                 shuffle=True, drop_last=True, batch_sampler=sampler, pin_memory=True)
-        criterion = losses[self.loss](batch_size=self.batch_size, temperature=self.temperature)
-        if self.extra_loss is not None:
-            extra_criterion = losses[self.extra_loss](use_patient=self.use_patient, use_phase=self.use_phase,
+        criterion_list = []
+        criterion = losses["nt_xent"](batch_size=self.batch_size, temperature=self.temperature)
+        print("Create standard loss with loss wt: ", self.loss_wt)
+        criterion_list.append((criterion, self.loss_wt))
+        if self.neg_loss is not None:
+            neg_criterion = losses["nt_xent_neg"](use_patient=self.use_patient, use_phase=self.use_phase,
                                                       use_slice_pos=self.use_slice_pos, batch_size=self.batch_size,
                                                       temperature=self.temperature, debug=self.debug)
+            criterion_list.append((neg_criterion, self.neg_loss_wt))
+            print("Create negative loss with loss wt: ", self.neg_loss_wt)
+        if self.pos_loss1 is not None:
+            pos_criterion1 = losses["nt_xent_pos"](use_patient=self.use_patient, use_phase=self.use_phase,
+                                                   use_slice_pos=self.use_slice_pos, batch_size=self.batch_size,
+                                                   temperature=self.temperature, mask_pos=self.pos_loss1_mask, debug=self.debug)
+            criterion_list.append((pos_criterion1, self.pos_loss1_wt))
+            print(f"Create positive loss1 with loss wt: {self.pos_loss1_wt} and mask: {self.pos_loss1_mask}")
+        if self.pos_loss2 is not None:
+            pos_criterion2 = losses["nt_xent_pos"](use_patient=self.use_patient, use_phase=self.use_phase,
+                                                   use_slice_pos=self.use_slice_pos, batch_size=self.batch_size,
+                                                   temperature=self.temperature, mask_pos=self.pos_loss2_mask, debug=self.debug)
+            criterion_list.append((pos_criterion2, self.pos_loss2_wt))
+            print(f"Create positive loss2 with loss wt: {self.pos_loss2_wt} and mask: {self.pos_loss2_mask}")
+        if self.pos_loss3 is not None:
+            pos_criterion3 = losses["nt_xent_pos"](use_patient=self.use_patient, use_phase=self.use_phase,
+                                                   use_slice_pos=self.use_slice_pos, batch_size=self.batch_size,
+                                                   temperature=self.temperature, mask_pos=self.pos_loss3_mask, debug=self.debug)
+            criterion_list.append((pos_criterion3, self.pos_loss3_wt))
+            print(f"Create positive loss3 with loss wt: {self.pos_loss3_wt} and mask: {self.pos_loss3_mask}")
+
 
         optimizer = torch.optim.Adam(model.parameters(), lr=self.lr,
                                      weight_decay=self.weight_decay)
@@ -224,11 +263,9 @@ class ContrastiveFeatureModel(FeatureModel):
 
                 z_i, z_j = model(x_i, x_j)
 
-                loss = criterion(z_i, z_j)
-                loss *= self.loss_wt
-                if self.extra_loss is not None:
-                    extra_loss = extra_criterion(z_i, z_j)
-                    loss += self.extra_loss_wt * extra_loss
+                loss = 0
+                for criterion, wt in criterion_list:
+                    loss += wt * criterion(z_i, z_j)
                 loss.backward()
 
                 optimizer.step()

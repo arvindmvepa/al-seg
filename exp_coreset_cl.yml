@@ -24,8 +24,19 @@ data_geometry:
     use_patient: True
     use_slice_pos: True
     use_phase: True
-    extra_loss: nt_xent_groups
-    extra_loss_wt: 0.8
+    neg_loss: True
+    neg_loss_wt: 0.8
+    pos_loss1: True
+    pos_loss1_wt: .2
+    pos_loss1_mask:
+      - 2
+      - 3
+    pos_loss2: True
+    pos_loss2_wt: .2
+    pos_loss2_mask:
+      - 3
+    pos_loss3: True
+    pos_loss3_wt: .2
     loss_wt: 0.2
     reset_sampler_every_epoch: True
 exp_dir: "DMPLS_w_coreset_cl_test_run"
