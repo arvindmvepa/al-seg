@@ -135,14 +135,10 @@ class NT_Xent_Group_Pos(NT_Xent_Group_Neg):
         # the correct label is the first index for all the samples
         labels = torch.zeros(N).to(positive_samples.device).long()
         loss = 0.0
-        if positive_samples.shape[1] >= 1:
-            # do BCELoss for each positive sample if there's more than one
-            for positive_sample_index in range(positive_samples.shape[1]):
-                # positive samples is first in the concat
-                logits = torch.cat((positive_samples[:, positive_sample_index].unsqueeze(1), negative_samples), dim=1)
-                loss += self.criterion(logits, labels)
-        else:
-            logits = torch.cat((positive_samples, negative_samples), dim=1)
+        # do BCELoss for each positive sample if there's more than one
+        for positive_sample_index in range(positive_samples.shape[1]):
+            # positive samples is first in the concat
+            logits = torch.cat((positive_samples[:, positive_sample_index].unsqueeze(1), negative_samples), dim=1)
             loss += self.criterion(logits, labels)
         loss /= (N * positive_samples.shape[1])
         return loss
