@@ -101,13 +101,13 @@ class NT_Xent_Group_Pos(NT_Xent_Group_Neg):
         self.mask_pos = mask_pos
         super().__init__(**kwargs)
 
-    def get_positive_mask(self, batch_size):
-        N = 2 * batch_size
+    def get_positive_mask(self):
+        N = 2 * self.batch_size
         mask = torch.ones((N, N), dtype=bool)
         mask = mask.fill_diagonal_(0)
-        for main_index in range(batch_size // self.group_size):
+        for main_index in range(self.batch_size // self.group_size):
             grouped_indices = [(main_index * self.group_size) + grouped_index for grouped_index in range(self.group_size) if grouped_index not in self.mask_pos]
-            grouped_indices_with_augs = grouped_indices + [batch_size + index for index in grouped_indices]
+            grouped_indices_with_augs = grouped_indices + [self.batch_size + index for index in grouped_indices]
             for grouped_index1, grouped_index2 in list(combinations(grouped_indices_with_augs, 2)):
                 mask[grouped_index1, grouped_index2] = 1
                 mask[grouped_index2, grouped_index1] = 1
