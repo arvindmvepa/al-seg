@@ -27,19 +27,20 @@ class RankedPolicy(BaseActiveLearningPolicy):
     """
 
     def __init__(self, model, model_uncertainty=None, data_geometry=None, ensemble_kwargs=None, uncertainty_kwargs=None,
-                 save_im_score_file="scores.txt", rank_type="desc",
-                 rounds=(), exp_dir="test", pseudolabels=False,
+                 save_im_score_file="scores.txt", rank_type="desc", resume=False, rounds=(), exp_dir="test",
+                 pseudolabels=False,
                  tag="", seed=0):
         super().__init__(model=model, model_uncertainty=model_uncertainty, ensemble_kwargs=ensemble_kwargs,
                          uncertainty_kwargs=uncertainty_kwargs, data_geometry=data_geometry,
-                         rounds=rounds, pseudolabels=pseudolabels,
-                         exp_dir=exp_dir, tag=tag, seed=seed)
+                         rounds=rounds, resume=resume, pseudolabels=pseudolabels, exp_dir=exp_dir, tag=tag, seed=seed)
         self.save_im_score_file = save_im_score_file
         self.cur_im_score_file = None
         self.rank_type = rank_type
 
     def data_split(self):
-        if self.cur_im_score_file:
+        if self.current_round_split_method == "random":
+            return self.random_split()
+        elif self.cur_im_score_file:
             if not os.path.exists(self.cur_im_score_file):
                 raise ValueError(f"Score file {self.cur_im_score_file} does not exist!")
             print("Using ranked split!")
@@ -55,7 +56,7 @@ class RankedPolicy(BaseActiveLearningPolicy):
         return self._data_split(self._ranked_sample_unann_indices)
 
     def _ranked_sample_unann_indices(self):
-        unann_im_dict, num_samples = self._get_unann_train_file_paths(), self._get_unann_num_samples()
+        unann_im_dict, num_samples = self._get_unann_train_file_paths(), self._get_unann_num_to_sample()
         # get the scores per image from the score file in this format: img_name, score
         im_scores_list = open(self.cur_im_score_file).readlines()
         im_scores_list = [im_score.strip().split(",") for im_score in im_scores_list]

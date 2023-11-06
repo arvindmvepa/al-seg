@@ -35,14 +35,17 @@ class PolicyBuilder:
     def build(self):
         self.check_params()
         model = ModelFactory.create_model(**self._model_params)
+        model_uncertainty = None
+        data_geometry = None
         if hasattr(self, "_model_uncertainty_params"):
             model_uncertainty = ModelUncertaintyFactory.create_model_uncertainty(model=model,
                                                                                  **self._model_uncertainty_params)
-            self._policy_params["model_uncertainty"] = model_uncertainty
         if hasattr(self, "_data_geometry_params"):
-            data_geometry = DataGeometryFactory.create_data_geometry(**self._data_geometry_params)
-            self._policy_params["data_geometry"] = data_geometry
-        return PolicyFactory.create_policy(model=model, exp_dir=self._exp_dir, **self._policy_params)
+            data_geometry = DataGeometryFactory.create_data_geometry(model_uncertainty=model_uncertainty,
+                                                                     ann_type=model.ann_type,
+                                                                     **self._data_geometry_params)
+        return PolicyFactory.create_policy(model=model, model_uncertainty=model_uncertainty,
+                                           data_geometry=data_geometry, exp_dir=self._exp_dir, **self._policy_params)
 
     def check_params(self, check_params=("_exp_dir", "_model_params", "_policy_params")
                      ):
