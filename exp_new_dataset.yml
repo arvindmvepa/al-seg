@@ -1,0 +1,21 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  dataset: "CHAOS_MRI"
+  ensemble_size: 1
+  max_iterations: 30000
+  gpus: "mps"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  uncertainty_kwargs:
+    skip: False
+    delete_preds: True
+  rounds: [[.05, 0], [.05, 0], [.05, 0], [.05, 0], [.05, 0]]
+model_uncertainty:
+  model_uncertainty_type: ensemble
+  score_func: entropy_w_label_probs
+exp_dir: "DMPLS_w_entropy_chaos_mri_weak_run"
