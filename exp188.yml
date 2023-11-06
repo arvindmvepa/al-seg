@@ -4,11 +4,13 @@ model:
   ensemble_size: 5
   gpus: "cuda:0"
 policy:
-  policy_type: random
-  seed: 2
-  resume: True
+  policy_type: ranked
+  seed: 0
   ensemble_kwargs:
     skip: False
     inf_test: True
   rounds: [[.05, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
-exp_dir: "DMPLS_exp2_random_v8"
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 0
+exp_dir: "DMPLS_exp0_coreset_v9"
