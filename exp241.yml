@@ -12,4 +12,4 @@ policy:
     inf_test: True
     inf_train: True
   rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.2, 0]]
-  exp_dir: "DMPLS_sup_exp2_random_v11"
+exp_dir: "DMPLS_sup_exp2_random_v11"
