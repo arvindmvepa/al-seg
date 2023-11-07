@@ -1,0 +1,13 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: random
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+exp_dir: "DMPLS_exp0_random_v10"
