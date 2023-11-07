@@ -1,0 +1,18 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 2
+  resume: True
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+    inf_train: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.2, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 2
+  exp_dir: "DMPLS_sup_exp2_coreset_v11"
