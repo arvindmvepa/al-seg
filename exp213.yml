@@ -6,6 +6,7 @@ model:
 policy:
   policy_type: ranked
   seed: 0
+  resume: True
   ensemble_kwargs:
     skip: False
     inf_test: True
