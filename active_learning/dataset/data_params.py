@@ -44,7 +44,9 @@ data_params = {
             },
     "CHAOS_CT": {
         "label":
-            {   "data_root": os.path.join("wsl4mis_data", "CHAOS", "CT_LIVER"),
+            {   "data_root": os.path.join("wsl4mis_data", 
+                                          "CHAOS",
+                                          "CT_LIVER"),
                 "train_file": os.path.join("wsl4mis",
                                            "data",
                                            "CHAOS",

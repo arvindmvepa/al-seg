@@ -1,14 +1,12 @@
-import h5py
 from glob import glob
-from scipy.ndimage.interpolation import zoom
 import numpy as np
 from tqdm import tqdm
 from numpy.random import RandomState
-from collections import defaultdict
 from functools import partial
 import os
 from active_learning.data_geometry.base_data_geometry import BaseDataGeometry
 from active_learning.feature_model.feature_model_factory import FeatureModelFactory
+from active_learning.dataset.dataset_factory import DatasetFactory
 from active_learning.data_geometry import coreset_algs
 import json
 from active_learning.data_geometry.dist_metrics import metric_w_config
@@ -17,12 +15,13 @@ from active_learning.data_geometry.dist_metrics import metric_w_config
 class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
-    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, use_uncertainty=False,
-                 model_uncertainty=None, uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0,
-                 max_dist=None, wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0,
-                 height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0,
-                 uncertainty_wt=0.0, patch_size=(256, 256), feature_model=False, feature_model_params=None,
-                 contrastive=False, use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
+    def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, dataset_type="ACDC",
+                 use_uncertainty=False, model_uncertainty=None, uncertainty_score_file="entropy.txt", use_labels=False,
+                 ann_type=None, label_wt=1.0, max_dist=None, wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0,
+                 phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0,
+                 slice_pos_wt=0.0, uncertainty_wt=0.0, patch_size=(256, 256), feature_model=False,
+                 feature_model_params=None, contrastive=False, use_model_features=False, seed=0, gpus="cuda:0",
+                 **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -32,6 +31,7 @@ class BaseCoreset(BaseDataGeometry):
             self.coreset_kwargs = coreset_kwargs
         else:
             raise ValueError("coreset_kwargs must be a dict or None")
+        self.dataset_type = dataset_type
         self.use_uncertainty = use_uncertainty
         self.model_uncertainty = model_uncertainty
         self.uncertainty_score_file = uncertainty_score_file
@@ -54,7 +54,7 @@ class BaseCoreset(BaseDataGeometry):
         self.data_root = None
         self.all_train_im_files = None
         self.all_train_full_im_paths = None
-
+        self.dataset = None
         self.image_features = None
         self.image_meta_data = None
         self.image_meta_data_arr = None
@@ -89,16 +89,20 @@ class BaseCoreset(BaseDataGeometry):
         self.data_root = data_root
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
+        self.dataset = DatasetFactory.create_dataset(dataset_type=self.dataset_type,
+                                                     all_train_im_files=self.all_train_im_files,
+                                                     all_train_full_im_paths=self.all_train_full_im_paths)
         self.setup_image_features()
         print("Done setting up data")
 
     def setup_image_features(self):
         print("Setting up image features...")
         print("Getting data")
-        image_data, self.image_labels_arr, self.image_meta_data =  self._get_data(self.all_train_full_im_paths)
+        image_data, self.image_labels_arr, self.image_meta_data =  self.dataset.get_data(self.all_train_full_im_paths,
+                                                                                         self.use_labels)
         print("Processing meta_data...")
-        self.image_meta_data_arr = self._process_meta_data()
-        self._update_non_image_indices()
+        self.image_meta_data_arr = self.dataset.process_meta_data()
+        self.non_image_indices = self.dataset.get_non_image_indices()
         print("Initializing image features for feature model...")
         self.feature_model.init_image_features(image_data, self.image_meta_data_arr, self.non_image_indices)
         print("Done setting up image features")
@@ -221,147 +225,6 @@ class BaseCoreset(BaseDataGeometry):
                                  **non_image_kwargs)
         return coreset_metric, features
 
-    @staticmethod
-    def _patch_im(im, patch_size):
-        x, y = im.shape
-        image = zoom(im, (patch_size[0] / x, patch_size[1] / y), order=0)
-        return image
-
-    def _load_image_and_label(self, case):
-        h5f = h5py.File(case, 'r')
-        image = h5f['image'][:]
-        patched_image = self._patch_im(image, self.patch_size)
-        patched_image = patched_image[np.newaxis,]
-        if self.use_labels:
-            label = h5f[self.ann_type][:]
-            patched_label = self._patch_im(label, self.patch_size)
-            return patched_image, patched_label[np.newaxis,]
-        else:
-            return patched_image, None
-
-    def _load_meta_data(self, meta_data_file):
-        meta_data = {}
-        with open(meta_data_file, 'r') as f:
-            for line in f:
-                key, value = line.strip().split(': ')
-                if key == 'ED' or key == 'ES':
-                    value = int(value)
-                if key == 'Height' or key == 'Weight':
-                    value = float(value)
-                meta_data[key] = value
-        return meta_data
-
-    def _get_data(self, all_train_full_im_paths):
-        if self.use_labels:
-            cases_arr, labels_arr, meta_data = self._get_image_and_label_data(all_train_full_im_paths)
-        else:
-            labels_arr = None
-            cases_arr, meta_data = self._get_image_data(all_train_full_im_paths)
-        return cases_arr, labels_arr, meta_data
-
-    def _get_image_data(self, all_train_full_im_paths):
-        cases = []
-        meta_data = []
-        for im_path in tqdm(all_train_full_im_paths):
-            image, _ = self._load_image_and_label(im_path)
-            meta_data_path = self._get_meta_data_path(im_path)
-            meta_datum = self._load_meta_data(meta_data_path)
-            cases.append(image)
-            meta_data.append(meta_datum)
-        cases_arr = np.concatenate(cases, axis=0)
-        return cases_arr, meta_data
-
-    def _get_image_and_label_data(self, all_train_full_im_paths):
-        cases = []
-        labels = []
-        meta_data = []
-        for im_path in tqdm(all_train_full_im_paths):
-            image, label = self._load_image_and_label(im_path)
-            meta_data_path = self._get_meta_data_path(im_path)
-            meta_datum = self._load_meta_data(meta_data_path)
-            cases.append(image)
-            labels.append(label)
-            meta_data.append(meta_datum)
-        cases_arr = np.concatenate(cases, axis=0)
-        labels_arr = np.concatenate(labels, axis=0)
-        return cases_arr, labels_arr, meta_data
-
-    def _get_meta_data_path(self, im_path):
-        meta_data_path = self._extract_patient_prefix(im_path) + ".cfg"
-        return meta_data_path
-
-    def _process_meta_data(self):
-        # calculate number of slices per frame
-        num_slices_dict = dict()
-        for file_name in self.all_train_im_files:
-            patient_frame_no = self._extract_patient_frame_no_str(file_name)
-            if patient_frame_no not in num_slices_dict:
-                num_slices_dict[patient_frame_no] = 1
-            else:
-                num_slices_dict[patient_frame_no] += 1
-
-        # calculate number of groups
-        groups_dict = defaultdict(lambda: len(groups_dict))
-        for im_meta_datum in self.image_meta_data:
-            groups_dict[im_meta_datum['Group']]
-        self.num_groups = len(groups_dict)
-        one_hot_group = [0] * self.num_groups
-
-        # calculate z-score params for height and weight
-        height_mean = 0
-        height_sstd = 0
-        weight_mean = 0
-        weight_sstd = 0
-        for im_meta_datum in self.image_meta_data:
-            height_mean += im_meta_datum['Height']
-            weight_mean += im_meta_datum['Weight']
-        height_mean /= len(self.image_meta_data)
-        weight_mean /= len(self.image_meta_data)
-
-        for im_meta_datum in self.image_meta_data:
-            height_sstd += (im_meta_datum['Height'] - height_mean) ** 2
-            weight_sstd += (im_meta_datum['Weight'] - weight_mean) ** 2
-        height_sstd = (height_sstd / (len(self.image_meta_data) - 1)) ** (.5)
-        weight_sstd = (weight_sstd / (len(self.image_meta_data) - 1)) ** (.5)
-
-        # encode all cfg features
-        extra_features_lst = []
-        for im_meta_datum, file_name in zip(self.image_meta_data, self.all_train_im_files):
-            extra_features = []
-            # add patient number
-            patient_num = self._extract_patient_num(file_name)
-            extra_features.append(patient_num)
-            # add if frame is ED or ES (one hot encoded)
-            patient_frame_no = self._extract_patient_frame_no_str(file_name)
-            frame_num = self._extract_frame_no(file_name)
-            if im_meta_datum['ED'] == frame_num:
-                extra_features.append(1)
-            elif im_meta_datum['ES'] == frame_num:
-                extra_features.append(0)
-            else:
-                raise ValueError("Frame number not found in ED or ES")
-            # add Group ID (one hot encoded)
-            group_id = groups_dict[im_meta_datum['Group']]
-            im_one_hot_group = one_hot_group.copy()
-            im_one_hot_group[group_id] = 1
-            extra_features.extend(im_one_hot_group)
-
-            # add Height and Weight
-            z_score_height = (im_meta_datum['Height'] - height_mean) / height_sstd
-            z_score_weight = (im_meta_datum['Weight'] - weight_mean) / weight_sstd
-
-            extra_features.append(z_score_height)
-            extra_features.append(z_score_weight)
-
-            # add relative slice position and general slice position
-            slice_num = self._extract_slice_no(file_name)
-            extra_features.append(slice_num / num_slices_dict[patient_frame_no])
-            extra_features.append(slice_num)
-
-            extra_features_lst.append(np.array(extra_features))
-
-        return np.array(extra_features_lst)
-
     def _update_non_image_wts(self, extra_feature_wt=None, patient_wt=None, phase_wt=None, group_wt=None, height_wt=None,
                               weight_wt=None, slice_rel_pos_wt=None, slice_mid_wt=None, slice_pos_wt=None, uncertainty_wt=None,
                               wt_max_dist_mult=None):
@@ -370,25 +233,6 @@ class BaseCoreset(BaseDataGeometry):
                                'slice_rel_pos_wt': slice_rel_pos_wt, 'slice_mid_wt': slice_mid_wt,
                                'slice_pos_wt': slice_pos_wt, "uncertainty_wt": uncertainty_wt,
                                "wt_max_dist_mult": wt_max_dist_mult}
-
-    def _update_non_image_indices(self):
-        self.non_image_indices = dict()
-        self.non_image_indices['patient_starting_index'] = 0
-        self.non_image_indices['patient_ending_index'] = self.non_image_indices['patient_starting_index'] + 1
-        self.non_image_indices['phase_starting_index'] = self.non_image_indices['patient_ending_index']
-        self.non_image_indices['phase_ending_index'] = self.non_image_indices['phase_starting_index'] + 1
-        self.non_image_indices['group_starting_index'] = self.non_image_indices['phase_ending_index']
-        self.non_image_indices['group_ending_index'] = self.non_image_indices['group_starting_index'] + self.num_groups
-        self.non_image_indices['height_starting_index'] = self.non_image_indices['group_ending_index']
-        self.non_image_indices['height_ending_index'] = self.non_image_indices['height_starting_index'] + 1
-        self.non_image_indices['weight_starting_index'] = self.non_image_indices['height_ending_index']
-        self.non_image_indices['weight_ending_index'] = self.non_image_indices['weight_starting_index'] + 1
-        self.non_image_indices['slice_rel_pos_starting_index'] = self.non_image_indices['weight_ending_index']
-        self.non_image_indices['slice_rel_pos_ending_index'] = self.non_image_indices['slice_rel_pos_starting_index'] + 1
-        self.non_image_indices['slice_pos_starting_index'] = self.non_image_indices['slice_rel_pos_ending_index']
-        self.non_image_indices['slice_pos_ending_index'] = self.non_image_indices['slice_pos_starting_index'] + 1
-        self.non_image_indices['uncertainty_starting_index'] = self.non_image_indices['slice_pos_ending_index']
-        self.non_image_indices['uncertainty_ending_index'] = self.non_image_indices['uncertainty_starting_index'] + 1
 
     def _extract_uncertainty_features(self, score_file):
         # get the scores per image from the score file in this format: img_name, score
@@ -399,52 +243,3 @@ class BaseCoreset(BaseDataGeometry):
         sorted_score_list = [im_score[1] for im_score in sorted_im_scores_list]
 
         return np.array(sorted_score_list).reshape(-1, 1)
-
-
-    def _extract_patient_frame_no_str(self, im_path):
-        return self._extract_patient_prefix(im_path) + "_" + str(self._extract_frame_no(im_path))
-
-    def _get_patient_num_start_index(self, im_path):
-        patient_prefix = "patient"
-        patient_prefix_len = len(patient_prefix)
-        patient_prefix_index = im_path.index(patient_prefix)
-        patient_num_start_index = patient_prefix_index + patient_prefix_len
-        return patient_num_start_index
-
-    def _get_patient_num_end_index(self, im_path):
-        patient_num_len = 3
-        patient_num_start_index = self._get_patient_num_start_index(im_path)
-        return patient_num_start_index + patient_num_len
-
-    def _extract_patient_num(self, im_path):
-        return int(im_path[self._get_patient_num_start_index(im_path):self._get_patient_num_end_index(im_path)])
-
-    def _extract_patient_prefix(self, im_path):
-        patient_prefix_end_index = self._get_patient_prefix_end_index(im_path)
-        patient_prefix = im_path[:patient_prefix_end_index]
-        return patient_prefix
-
-    def _get_patient_prefix_end_index(self, im_path):
-        patient_prefix = "patient"
-        patient_prefix_len = len(patient_prefix)
-        patient_prefix_index = im_path.index(patient_prefix)
-        patient_num_len = 3
-        patient_prefix_end_index = patient_prefix_index + patient_prefix_len + patient_num_len
-        return patient_prefix_end_index
-
-    def _extract_frame_no(self, im_path):
-        frame_prefix = "frame"
-        frame_num_len = 2
-        frame_and_num_prefix_len = len(frame_prefix) + frame_num_len
-        frame_and_num_end_index = im_path.index(frame_prefix) + frame_and_num_prefix_len
-        frame_no = im_path[frame_and_num_end_index-frame_num_len:frame_and_num_end_index]
-        return int(frame_no)
-
-    def _extract_slice_no(self, im_path):
-        slice_str = "slice_"
-        slice_str_len = len(slice_str)
-        slice_num_len = 1
-        slice_start_index = im_path.index(slice_str) + slice_str_len
-        slice_end_index = slice_start_index + slice_num_len
-        slice_num = int(im_path[slice_start_index:slice_end_index])
-        return slice_num
