@@ -1,0 +1,15 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 5
+policy:
+  policy_type: ranked
+  seed: 0
+  resume: True
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0, random], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  data_geometry_type: vaal
+exp_dir: "DMPLS_exp0_vaal_v10"
