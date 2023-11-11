@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from active_learning.model.data_params import data_params
+from active_learning.dataset.data_params import data_params
 import os
 from random import Random
 from tqdm import tqdm
