@@ -14,13 +14,13 @@ class BaseDataset(ABC):
         self.all_train_full_im_paths = all_train_full_im_paths
         self.patch_size = patch_size
 
-    def get_data(self, all_train_full_im_paths, use_labels=False):
+    def get_data(self, use_labels=False):
         if use_labels:
-            cases_arr, labels_arr, meta_data = self._get_image_and_label_data(all_train_full_im_paths)
+            cases_arr, meta_data, labels_arr = self._get_image_and_label_data()
         else:
             labels_arr = None
-            cases_arr, meta_data = self._get_image_data(all_train_full_im_paths)
-        return cases_arr, labels_arr, meta_data
+            cases_arr, meta_data = self._get_image_data()
+        return cases_arr, meta_data, labels_arr
 
     @staticmethod
     def _patch_im(im, patch_size):
@@ -44,10 +44,10 @@ class BaseDataset(ABC):
         patched_label = self._patch_im(label, self.patch_size)
         return patched_image, patched_label[np.newaxis,]
 
-    def _get_image_data(self, all_train_full_im_paths):
+    def _get_image_data(self):
         cases = []
         meta_data = []
-        for im_path in tqdm(all_train_full_im_paths):
+        for im_path in tqdm(self.all_train_full_im_paths):
             image = self._load_image(im_path)
             meta_datum = self._load_meta_data(im_path)
             cases.append(image)
@@ -55,11 +55,12 @@ class BaseDataset(ABC):
         cases_arr = np.concatenate(cases, axis=0)
         return cases_arr, meta_data
 
-    def _get_image_and_label_data(self, all_train_full_im_paths):
+    def _get_image_and_label_data(self):
         cases = []
         labels = []
         meta_data = []
-        for im_path in tqdm(all_train_full_im_paths):
+        print("debug len(self.all_train_full_im_paths): ", len(self.all_train_full_im_paths))
+        for im_path in tqdm(self.all_train_full_im_paths):
             image, label = self._load_image_and_label(im_path)
             meta_datum = self._load_meta_data(im_path)
             cases.append(image)
