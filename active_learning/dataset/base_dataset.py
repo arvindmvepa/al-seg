@@ -33,7 +33,7 @@ class BaseDataset(ABC):
         image = h5f['image'][:]
         patched_image = self._patch_im(image, self.patch_size)
         patched_image = patched_image[np.newaxis,]
-        return patched_image, None
+        return patched_image
 
     def _load_image_and_label(self, case):
         h5f = h5py.File(case, 'r')
@@ -47,13 +47,14 @@ class BaseDataset(ABC):
     def _get_image_data(self):
         cases = []
         meta_data = []
-        print("debug len(self.all_train_full_im_paths): ", len(self.all_train_full_im_paths))
         for im_path in tqdm(self.all_train_full_im_paths):
             image = self._load_image(im_path)
+            print("debug image.shape", image.shape)
             meta_datum = self._load_meta_data(im_path)
             cases.append(image)
             meta_data.append(meta_datum)
         cases_arr = np.concatenate(cases, axis=0)
+        print("debug cases_arr.shape", cases_arr.shape)
         return cases_arr, meta_data
 
     def _get_image_and_label_data(self):
