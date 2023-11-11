@@ -22,7 +22,7 @@ class ACDCDataset(BaseDataset):
         meta_data_path = self._extract_patient_prefix(im_path) + ".cfg"
         return meta_data_path
 
-    def process_meta_data(self):
+    def process_meta_data(self, image_meta_data):
         # calculate number of slices per frame
         num_slices_dict = dict()
         for file_name in self.all_train_im_files:
@@ -34,7 +34,7 @@ class ACDCDataset(BaseDataset):
 
         # calculate number of groups
         groups_dict = defaultdict(lambda: len(groups_dict))
-        for im_meta_datum in self.image_meta_data:
+        for im_meta_datum in image_meta_data:
             groups_dict[im_meta_datum['Group']]
         self.num_groups = len(groups_dict)
         one_hot_group = [0] * self.num_groups
@@ -44,21 +44,21 @@ class ACDCDataset(BaseDataset):
         height_sstd = 0
         weight_mean = 0
         weight_sstd = 0
-        for im_meta_datum in self.image_meta_data:
+        for im_meta_datum in image_meta_data:
             height_mean += im_meta_datum['Height']
             weight_mean += im_meta_datum['Weight']
-        height_mean /= len(self.image_meta_data)
-        weight_mean /= len(self.image_meta_data)
+        height_mean /= len(image_meta_data)
+        weight_mean /= len(image_meta_data)
 
-        for im_meta_datum in self.image_meta_data:
+        for im_meta_datum in image_meta_data:
             height_sstd += (im_meta_datum['Height'] - height_mean) ** 2
             weight_sstd += (im_meta_datum['Weight'] - weight_mean) ** 2
-        height_sstd = (height_sstd / (len(self.image_meta_data) - 1)) ** (.5)
-        weight_sstd = (weight_sstd / (len(self.image_meta_data) - 1)) ** (.5)
+        height_sstd = (height_sstd / (len(image_meta_data) - 1)) ** (.5)
+        weight_sstd = (weight_sstd / (len(image_meta_data) - 1)) ** (.5)
 
         # encode all cfg features
         extra_features_lst = []
-        for im_meta_datum, file_name in zip(self.image_meta_data, self.all_train_im_files):
+        for im_meta_datum, file_name in zip(image_meta_data, self.all_train_im_files):
             extra_features = []
             # add patient number
             patient_num = self._extract_patient_num(file_name)

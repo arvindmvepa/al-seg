@@ -105,7 +105,7 @@ class BaseCoreset(BaseDataGeometry):
         image_data, self.image_labels_arr, self.image_meta_data =  self.dataset.get_data(self.all_train_full_im_paths,
                                                                                          self.use_labels)
         print("Processing meta_data...")
-        self.image_meta_data_arr = self.dataset.process_meta_data()
+        self.image_meta_data_arr = self.dataset.process_meta_data(self.image_meta_data)
         self.non_image_indices = self.dataset.get_non_image_indices()
         print("Initializing image features for feature model...")
         self.feature_model.init_image_features(image_data, self.image_meta_data_arr, self.non_image_indices)

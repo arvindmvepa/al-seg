@@ -44,18 +44,6 @@ class BaseDataset(ABC):
         patched_label = self._patch_im(label, self.patch_size)
         return patched_image, patched_label[np.newaxis,]
 
-    def _load_meta_data(self, meta_data_file):
-        meta_data = {}
-        with open(meta_data_file, 'r') as f:
-            for line in f:
-                key, value = line.strip().split(': ')
-                if key == 'ED' or key == 'ES':
-                    value = int(value)
-                if key == 'Height' or key == 'Weight':
-                    value = float(value)
-                meta_data[key] = value
-        return meta_data
-
     def _get_image_data(self, all_train_full_im_paths):
         cases = []
         meta_data = []
@@ -86,7 +74,7 @@ class BaseDataset(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def process_meta_data(self):
+    def process_meta_data(self, image_meta_data):
         raise NotImplementedError()
 
     @abstractmethod
