@@ -106,6 +106,7 @@ class BaseCoreset(BaseDataGeometry):
                                                                                          self.use_labels)
         print("Processing meta_data...")
         self.image_meta_data_arr = self.dataset.process_meta_data(self.image_meta_data)
+        print("debug, image_meta_data_arr.shape", self.image_meta_data_arr.shape)
         self.non_image_indices = self.dataset.get_non_image_indices()
         print("Initializing image features for feature model...")
         self.feature_model.init_image_features(image_data, self.image_meta_data_arr, self.non_image_indices)
@@ -129,8 +130,7 @@ class BaseCoreset(BaseDataGeometry):
     def create_coreset_inst(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
         print("Creating coreset instance...")
         print("Getting coreset metric and features...")
-        coreset_metric, features = self.get_coreset_metric_and_features(processed_data, meta_data_arr=self.image_meta_data_arr,
-                                                                        prev_round_dir=prev_round_dir,
+        coreset_metric, features = self.get_coreset_metric_and_features(processed_data, prev_round_dir=prev_round_dir,
                                                                         uncertainty_kwargs=uncertainty_kwargs)
         coreset_inst = self.coreset_cls(X=features, file_names=self.all_train_im_files, metric=coreset_metric,
                                         **self.coreset_kwargs)
@@ -196,7 +196,7 @@ class BaseCoreset(BaseDataGeometry):
 
         return preds_arrs
 
-    def get_coreset_metric_and_features(self, processed_data, meta_data_arr, prev_round_dir=None, uncertainty_kwargs=None):
+    def get_coreset_metric_and_features(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
         num_im_features = processed_data.shape[1]
         if self.use_labels:
             print(f"Using labels with weight {self.label_wt}")
@@ -208,7 +208,7 @@ class BaseCoreset(BaseDataGeometry):
             label_mask = np.where(labels != 4, self.label_wt, 1)
             im_features = im_features * label_mask
             processed_data[:, :labels.shape[1]] = im_features
-        features = np.concatenate([processed_data, meta_data_arr], axis=1)
+        features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
         if self.use_uncertainty and (prev_round_dir is not None):
             if uncertainty_kwargs is None:
                 uncertainty_kwargs = dict()
