@@ -10,7 +10,7 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: True
-  rounds: [[.01, 0, random], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+  rounds: [[.01, 0, random, True], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
   data_geometry_type: vaal
 exp_dir: "DMPLS_exp2_vaal_v10"
