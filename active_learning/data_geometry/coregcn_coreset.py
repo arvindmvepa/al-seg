@@ -160,10 +160,10 @@ class CoreGCN(BaseCoreset):
         return adj
 
     def get_slice_no(self, image_index):
-        if (0 <= image_index) and (image_index >= self.image_cfgs_arr.shape[0]):
+        if (0 <= image_index) and (image_index >= self.image_meta_data_arr.shape[0]):
             return None
         else:
-            return self.image_cfgs_arr[image_index, self.slice_pos_starting_index:self.slice_pos_ending_index]
+            return self.image_meta_data_arr[image_index, self.slice_pos_starting_index:self.slice_pos_ending_index]
 
     def BCEAdjLoss(self, scores, lbl, nlbl, l_adj, eps=1e-10):
         lnl = torch.log(scores[lbl] + eps)

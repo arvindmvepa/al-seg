@@ -56,8 +56,8 @@ class BaseCoreset(BaseDataGeometry):
         self.all_train_full_im_paths = None
 
         self.image_features = None
-        self.image_cfgs = None
-        self.image_cfgs_arr = None
+        self.image_meta_data = None
+        self.image_meta_data_arr = None
         self.non_image_wts = None
         self.non_image_indices = None
         self._update_non_image_wts(extra_feature_wt=extra_feature_wt, patient_wt=patient_wt, phase_wt=phase_wt,
@@ -95,12 +95,12 @@ class BaseCoreset(BaseDataGeometry):
     def setup_image_features(self):
         print("Setting up image features...")
         print("Getting data")
-        image_data, self.image_labels_arr, self.image_cfgs =  self._get_data(self.all_train_full_im_paths)
-        print("Processing cfgs...")
-        self.image_cfgs_arr = self._process_cfgs()
+        image_data, self.image_labels_arr, self.image_meta_data =  self._get_data(self.all_train_full_im_paths)
+        print("Processing meta_data...")
+        self.image_meta_data_arr = self._process_meta_data()
         self._update_non_image_indices()
         print("Initializing image features for feature model...")
-        self.feature_model.init_image_features(image_data, self.image_cfgs_arr, self.non_image_indices)
+        self.feature_model.init_image_features(image_data, self.image_meta_data_arr, self.non_image_indices)
         print("Done setting up image features")
 
     def setup_alg(self):
@@ -121,7 +121,7 @@ class BaseCoreset(BaseDataGeometry):
     def create_coreset_inst(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
         print("Creating coreset instance...")
         print("Getting coreset metric and features...")
-        coreset_metric, features = self.get_coreset_metric_and_features(processed_data, cfgs_arr=self.image_cfgs_arr,
+        coreset_metric, features = self.get_coreset_metric_and_features(processed_data, meta_data_arr=self.image_meta_data_arr,
                                                                         prev_round_dir=prev_round_dir,
                                                                         uncertainty_kwargs=uncertainty_kwargs)
         coreset_inst = self.coreset_cls(X=features, file_names=self.all_train_im_files, metric=coreset_metric,
@@ -188,7 +188,7 @@ class BaseCoreset(BaseDataGeometry):
 
         return preds_arrs
 
-    def get_coreset_metric_and_features(self, processed_data, cfgs_arr, prev_round_dir=None, uncertainty_kwargs=None):
+    def get_coreset_metric_and_features(self, processed_data, meta_data_arr, prev_round_dir=None, uncertainty_kwargs=None):
         num_im_features = processed_data.shape[1]
         if self.use_labels:
             print(f"Using labels with weight {self.label_wt}")
@@ -200,7 +200,7 @@ class BaseCoreset(BaseDataGeometry):
             label_mask = np.where(labels != 4, self.label_wt, 1)
             im_features = im_features * label_mask
             processed_data[:, :labels.shape[1]] = im_features
-        features = np.concatenate([processed_data, cfgs_arr], axis=1)
+        features = np.concatenate([processed_data, meta_data_arr], axis=1)
         if self.use_uncertainty and (prev_round_dir is not None):
             if uncertainty_kwargs is None:
                 uncertainty_kwargs = dict()
@@ -239,58 +239,58 @@ class BaseCoreset(BaseDataGeometry):
         else:
             return patched_image, None
 
-    def _load_cfg(self, cfg_file):
-        cfg = {}
-        with open(cfg_file, 'r') as f:
+    def _load_meta_data(self, meta_data_file):
+        meta_data = {}
+        with open(meta_data_file, 'r') as f:
             for line in f:
                 key, value = line.strip().split(': ')
                 if key == 'ED' or key == 'ES':
                     value = int(value)
                 if key == 'Height' or key == 'Weight':
                     value = float(value)
-                cfg[key] = value
-        return cfg
+                meta_data[key] = value
+        return meta_data
 
     def _get_data(self, all_train_full_im_paths):
         if self.use_labels:
-            cases_arr, labels_arr, cfgs = self._get_image_and_label_data(all_train_full_im_paths)
+            cases_arr, labels_arr, meta_data = self._get_image_and_label_data(all_train_full_im_paths)
         else:
             labels_arr = None
-            cases_arr, cfgs = self._get_image_data(all_train_full_im_paths)
-        return cases_arr, labels_arr, cfgs
+            cases_arr, meta_data = self._get_image_data(all_train_full_im_paths)
+        return cases_arr, labels_arr, meta_data
 
     def _get_image_data(self, all_train_full_im_paths):
         cases = []
-        cfgs = []
+        meta_data = []
         for im_path in tqdm(all_train_full_im_paths):
             image, _ = self._load_image_and_label(im_path)
-            cfg_path = self._get_cfg_path(im_path)
-            cfg = self._load_cfg(cfg_path)
+            meta_data_path = self._get_meta_data_path(im_path)
+            meta_datum = self._load_meta_data(meta_data_path)
             cases.append(image)
-            cfgs.append(cfg)
+            meta_data.append(meta_datum)
         cases_arr = np.concatenate(cases, axis=0)
-        return cases_arr, cfgs
+        return cases_arr, meta_data
 
     def _get_image_and_label_data(self, all_train_full_im_paths):
         cases = []
         labels = []
-        cfgs = []
+        meta_data = []
         for im_path in tqdm(all_train_full_im_paths):
             image, label = self._load_image_and_label(im_path)
-            cfg_path = self._get_cfg_path(im_path)
-            cfg = self._load_cfg(cfg_path)
+            meta_data_path = self._get_meta_data_path(im_path)
+            meta_datum = self._load_meta_data(meta_data_path)
             cases.append(image)
             labels.append(label)
-            cfgs.append(cfg)
+            meta_data.append(meta_datum)
         cases_arr = np.concatenate(cases, axis=0)
         labels_arr = np.concatenate(labels, axis=0)
-        return cases_arr, labels_arr, cfgs
+        return cases_arr, labels_arr, meta_data
 
-    def _get_cfg_path(self, im_path):
-        cfg_path = self._extract_patient_prefix(im_path) + ".cfg"
-        return cfg_path
+    def _get_meta_data_path(self, im_path):
+        meta_data_path = self._extract_patient_prefix(im_path) + ".cfg"
+        return meta_data_path
 
-    def _process_cfgs(self):
+    def _process_meta_data(self):
         # calculate number of slices per frame
         num_slices_dict = dict()
         for file_name in self.all_train_im_files:
@@ -302,8 +302,8 @@ class BaseCoreset(BaseDataGeometry):
 
         # calculate number of groups
         groups_dict = defaultdict(lambda: len(groups_dict))
-        for im_cfg in self.image_cfgs:
-            groups_dict[im_cfg['Group']]
+        for im_meta_datum in self.image_meta_data:
+            groups_dict[im_meta_datum['Group']]
         self.num_groups = len(groups_dict)
         one_hot_group = [0] * self.num_groups
 
@@ -312,21 +312,21 @@ class BaseCoreset(BaseDataGeometry):
         height_sstd = 0
         weight_mean = 0
         weight_sstd = 0
-        for im_cfg in self.image_cfgs:
-            height_mean += im_cfg['Height']
-            weight_mean += im_cfg['Weight']
-        height_mean /= len(self.image_cfgs)
-        weight_mean /= len(self.image_cfgs)
+        for im_meta_datum in self.image_meta_data:
+            height_mean += im_meta_datum['Height']
+            weight_mean += im_meta_datum['Weight']
+        height_mean /= len(self.image_meta_data)
+        weight_mean /= len(self.image_meta_data)
 
-        for im_cfg in self.image_cfgs:
-            height_sstd += (im_cfg['Height'] - height_mean) ** 2
-            weight_sstd += (im_cfg['Weight'] - weight_mean) ** 2
-        height_sstd = (height_sstd / (len(self.image_cfgs) - 1)) ** (.5)
-        weight_sstd = (weight_sstd / (len(self.image_cfgs) - 1)) ** (.5)
+        for im_meta_datum in self.image_meta_data:
+            height_sstd += (im_meta_datum['Height'] - height_mean) ** 2
+            weight_sstd += (im_meta_datum['Weight'] - weight_mean) ** 2
+        height_sstd = (height_sstd / (len(self.image_meta_data) - 1)) ** (.5)
+        weight_sstd = (weight_sstd / (len(self.image_meta_data) - 1)) ** (.5)
 
         # encode all cfg features
         extra_features_lst = []
-        for im_cfg, file_name in zip(self.image_cfgs, self.all_train_im_files):
+        for im_meta_datum, file_name in zip(self.image_meta_data, self.all_train_im_files):
             extra_features = []
             # add patient number
             patient_num = self._extract_patient_num(file_name)
@@ -334,21 +334,21 @@ class BaseCoreset(BaseDataGeometry):
             # add if frame is ED or ES (one hot encoded)
             patient_frame_no = self._extract_patient_frame_no_str(file_name)
             frame_num = self._extract_frame_no(file_name)
-            if im_cfg['ED'] == frame_num:
+            if im_meta_datum['ED'] == frame_num:
                 extra_features.append(1)
-            elif im_cfg['ES'] == frame_num:
+            elif im_meta_datum['ES'] == frame_num:
                 extra_features.append(0)
             else:
                 raise ValueError("Frame number not found in ED or ES")
             # add Group ID (one hot encoded)
-            group_id = groups_dict[im_cfg['Group']]
+            group_id = groups_dict[im_meta_datum['Group']]
             im_one_hot_group = one_hot_group.copy()
             im_one_hot_group[group_id] = 1
             extra_features.extend(im_one_hot_group)
 
             # add Height and Weight
-            z_score_height = (im_cfg['Height'] - height_mean) / height_sstd
-            z_score_weight = (im_cfg['Weight'] - weight_mean) / weight_sstd
+            z_score_height = (im_meta_datum['Height'] - height_mean) / height_sstd
+            z_score_weight = (im_meta_datum['Weight'] - weight_mean) / weight_sstd
 
             extra_features.append(z_score_height)
             extra_features.append(z_score_weight)
