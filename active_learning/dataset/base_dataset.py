@@ -8,10 +8,11 @@ from scipy.ndimage.interpolation import zoom
 class BaseDataset(ABC):
     """Base class for Dataset"""
 
-    def __init__(self, all_train_im_files, all_train_full_im_paths, **kwargs):
+    def __init__(self, all_train_im_files, all_train_full_im_paths, patch_size=(256, 256), **kwargs):
         super().__init__()
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = all_train_full_im_paths
+        self.patch_size = patch_size
 
     def get_data(self, all_train_full_im_paths, use_labels=False):
         if use_labels:

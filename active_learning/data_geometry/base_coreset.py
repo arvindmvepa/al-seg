@@ -16,12 +16,12 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, dataset_type="ACDC",
-                 use_uncertainty=False, model_uncertainty=None, uncertainty_score_file="entropy.txt", use_labels=False,
-                 ann_type=None, label_wt=1.0, max_dist=None, wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0,
-                 phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0,
-                 slice_pos_wt=0.0, uncertainty_wt=0.0, patch_size=(256, 256), feature_model=False,
-                 feature_model_params=None, contrastive=False, use_model_features=False, seed=0, gpus="cuda:0",
-                 **kwargs):
+                 dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
+                 uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0, max_dist=None,
+                 wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0,
+                 weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0,
+                 feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False, seed=0,
+                 gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -32,6 +32,10 @@ class BaseCoreset(BaseDataGeometry):
         else:
             raise ValueError("coreset_kwargs must be a dict or None")
         self.dataset_type = dataset_type
+        if not isinstance(dataset_kwargs, dict):
+            self.dataset_kwargs = {}
+        else:
+            self.dataset_kwargs = dataset_kwargs
         self.use_uncertainty = use_uncertainty
         self.model_uncertainty = model_uncertainty
         self.uncertainty_score_file = uncertainty_score_file
@@ -41,7 +45,6 @@ class BaseCoreset(BaseDataGeometry):
         self.max_dist = max_dist
         self.wt_max_dist_mult = wt_max_dist_mult
 
-        self.patch_size = patch_size
         self.contrastive = contrastive
         self.gpus = gpus
         self.feature_model = feature_model
@@ -91,7 +94,8 @@ class BaseCoreset(BaseDataGeometry):
         self.all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
         self.dataset = DatasetFactory.create_dataset(dataset_type=self.dataset_type,
                                                      all_train_im_files=self.all_train_im_files,
-                                                     all_train_full_im_paths=self.all_train_full_im_paths)
+                                                     all_train_full_im_paths=self.all_train_full_im_paths,
+                                                     **self.dataset_kwargs)
         self.setup_image_features()
         print("Done setting up data")
 
