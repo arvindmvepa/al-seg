@@ -42,17 +42,17 @@ data_params = {
                           "train_logits_path": "train_preds.npz"
                       } 
             },
-    "CHAOS": {
+    "CHAOS_CT": {
         "label":
-            {   "data_root": os.path.join("chaos_data"), 
-                "train_file": os.path.join("chaos",
-                                           "data",
+            {   "data_root": os.path.join("wsl4mis_data", "CHAOS"),
+                "train_file": os.path.join("CHAOS",
+                                           "CT_LIVER",
                                            "train.txt"),
                 "val_file": os.path.join("chaos",
-                                         "data",
+                                         "CT_LIVER",
                                          "val.txt"),
                 "test_file": os.path.join("chaos",
-                                          "data",
+                                          "CT_LIVER",
                                           "test.txt"),
                 "num_classes": 2,
                 "train_results_dir": "",
@@ -61,15 +61,12 @@ data_params = {
             },
     "LVSC": {
         "label":
-            {   "data_root": os.path.join("LVSC_data"), 
+            {   "data_root": os.path.join("wsl4mis_data", "LVSC"),
                 "train_file": os.path.join("LVSC",
-                                           "data",
                                            "train.txt"),
                 "val_file": os.path.join("LVSC",
-                                         "data",
                                          "val.txt"),
                 "test_file": os.path.join("LVSC",
-                                          "data",
                                           "test.txt"),
                 "num_classes": 2,
                 "train_results_dir": "",
