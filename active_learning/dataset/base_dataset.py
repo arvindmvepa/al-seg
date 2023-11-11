@@ -49,12 +49,10 @@ class BaseDataset(ABC):
         meta_data = []
         for im_path in tqdm(self.all_train_full_im_paths):
             image = self._load_image(im_path)
-            print("debug image.shape", image.shape)
             meta_datum = self._load_meta_data(im_path)
             cases.append(image)
             meta_data.append(meta_datum)
         cases_arr = np.concatenate(cases, axis=0)
-        print("debug cases_arr.shape", cases_arr.shape)
         return cases_arr, meta_data
 
     def _get_image_and_label_data(self):
