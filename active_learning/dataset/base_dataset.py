@@ -47,6 +47,7 @@ class BaseDataset(ABC):
     def _get_image_data(self):
         cases = []
         meta_data = []
+        print("debug len(self.all_train_full_im_paths): ", len(self.all_train_full_im_paths))
         for im_path in tqdm(self.all_train_full_im_paths):
             image = self._load_image(im_path)
             meta_datum = self._load_meta_data(im_path)
@@ -59,7 +60,6 @@ class BaseDataset(ABC):
         cases = []
         labels = []
         meta_data = []
-        print("debug len(self.all_train_full_im_paths): ", len(self.all_train_full_im_paths))
         for im_path in tqdm(self.all_train_full_im_paths):
             image, label = self._load_image_and_label(im_path)
             meta_datum = self._load_meta_data(im_path)
