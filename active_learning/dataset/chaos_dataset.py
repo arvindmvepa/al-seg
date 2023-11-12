@@ -43,7 +43,7 @@ class CHAOS_CT_Dataset(BaseDataset):
         return non_image_indices
 
     def _extract_patient_num(self, im_path):
-        patient_num_string_raw = self._get_patient_num_start_index(im_path)
+        patient_num_string_raw = im_path[self._get_patient_num_start_index(im_path):]
         patient_num_string = patient_num_string_raw[:patient_num_string_raw.index("_")]
         return int(patient_num_string)
 
@@ -55,7 +55,7 @@ class CHAOS_CT_Dataset(BaseDataset):
         return patient_num_start_index
 
     def _extract_slice_no(self, im_path):
-        slice_no_string_raw = self._get_slice_no_start_index(im_path)
+        slice_no_string_raw = im_path[self._get_slice_no_start_index(im_path):]
         slice_no_string = slice_no_string_raw[:slice_no_string_raw.index(".")]
         return int(slice_no_string)
 

@@ -43,8 +43,9 @@ class LVSC_Dataset(BaseDataset):
         non_image_indices['uncertainty_starting_index'] = non_image_indices['slice_pos_ending_index']
         non_image_indices['uncertainty_ending_index'] = non_image_indices['uncertainty_starting_index'] + 1
         return non_image_indices
+
     def _extract_patient_num(self, im_path):
-        patient_num_string_raw = self._get_patient_num_start_index(im_path)
+        patient_num_string_raw = im_path[self._get_patient_num_start_index(im_path):]
         patient_num_string = patient_num_string_raw[:patient_num_string_raw.index("_")]
         return int(patient_num_string)
 
@@ -56,7 +57,7 @@ class LVSC_Dataset(BaseDataset):
         return patient_num_start_index
 
     def _extract_phase(self, im_path):
-        phase_string_raw = self._get_phase_start_index(im_path)
+        phase_string_raw = im_path[self._get_phase_start_index(im_path):]
         phase_string = phase_string_raw[:phase_string_raw.index("_")]
         vol_type = phase_string[:2]
         vol_num = int(phase_string[2:])
@@ -76,7 +77,7 @@ class LVSC_Dataset(BaseDataset):
         return phase_start_index
 
     def _extract_slice_no(self, im_path):
-        slice_no_string_raw = self._get_slice_no_start_index(im_path)
+        slice_no_string_raw = im_path[self._get_slice_no_start_index(im_path):]
         slice_no_string = slice_no_string_raw[:slice_no_string_raw.index(".")]
         return int(slice_no_string)
 
