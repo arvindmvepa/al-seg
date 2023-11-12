@@ -245,14 +245,14 @@ class GPUkCenterGreedy(SamplingMethod):
                 # Initialize centers with a randomly selected datapoint
                 ind = self.random_state.choice(np.arange(self.n_obs))
             else:
-                ind = np.argmax(self.min_distances)
+                ind = torch.argmax(self.min_distances).item()
             # New examples should not be in already selected since those points
             # should have min_distance of zero to a cluster center.
             assert ind not in already_selected
 
             self.update_distances([ind], only_new=True, reset_dist=False)
             new_batch.append(ind)
-        max_dist = max(self.min_distances)
+        max_dist = torch.max(self.min_distances)
         print(
             "Maximum distance from cluster centers is %0.2f" % max_dist
         )
