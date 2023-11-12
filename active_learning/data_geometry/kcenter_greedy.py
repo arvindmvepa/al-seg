@@ -200,15 +200,18 @@ class GPUkCenterGreedy(SamplingMethod):
             dist = torch.cdist(torch.unsqueeze(self.features, 0), torch.unsqueeze(x, 0), p=2).squeeze(0)
             print("Done calculating pairwise distances. dist.shape = ", dist.shape)
             print("Starting to add in uncertainty...")
+
             if self.use_uncertainty:
-                for i in range(dist.shape[0]):
-                    for j in range(x.shape[0]):
-                        dist[i,j] = dist[i, j] + (self.wt_uncertainty_arr[i] + self.wt_uncertainty_arr[j])/2.0
+                # dimensions will automatically broadcoast
+                dist = dist + self.wt_uncertainty_arr * 0.5
+                for j in range(x.shape[0]):
+                    dist[:,j] = dist[:, j] + self.wt_uncertainty_arr[j]*0.5
             print("Done adding in uncertainty")
+            min_dist = torch.min(dist, axis=1)
             if self.min_distances is None:
-                self.min_distances = torch.min(dist, axis=1).reshape(-1, 1)
+                self.min_distances = torch.reshape(min_dist, (-1, 1))
             else:
-                self.min_distances = torch.minimum(self.min_distances, dist)
+                self.min_distances = torch.minimum(self.min_distances, min_dist)
 
     def select_batch_(self, already_selected, N, **kwargs):
         """
