@@ -11,7 +11,8 @@ class CoreGCN(BaseCoreset):
     """Class for identifying representative data points using Coreset sampling"""
 
     def __init__(self, subset_size="all", hidden_units=128, dropout_rate=0.3, lr_gcn=1e-3, wdecay=5e-4, lambda_loss=1.2,
-                 num_epochs_gcn=200, s_margin=0.1, starting_sample=5, adj_sim_wt_metric=None, **kwargs):
+                 num_epochs_gcn=200, s_margin=0.1, starting_sample=5, use_random_start=True,
+                 adj_sim_wt_metric=None, **kwargs):
         super().__init__(**kwargs)
         self.subset_size = subset_size
         self.hidden_units = hidden_units
@@ -22,6 +23,7 @@ class CoreGCN(BaseCoreset):
         self.num_epochs_gcn = num_epochs_gcn
         self.s_margin = s_margin
         self.starting_sample = starting_sample
+        self.use_random_start = use_random_start
         if adj_sim_wt_metric is None:
             self.adj_sim_wt_metric = None
         elif adj_sim_wt_metric not in wt_metrics:
@@ -39,15 +41,24 @@ class CoreGCN(BaseCoreset):
         sample_indices = []
         already_selected = already_selected.copy()
         if len(already_selected) < self.starting_sample:
-            print(f"Calculating KCenterGreedyCoreset until we obtain {self.starting_sample} samples..")
-            already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
-            num_samples_coreset = min(self.starting_sample - len(already_selected), num_samples)
-            sample_indices_,_ = coreset_inst.select_batch_(already_selected=already_selected_indices,
-                                                                   N=num_samples_coreset)
-            sample_indices += sample_indices_
-            num_samples = num_samples - num_samples_coreset
-            # add the just labeled samples to already_selected
-            already_selected += [self.all_train_im_files[i] for i in sample_indices]
+            if self.use_random_start:
+                print("Using random start to select samples..")
+                num_samples = min(self.starting_sample - len(already_selected), num_samples)
+                sample_indices_ = np.random.choice(np.arange(len(self.all_train_im_files)), num_samples, replace=False)
+                sample_indices += sample_indices_.tolist()
+                num_samples = num_samples - len(sample_indices_)
+                # add the just labeled samples to already_selected
+                already_selected += [self.all_train_im_files[i] for i in sample_indices]
+            else:
+                print(f"Calculating KCenterGreedyCoreset until we obtain {self.starting_sample} samples..")
+                already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
+                num_samples_coreset = min(self.starting_sample - len(already_selected), num_samples)
+                sample_indices_,_ = coreset_inst.select_batch_(already_selected=already_selected_indices,
+                                                                       N=num_samples_coreset)
+                sample_indices += sample_indices_
+                num_samples = num_samples - num_samples_coreset
+                # add the just labeled samples to already_selected
+                already_selected += [self.all_train_im_files[i] for i in sample_indices]
         if num_samples > 0:
             print("Calculating CoreGCN..")
             all_indices = np.arange(len(self.all_train_im_files))
