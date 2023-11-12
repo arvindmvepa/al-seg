@@ -118,7 +118,7 @@ class kCenterGreedy(SamplingMethod):
         new_batch = []
 
         combined_already_selected = already_selected + self.already_selected
-        print("Selecting new batch with GPUKCenterGreedy...")
+        print("Selecting new batch with KCenterGreedy...")
         for i in tqdm(range(N)):
             if not combined_already_selected and (i == 0):
                 # Initialize centers with a randomly selected datapoint
@@ -239,7 +239,8 @@ class GPUkCenterGreedy(SamplingMethod):
         new_batch = []
 
         combined_already_selected = already_selected + self.already_selected
-        for i in range(N):
+        print("Selecting new batch with GPUKCenterGreedy...")
+        for i in tqdm(range(N)):
             if not combined_already_selected and (i == 0):
                 # Initialize centers with a randomly selected datapoint
                 ind = self.random_state.choice(np.arange(self.n_obs))
