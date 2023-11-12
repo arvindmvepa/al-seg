@@ -160,12 +160,14 @@ class GPUkCenterGreedy(SamplingMethod):
             self.uncertainty_starting_index = uncertainty_starting_index
             self.uncertainty_ending_index = uncertainty_ending_index
             self.uncertainty_wt = uncertainty_wt
-            print("Using uncertainty in Coreset!")
+            self.use_uncertainty = True
+            print("Using uncertainty in GPUKCenterGreedy")
         else:
             self.uncertainty_starting_index = None
             self.uncertainty_ending_index = None
             self.uncertainty_wt = None
-            print("Not using uncertainty in Coreset!")
+            self.use_uncertainty = False
+            print("Not using uncertainty in GPUKCenterGreedy")
         self.flat_X, self.wt_uncertainty_arr = self.extract_and_flatten_X()
         self.file_names = file_names
         self.random_state = RandomState(seed=seed)
@@ -198,7 +200,7 @@ class GPUkCenterGreedy(SamplingMethod):
             dist = torch.pairwise_distances(self.features, x)
             print("Done calculating pairwise distances.")
             print("Starting to add in uncertainty...")
-            if self.uncertainty_index is not None:
+            if self.use_uncertainty:
                 for i in range(dist.shape[0]):
                     for j in range(dist.shape[0]):
                         dist[i,j] = dist[i, j] + (self.wt_uncertainty_arr[i] + self.wt_uncertainty_arr[j])/2.0
@@ -258,7 +260,7 @@ class GPUkCenterGreedy(SamplingMethod):
 
     def extract_and_flatten_X(self):
         uncertainty_arr = None
-        if self.uncertainty_index is not None:
+        if self.use_uncertainty:
             X = self.X[:self.num_im_features]
             uncertainty_arr = np.sum(self.X[: self.uncertainty_starting_index:self.uncertainty_ending_index], axis=1) * self.uncertainty_wt
             print("Using uncertainty, uncertainty array shape: ", uncertainty_arr.shape)
