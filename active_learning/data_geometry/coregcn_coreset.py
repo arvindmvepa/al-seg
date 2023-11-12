@@ -43,10 +43,11 @@ class CoreGCN(BaseCoreset):
         if len(already_selected) < self.starting_sample:
             if self.use_random_start:
                 print("Using random start to select samples..")
-                num_samples = min(self.starting_sample - len(already_selected), num_samples)
-                sample_indices_ = np.random.choice(np.arange(len(self.all_train_im_files)), num_samples, replace=False)
+                num_samples_random = min(self.starting_sample - len(already_selected), num_samples)
+                sample_indices_ = np.random.choice(np.arange(len(self.all_train_im_files)), num_samples_random,
+                                                   replace=False)
                 sample_indices += sample_indices_.tolist()
-                num_samples = num_samples - len(sample_indices_)
+                num_samples = num_samples - num_samples_random
                 # add the just labeled samples to already_selected
                 already_selected += [self.all_train_im_files[i] for i in sample_indices]
             else:
