@@ -112,7 +112,7 @@ class PatientPhaseSliceBatchSampler(Sampler):
         for phase_list in self.hierarchical_data:
             patient_data_groups = []
             full_slice_lst = sum(phase_list, [])
-            for slice_list in phase_list:
+            for phase_index, slice_list in enumerate(phase_list):
                 for i, slice in enumerate(slice_list):
                     current_data_group = list()
                     current_data_group.append(current_flat_index)
@@ -135,19 +135,11 @@ class PatientPhaseSliceBatchSampler(Sampler):
                     if self.use_patient:
                         # randomly pick a slice in the same patient
                         current_patient_flat_index = current_flat_index
-                        phase_index = None
-                        print("debug ", slice_list)
-                        for cur_phase_index, slice_list_ in enumerate(slice_list):
-                            if (slice_list == slice_list_).all():
-                                phase_index = cur_phase_index
-                                break
-                        if phase_index is None:
-                            raise ValueError('Could not find slice_list in phase_list!')
-                        for current_phase_index in range(phase_index+1):
-                            if current_phase_index == phase_index:
+                        for iter_phase_index in range(phase_index+1):
+                            if iter_phase_index == phase_index:
                                 current_patient_flat_index = current_patient_flat_index - i
                             else:
-                                current_patient_flat_index = current_patient_flat_index - len(phase_list[current_phase_index])
+                                current_patient_flat_index = current_patient_flat_index - len(phase_list[iter_phase_index])
                         random_slice_in_patient = None
                         while (random_slice_in_patient in current_data_group) or (random_slice_in_patient is None):
                             random_slice_in_patient = current_patient_flat_index + self.random_state.choice(np.arange(len(full_slice_lst)))
