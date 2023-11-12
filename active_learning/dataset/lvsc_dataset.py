@@ -50,6 +50,7 @@ class LVSC_Dataset(BaseDataset):
         return int(patient_num_string)
 
     def _get_patient_num_start_index(self, im_path):
+        print("debug ", im_path)
         patient_prefix = "DET"
         patient_prefix_len = len(patient_prefix)
         patient_prefix_index = im_path.index(patient_prefix)
