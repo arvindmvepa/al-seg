@@ -1,7 +1,7 @@
 model:
   model_type: "strong"
   ann_type: "label"
-  dataset_type: "CHAOS_CT"
+  dataset: "CHAOS_CT"
   ensemble_size: 3
   max_iterations: 30000
   gpus: "cuda:0"
