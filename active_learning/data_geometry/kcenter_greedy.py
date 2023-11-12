@@ -197,6 +197,7 @@ class GPUkCenterGreedy(SamplingMethod):
             print("debugging: cluster_centers = ", cluster_centers)
 
             x = self.features[cluster_centers]
+            print("debugging: x.shape = ", x.shape)
             # Update min_distances for all examples given new cluster center.
             print("Starting to calculate pairwise distances...")
             dist = torch.cdist(torch.unsqueeze(self.features, 0), torch.unsqueeze(x, 0), p=2).squeeze(0)
