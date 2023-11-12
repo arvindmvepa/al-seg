@@ -13,8 +13,10 @@ policy:
     inf_test: False
   rounds: [[.1, 0], [.05, 0], [.05, 0], [.05, 0], [.05, 0]]
 data_geometry:
+  data_geometry_type: gpu_kcenter_greedy
   dataset_type: "LVSC"
-  data_geometry_type: kcenter_greedy
+  uncertainty_wt: 1.0
+  use_uncertainty: True
   contrastive: True
   feature_model: True
   feature_model_params:

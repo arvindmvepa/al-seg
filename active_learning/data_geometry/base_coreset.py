@@ -131,7 +131,11 @@ class BaseCoreset(BaseDataGeometry):
         coreset_metric, features = self.get_coreset_metric_and_features(processed_data, prev_round_dir=prev_round_dir,
                                                                         uncertainty_kwargs=uncertainty_kwargs)
         coreset_inst = self.coreset_cls(X=features, file_names=self.all_train_im_files, metric=coreset_metric,
-                                        **self.coreset_kwargs)
+                                        num_im_features=processed_data.shape[1],
+                                        uncertainty_starting_index=self.non_image_indices["uncertainty_starting_index"] if self.use_uncertainty else None,
+                                        uncertainty_ending_index=self.non_image_indices["uncertainty_ending_index"] if self.use_uncertainty else None,
+                                        uncertainty_wt=self.non_image_wts["uncertainty_wt"] if self.use_uncertainty else None,
+                                        gpus=self.gpus, **self.coreset_kwargs)
         print(f"Created {coreset_inst.name} inst!")
         return coreset_inst
 
