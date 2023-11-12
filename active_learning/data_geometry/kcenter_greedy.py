@@ -7,6 +7,7 @@ from numpy.random import RandomState
 import abc
 import numpy as np
 import torch
+from tqdm import tqdm
 
 
 class SamplingMethod(object):
@@ -117,7 +118,8 @@ class kCenterGreedy(SamplingMethod):
         new_batch = []
 
         combined_already_selected = already_selected + self.already_selected
-        for i in range(N):
+        print("Selecting new batch with GPUKCenterGreedy...")
+        for i in tqdm(range(N)):
             if not combined_already_selected and (i == 0):
                 # Initialize centers with a randomly selected datapoint
                 ind = self.random_state.choice(np.arange(self.n_obs))
@@ -194,29 +196,21 @@ class GPUkCenterGreedy(SamplingMethod):
                 d for d in cluster_centers if d not in self.already_selected
             ]
         if cluster_centers:
-            print("debugging: cluster_centers = ", cluster_centers)
 
             x = self.features[cluster_centers]
-            print("debugging: x.shape = ", x.shape)
             # Update min_distances for all examples given new cluster center.
-            print("Starting to calculate pairwise distances...")
             dist = torch.cdist(torch.unsqueeze(self.features, 0), torch.unsqueeze(x, 0), p=2).squeeze(0)
-            print("Done calculating pairwise distances. dist.shape = ", dist.shape)
-            print("Starting to add in uncertainty...")
 
             if self.use_uncertainty:
                 # dimensions will automatically broadcoast
                 dist = dist + self.wt_uncertainty_arr * 0.5
                 for j in range(x.shape[0]):
                     dist[:,j] = dist[:, j] + self.wt_uncertainty_arr[j]*0.5
-            print("Done adding in uncertainty")
             min_dist = torch.reshape(torch.torch.min(dist,1).values, (-1, 1))
-            print("debugging: min_dist.shape = ", min_dist.shape)
             if self.min_distances is None:
                 self.min_distances = min_dist
             else:
                 self.min_distances = torch.minimum(self.min_distances, min_dist)
-            print("debugging: self.min_distances.shape = ", self.min_distances.shape)
 
     def select_batch_(self, already_selected, N, **kwargs):
         """
