@@ -4,13 +4,14 @@ from scipy.spatial.distance import cosine
 
 
 def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_mult, num_im_features,
-                    patient_starting_index, patient_ending_index, phase_starting_index, phase_ending_index,
-                    group_starting_index, group_ending_index, height_starting_index, height_ending_index,
-                    weight_starting_index, weight_ending_index, slice_rel_pos_starting_index,
-                    slice_rel_pos_ending_index, slice_pos_starting_index, slice_pos_ending_index,
-                    uncertainty_starting_index, uncertainty_ending_index,  extra_feature_wt=-0.0, patient_wt=0.0,
-                    phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0,
-                    slice_pos_wt=0.0, uncertainty_wt=0.0):
+                    patient_starting_index=None, patient_ending_index=None, phase_starting_index=None,
+                    phase_ending_index=None, group_starting_index=None, group_ending_index=None,
+                    height_starting_index=None, height_ending_index=None, weight_starting_index=None,
+                    weight_ending_index=None, slice_rel_pos_starting_index=None, slice_rel_pos_ending_index=None,
+                    slice_pos_starting_index=None, slice_pos_ending_index=None, uncertainty_starting_index=None,
+                    uncertainty_ending_index=None,  extra_feature_wt=-0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0,
+                    height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0,
+                    uncertainty_wt=0.0):
     assert image_vec1.shape == image_vec2.shape
     if image_metric == "cosine":
         image_metric = lambda x,y: (1 - cosine(x,y))
@@ -21,15 +22,49 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
         image_metric = lambda x,y: metric_inst.pairwise([x], [y])[0]
     metric_val = np.sum(image_metric(image_vec1[:num_im_features], image_vec2[:num_im_features]))
     non_image_vec1, non_image_vec2 = image_vec1[num_im_features:], image_vec2[num_im_features:]
-    patient_score = 1 - np.sum(non_image_vec1[patient_starting_index:patient_ending_index] == non_image_vec2[patient_starting_index:patient_ending_index])
-    phase_score = np.sum(np.abs(non_image_vec1[phase_starting_index:phase_ending_index] - non_image_vec2[phase_starting_index:phase_ending_index]))
-    group_score = 1 - np.dot(non_image_vec1[group_starting_index:group_ending_index], non_image_vec2[group_starting_index:group_ending_index])
-    height_score = np.sum(np.abs(non_image_vec1[height_starting_index:height_ending_index] - non_image_vec2[height_starting_index:height_ending_index]))
-    weight_score = np.sum(np.abs(non_image_vec1[weight_starting_index:weight_ending_index] - non_image_vec2[weight_starting_index:weight_ending_index]))
-    slice_rel_pos_score = np.sum(np.abs(non_image_vec1[slice_rel_pos_starting_index:slice_rel_pos_ending_index] - non_image_vec2[slice_rel_pos_starting_index:slice_rel_pos_ending_index]))
-    slice_mid_score = np.sum(1 - np.abs(non_image_vec1[slice_rel_pos_starting_index:slice_rel_pos_ending_index] - 0.5) - np.abs(non_image_vec2[slice_rel_pos_starting_index:slice_rel_pos_ending_index] - 0.5))
-    slice_pos_score = 1 - np.sum(non_image_vec1[slice_pos_starting_index:slice_pos_ending_index] == non_image_vec2[slice_pos_starting_index:slice_pos_ending_index])
-    uncertainty_score = np.sum((non_image_vec1[uncertainty_starting_index:uncertainty_ending_index] + non_image_vec2[uncertainty_starting_index:uncertainty_ending_index])/2.0)
+    if (patient_starting_index is not None) and (patient_ending_index is not None):
+        patient_score = 1 - np.sum(non_image_vec1[patient_starting_index:patient_ending_index] == non_image_vec2[patient_starting_index:patient_ending_index])
+    else:
+        patient_score = 0
+    if (phase_starting_index is not None) and (phase_ending_index is not None):
+        phase_score = np.sum(np.abs(non_image_vec1[phase_starting_index:phase_ending_index] - non_image_vec2[
+                                                                                              phase_starting_index:phase_ending_index]))
+    else:
+        phase_score = 0
+    if (group_starting_index is not None) and (group_ending_index is not None):
+        group_score = 1 - np.dot(non_image_vec1[group_starting_index:group_ending_index], non_image_vec2[
+                                                                                          group_starting_index:group_ending_index])
+    else:
+        group_score = 0
+    if (height_starting_index is not None) and (height_ending_index is not None):
+        height_score = np.sum(np.abs(non_image_vec1[height_starting_index:height_ending_index] - non_image_vec2[
+                                                                                                height_starting_index:height_ending_index]))
+    else:
+        height_score = 0
+    if (weight_starting_index is not None) and (weight_ending_index is not None):
+        weight_score = np.sum(np.abs(non_image_vec1[weight_starting_index:weight_ending_index] - non_image_vec2[
+                                                                                                weight_starting_index:weight_ending_index]))
+    else:
+        weight_score = 0
+    if (slice_rel_pos_starting_index is not None) and (slice_rel_pos_ending_index is not None):
+        slice_rel_pos_score = np.sum(np.abs(non_image_vec1[slice_rel_pos_starting_index:slice_rel_pos_ending_index] - non_image_vec2[
+                                                                                                                        slice_rel_pos_starting_index:slice_rel_pos_ending_index]))
+        slice_mid_score = np.sum(
+            1 - np.abs(non_image_vec1[slice_rel_pos_starting_index:slice_rel_pos_ending_index] - 0.5) - np.abs(
+                non_image_vec2[slice_rel_pos_starting_index:slice_rel_pos_ending_index] - 0.5))
+    else:
+        slice_rel_pos_score = 0
+        slice_mid_score = 0
+    if (slice_pos_starting_index is not None) and (slice_pos_ending_index is not None):
+        slice_pos_score = 1 - np.sum(non_image_vec1[slice_pos_starting_index:slice_pos_ending_index] == non_image_vec2[
+                                                                                                      slice_pos_starting_index:slice_pos_ending_index])
+    else:
+        slice_pos_score = 0
+    if (uncertainty_starting_index is not None) and (uncertainty_ending_index is not None):
+        uncertainty_score = np.sum(np.abs(non_image_vec1[uncertainty_starting_index:uncertainty_ending_index] - non_image_vec2[
+                                                                                                                  uncertainty_starting_index:uncertainty_ending_index]))
+    else:
+        uncertainty_score = 0
 
     # scale all the weights to be less than max_dist * wt_max_dist_mult
     if max_dist is not None:
@@ -43,7 +78,6 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
         slice_rel_pos_wt = max(min(slice_rel_pos_wt, wt_max_dist), -wt_max_dist)
         slice_pos_wt = max(min(slice_pos_wt, wt_max_dist), -wt_max_dist)
         uncertainty_wt = max(min(uncertainty_wt, wt_max_dist), -wt_max_dist)
-
 
     patient_score = patient_score * patient_wt
     phase_score = phase_score * phase_wt
