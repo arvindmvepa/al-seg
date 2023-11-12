@@ -137,7 +137,7 @@ class PatientPhaseSliceBatchSampler(Sampler):
                         current_patient_flat_index = current_flat_index
                         phase_index = phase_list.index(slice_list)
                         for current_phase_index in range(phase_index+1):
-                            if current_phase_index:
+                            if current_phase_index == phase_index:
                                 current_patient_flat_index = current_patient_flat_index - i
                             else:
                                 current_patient_flat_index = current_patient_flat_index - len(phase_list[current_phase_index])
