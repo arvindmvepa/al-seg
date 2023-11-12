@@ -13,7 +13,7 @@ class CHAOS_CT_Dataset(BaseDataset):
     def process_meta_data(self, image_meta_data):
         # encode all cfg features
         extra_features_lst = []
-        for im_meta_datum, file_name in zip(image_meta_data):
+        for im_meta_datum in image_meta_data:
             extra_features = []
             # add patient number
             patient_num = im_meta_datum['PATIENT']
