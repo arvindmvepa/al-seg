@@ -195,6 +195,7 @@ class GPUkCenterGreedy(SamplingMethod):
             ]
         if cluster_centers:
             print("debugging: cluster_centers = ", cluster_centers)
+
             x = self.features[cluster_centers]
             # Update min_distances for all examples given new cluster center.
             print("Starting to calculate pairwise distances...")
