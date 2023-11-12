@@ -76,7 +76,7 @@ class LVSC_Dataset(BaseDataset):
         phase_prefix = "_"
         phase_prefix_len = len(phase_prefix)
         phase_prefix_index = patient_raw_string.index(phase_prefix)
-        phase_start_index = phase_prefix_index + phase_prefix_len
+        phase_start_index = patient_prefix_index + phase_prefix_index + phase_prefix_len
         return phase_start_index
 
     def _extract_slice_no(self, im_path):
