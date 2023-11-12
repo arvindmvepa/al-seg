@@ -194,6 +194,7 @@ class GPUkCenterGreedy(SamplingMethod):
                 d for d in cluster_centers if d not in self.already_selected
             ]
         if cluster_centers:
+            print("debugging: cluster_centers = ", cluster_centers)
             x = self.features[cluster_centers]
             # Update min_distances for all examples given new cluster center.
             print("Starting to calculate pairwise distances...")
@@ -212,6 +213,7 @@ class GPUkCenterGreedy(SamplingMethod):
                 self.min_distances = torch.reshape(min_dist, (-1, 1))
             else:
                 self.min_distances = torch.minimum(self.min_distances, min_dist)
+            print("debugging: self.min_distances.shape = ", self.min_distances.shape)
 
     def select_batch_(self, already_selected, N, **kwargs):
         """
