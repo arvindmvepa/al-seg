@@ -135,7 +135,14 @@ class PatientPhaseSliceBatchSampler(Sampler):
                     if self.use_patient:
                         # randomly pick a slice in the same patient
                         current_patient_flat_index = current_flat_index
-                        phase_index = phase_list.index(slice_list)
+                        phase_index = None
+                        print("debug ", slice_list)
+                        for cur_phase_index, slice_list_ in enumerate(slice_list):
+                            if (slice_list == slice_list_).all():
+                                phase_index = cur_phase_index
+                                break
+                        if phase_index is None:
+                            raise ValueError('Could not find slice_list in phase_list!')
                         for current_phase_index in range(phase_index+1):
                             if current_phase_index == phase_index:
                                 current_patient_flat_index = current_patient_flat_index - i
