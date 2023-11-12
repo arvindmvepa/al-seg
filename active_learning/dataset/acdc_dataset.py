@@ -3,7 +3,7 @@ import numpy as np
 from collections import defaultdict
 
 
-class ACDCDataset(BaseDataset):
+class ACDC_Dataset(BaseDataset):
 
     def _load_meta_data(self, im_data_file):
         meta_data_file = self._get_meta_data_path(im_data_file)
