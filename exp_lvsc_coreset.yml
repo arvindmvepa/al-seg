@@ -17,7 +17,8 @@ policy:
     delete_preds: True
   rounds: [[.1, 0], [.05, 0], [.05, 0], [.05, 0], [.05, 0]]
 data_geometry:
-  data_geometry_type: gpu_kcenter_greedy
+  data_geometry_type: kcenter_greedy
+  alg_string: gpu_kcenter_greedy
   dataset_type: "LVSC"
   uncertainty_wt: 1.0
   use_uncertainty: True
