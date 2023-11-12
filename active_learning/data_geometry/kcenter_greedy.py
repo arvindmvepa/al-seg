@@ -249,7 +249,7 @@ class GPUkCenterGreedy(SamplingMethod):
                 # Initialize centers with a randomly selected datapoint
                 ind = self.random_state.choice(np.arange(self.n_obs))
             else:
-                ind = torch.argmax(self.min_distances).item()
+                ind = torch.argmax(self.min_distances).cpu().detach().numpy()[0]
             # New examples should not be in already selected since those points
             # should have min_distance of zero to a cluster center.
             assert ind not in already_selected
