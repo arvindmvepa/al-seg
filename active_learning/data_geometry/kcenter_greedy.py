@@ -197,6 +197,8 @@ class GPUkCenterGreedy(SamplingMethod):
             x = self.features[cluster_centers]
             # Update min_distances for all examples given new cluster center.
             print("Starting to calculate pairwise distances...")
+            print("debug: torch.unsqueeze(self.features, 0).shape = ", torch.unsqueeze(self.features, 0).shape)
+            print("debug: torch.unsqueeze(x, 0).shape = ", torch.unsqueeze(x, 0).shape)
             dist = torch.cdist(torch.unsqueeze(self.features, 0), torch.unsqueeze(x, 0), p=2).squeeze(0)
             print("Done calculating pairwise distances. dist.shape = ", dist.shape)
             print("Starting to add in uncertainty...")
