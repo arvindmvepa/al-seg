@@ -70,9 +70,12 @@ class LVSC_Dataset(BaseDataset):
             raise ValueError("Volume type not recognized")
 
     def _get_phase_start_index(self, im_path):
+        patient_prefix = "DET"
+        patient_prefix_index = im_path.index(patient_prefix)
+        patient_raw_string = im_path[patient_prefix_index:]
         phase_prefix = "_"
         phase_prefix_len = len(phase_prefix)
-        phase_prefix_index = im_path.index(phase_prefix)
+        phase_prefix_index = patient_raw_string.index(phase_prefix)
         phase_start_index = phase_prefix_index + phase_prefix_len
         return phase_start_index
 
