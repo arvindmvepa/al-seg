@@ -22,7 +22,8 @@ class LVSC_Dataset(BaseDataset):
             extra_features.append(patient_num)
 
             # add constant for phase
-            extra_features.append(0)
+            phase = im_meta_datum['PHASE']
+            extra_features.append(phase)
 
             # add slice position
             slice_num = im_meta_datum['SLICE_NO']
