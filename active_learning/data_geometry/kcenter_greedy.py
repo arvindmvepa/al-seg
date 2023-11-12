@@ -7,7 +7,6 @@ from numpy.random import RandomState
 import abc
 import numpy as np
 import torch
-from torch.nn import PairwiseDistance
 
 
 class SamplingMethod(object):
@@ -198,9 +197,8 @@ class GPUkCenterGreedy(SamplingMethod):
             x = self.features[cluster_centers]
             # Update min_distances for all examples given new cluster center.
             print("Starting to calculate pairwise distances...")
-            pdist = PairwiseDistance(p=2)
-            dist = pdist(self.features, x)
-            print("Done calculating pairwise distances.")
+            dist = torch.cdist(torch.unsqueeze(self.features, 0), torch.unsqueeze(x, 0), p=2).squeeze(0)
+            print("Done calculating pairwise distances. dist.shape = ", dist.shape)
             print("Starting to add in uncertainty...")
             if self.use_uncertainty:
                 for i in range(dist.shape[0]):
