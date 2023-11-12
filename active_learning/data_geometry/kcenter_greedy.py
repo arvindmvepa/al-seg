@@ -211,6 +211,7 @@ class GPUkCenterGreedy(SamplingMethod):
                     dist[:,j] = dist[:, j] + self.wt_uncertainty_arr[j]*0.5
             print("Done adding in uncertainty")
             min_dist = torch.min(dist,1).values
+            print("debugging: min_dist.shape = ", min_dist.shape)
             if self.min_distances is None:
                 self.min_distances = torch.reshape(min_dist, (-1, 1))
             else:
