@@ -11,8 +11,11 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: False
+  uncertainty_kwargs:
+    skip: False
+    delete_preds: True
   rounds: [[.1, 0], [.05, 0], [.05, 0], [.05, 0], [.05, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  dataset_type: "CHAOS_CT"
-exp_dir: "strong_chaos_coreset_test_run"
+  dataset_type: "LVSC"
+exp_dir: "strong_lvsc_coreset_test_run"

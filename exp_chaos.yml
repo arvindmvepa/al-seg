@@ -18,4 +18,4 @@ policy:
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: entropy_w_label_probs
-exp_dir: "strong_w_chaos_test_run"
+exp_dir: "strong_chaos_test_run"
