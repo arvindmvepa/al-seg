@@ -7,6 +7,7 @@ from numpy.random import RandomState
 import abc
 import numpy as np
 import torch
+from torch.nn.functional import pairwise_distance
 
 
 class SamplingMethod(object):
@@ -197,7 +198,7 @@ class GPUkCenterGreedy(SamplingMethod):
             x = self.features[cluster_centers]
             # Update min_distances for all examples given new cluster center.
             print("Starting to calculate pairwise distances...")
-            dist = torch.pairwise_distances(self.features, x)
+            dist = pairwise_distance(self.features, x)
             print("Done calculating pairwise distances.")
             print("Starting to add in uncertainty...")
             if self.use_uncertainty:
@@ -261,9 +262,12 @@ class GPUkCenterGreedy(SamplingMethod):
     def extract_and_flatten_X(self):
         uncertainty_arr = None
         if self.use_uncertainty:
-            X = self.X[:self.num_im_features]
+            X = self.X[:, self.num_im_features]
             uncertainty_arr = np.sum(self.X[: self.uncertainty_starting_index:self.uncertainty_ending_index], axis=1) * self.uncertainty_wt
             print("Using uncertainty, uncertainty array shape: ", uncertainty_arr.shape)
+            print("debug, X shape: ", X.shape)
+            print("debug, np.sum(self.X[: self.uncertainty_starting_index:self.uncertainty_ending_index], axis=0).shape ",
+                  np.sum(self.X[: self.uncertainty_starting_index:self.uncertainty_ending_index], axis=0).shape)
             uncertainty_arr = torch.from_numpy(uncertainty_arr).float().to(self.gpus)
         shape = X.shape
         flat_X = X
