@@ -12,7 +12,7 @@ policy:
     skip: False
     inf_test: True
     inf_train: True
-  rounds: [[0.007 , 0], [0.014 , 0], [0.021, 0], [0.028, 0], [0.035, 0], [0.071, 0], [0.107, 0], [0.142, 0], [0.284, 0]]
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0],  [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
   dataset_type: "CHAOS_CT"
   data_geometry_type: kcenter_greedy
@@ -46,4 +46,4 @@ data_geometry:
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: entropy_w_label_probs
-exp_dir: "DMPLS_sup_CHAOS_exp2_coreset_fuse20_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_uncertainty1_v12"
+exp_dir: "DMPLS_sup_CHAOS_exp2_coreset_fuse20_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_uncertainty1_v13"

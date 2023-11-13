@@ -11,5 +11,5 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: True
-  rounds: [[0.0007 , 0], [0.0015 , 0], [0.0023, 0], [0.0031, 0], [0.0038, 0], [0.0077, 0], [0.0116, 0], [0.0154, 0], [0.0309, 0]]
-exp_dir: "DMPLS_sup_LVSC_exp1_random_v12"
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0],  [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+exp_dir: "DMPLS_sup_LVSC_exp1_random_v13"

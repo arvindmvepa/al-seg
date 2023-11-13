@@ -11,9 +11,10 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: True
-  rounds: [[0.0007 , 0], [0.0015 , 0], [0.0023, 0], [0.0031, 0], [0.0038, 0], [0.0077, 0], [0.0116, 0], [0.0154, 0], [0.0309, 0]]
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0],  [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
   dataset_type: "LVSC"
+  alg_string: gpu_kcenter_greedy
   data_geometry_type: kcenter_greedy
   seed: 1
-exp_dir: "DMPLS_sup_LVSC_exp1_coreset_v12"
+exp_dir: "DMPLS_sup_LVSC_exp1_coreset_v13"
