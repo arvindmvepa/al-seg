@@ -10,7 +10,10 @@ def get_round_num(round_dir):
 
 results_csv_file = "results.csv"
 root_dir = "."
-exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*exp*v9*"))))
+#exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*exp*v10*"))))
+#exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*exp*v11*"))))
+#exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*CHAOS*exp*v12*"))))
+#exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*LVSC*exp*v12*"))))
 
 results = []
 for exp_dir in exp_dirs:
@@ -35,8 +38,10 @@ for exp_dir in exp_dirs:
                 if os.path.exists(test_metric_file):
                     with open(test_metric_file) as test_metric_fp:
                         test_metric_dict = json.load(test_metric_fp)
-                if (val_metric_dict is None) or (test_metric_dict is None):
-                    continue
+                if val_metric_dict is None:
+                    val_metric_dict = {"perforance": None}
+                if test_metric_dict is None:
+                    test_metric_dict = {"perforance": None}
                 print(val_metric_dict)
                 print(test_metric_dict)
 
@@ -46,12 +51,11 @@ for exp_dir in exp_dirs:
                 if val_max is None:
                     val_max = val_result
                     test_for_val_max = test_result
-                elif val_result > val_max:
+                elif isinstance(val_result, float) and val_result > val_max:
                     val_max = val_result
                     test_for_val_max = test_result
                 num_models += 1
-            if (val_max is not None) and (test_for_val_max is not None):
-                round_results.extend([val_max, test_for_val_max, num_models])
+            round_results.extend([val_max, test_for_val_max, num_models])
         if round_results:
             exp_results = [os.path.basename(exp_dir)]
             exp_results.extend(round_results)
