@@ -1,3 +1,4 @@
+import torch
 from active_learning.data_geometry.base_coreset import BaseCoreset
 
 
@@ -19,6 +20,10 @@ class KCenterGreedyCoreset(BaseCoreset):
                                                                        delete_preds=delete_preds)
         core_set_indices, self.max_dist = coreset_inst.select_batch_(already_selected=already_selected_indices,
                                                                      N=num_samples)
+
+        # delete coreset instance after use and free gpu memory
+        del coreset_inst
+        torch.cuda.empty_cache()
 
         # write score file
         with open(im_score_file, "w") as f:
