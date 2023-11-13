@@ -39,9 +39,9 @@ for exp_dir in exp_dirs:
                     with open(test_metric_file) as test_metric_fp:
                         test_metric_dict = json.load(test_metric_fp)
                 if val_metric_dict is None:
-                    val_metric_dict = {"perforance": None}
+                    val_metric_dict = {"performance": None}
                 if test_metric_dict is None:
-                    test_metric_dict = {"perforance": None}
+                    test_metric_dict = {"performance": None}
                 print(val_metric_dict)
                 print(test_metric_dict)
 
