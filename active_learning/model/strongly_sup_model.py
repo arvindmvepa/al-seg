@@ -179,7 +179,7 @@ class StronglySupModel(WSL4MISModel):
         return json.dumps(mapping)
 
 
-class DeepBayesianDMPLSModel(DeepBayesianWSL4MISMixin, StronglySupModel):
+class DeepBayesianStronglySupModel(DeepBayesianWSL4MISMixin, StronglySupModel):
 
     def __init__(self, T=40, db_score_func="mean_probs", *args, **kwargs):
         super().__init__(*args, **kwargs)
