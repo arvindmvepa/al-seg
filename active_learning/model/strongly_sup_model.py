@@ -1,5 +1,5 @@
 import sys
-from active_learning.model.wsl4mis_model import WSL4MISModel
+from active_learning.model.wsl4mis_model import WSL4MISModel, DeepBayesianWSL4MISMixin
 import json
 import os
 import logging
@@ -176,5 +176,22 @@ class StronglySupModel(WSL4MISModel):
     def __repr__(self):
         mapping = self.__dict__
         mapping["model_cls"] = "StronglySupModel"
+        return json.dumps(mapping)
+
+
+class DeepBayesianDMPLSModel(DeepBayesianWSL4MISMixin, StronglySupModel):
+
+    def __init__(self, T=40, db_score_func="mean_probs", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.T = T
+        self.db_score_func = db_score_func
+
+    @property
+    def model_string(self):
+        return "db_strong"
+
+    def __repr__(self):
+        mapping = self.__dict__
+        mapping["model_cls"] = "DeepBayesianStrongModel"
         return json.dumps(mapping)
  
