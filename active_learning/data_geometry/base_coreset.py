@@ -215,8 +215,9 @@ class BaseCoreset(BaseDataGeometry):
             if uncertainty_kwargs is None:
                 uncertainty_kwargs = dict()
             uncertainty_round_score_file = os.path.join(prev_round_dir, self.uncertainty_score_file)
-            self.model_uncertainty.calculate_uncertainty(im_score_file=uncertainty_round_score_file,
-                                                         round_dir=prev_round_dir, **uncertainty_kwargs)
+            if not os.path.exists(uncertainty_round_score_file):
+                self.model_uncertainty.calculate_uncertainty(im_score_file=uncertainty_round_score_file,
+                                                             round_dir=prev_round_dir, **uncertainty_kwargs)
             uncertainty_features = self._extract_uncertainty_features(uncertainty_round_score_file)
             assert uncertainty_features.shape[0] == features.shape[0]
             features = np.concatenate([features, uncertainty_features], axis=1)
