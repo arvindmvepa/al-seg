@@ -1,5 +1,6 @@
 from random import Random
 import os
+import torch
 
 
 class BaseActiveLearningPolicy:
@@ -153,6 +154,7 @@ class BaseActiveLearningPolicy:
                                                                     train_logits_path=self.model.data_params['train_logits_path'],
                                                                     uncertainty_kwargs=uncertainty_kwargs,
                                                                     **geometry_kwargs)
+                    torch.cuda.empty_cache()
                 else:
                     print(f"Skipping calculating data geometry")
                 self.cur_im_score_file = im_score_file
@@ -178,11 +180,13 @@ class BaseActiveLearningPolicy:
             self.model.train_ensemble(round_dir=self.round_dir, cur_total_oracle_split=self.cur_total_oracle_split,
                                       cur_total_pseudo_split=self.cur_total_pseudo_split, resume=self.resume,
                                       **ensemble_kwargs)
+            torch.cuda.empty_cache()
             # calculate model uncertainty
             if calculate_model_uncertainty and (self._round_num < (self.num_rounds - 1)):
                 # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
                 if (not self.resume) or (not os.path.exists(im_score_file)):
                     self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
+                    torch.cuda.empty_cache()
                 else:
                     print(f"Skipping calculating model uncertainty")
                 self.cur_im_score_file = im_score_file
