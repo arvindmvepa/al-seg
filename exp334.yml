@@ -12,4 +12,4 @@ policy:
     skip: False
     inf_test: True
   rounds: [ [ .01, 0 ], [ .01, 0 ], [ .01, 0 ], [ .01, 0 ], [ .01, 0 ],  [ .05, 0 ], [ .05, 0 ], [ .05, 0 ], [ .20, 0 ] ]
-  exp_dir: "DMPLS_sup_CHAOS_CT_exp2_random_v13"
+exp_dir: "DMPLS_sup_CHAOS_CT_exp2_random_v13"
