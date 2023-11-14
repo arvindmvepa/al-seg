@@ -40,7 +40,7 @@ class BaseDataset(ABC):
         image = h5f['image'][:]
         patched_image = self._patch_im(image, self.patch_size)
         patched_image = patched_image[np.newaxis,]
-        label = h5f[self.ann_type][:]
+        label = h5f["scribble"][:]
         patched_label = self._patch_im(label, self.patch_size)
         return patched_image, patched_label[np.newaxis,]
 
