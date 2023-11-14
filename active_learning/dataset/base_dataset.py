@@ -67,7 +67,7 @@ class BaseDataset(ABC):
             meta_data.append(meta_datum)
         cases_arr = np.concatenate(cases, axis=0)
         labels_arr = np.concatenate(labels, axis=0)
-        return cases_arr, labels_arr, meta_data
+        return cases_arr, meta_data, labels_arr
 
     @abstractmethod
     def _load_meta_data(self, im_data_file):
