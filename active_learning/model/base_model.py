@@ -243,7 +243,6 @@ class MajorityVoteMixin:
 class SoftmaxMixin:
 
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict=None, delete_preds=True):
-        f = open(im_score_file, "w")
         train_logits_path = os.path.join(round_dir, "*", self.data_params['train_logits_path'])
         train_results = sorted(list(glob(train_logits_path)))
         im_files = sorted(np.load(train_results[0], mmap_mode='r').files)
@@ -252,20 +251,20 @@ class SoftmaxMixin:
         else:
             filtered_im_files = im_files
         # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
-        for im_file in tqdm(filtered_im_files):
-            ensemble_preds_arr = []
-            for i, result in enumerate(train_results):
-                preds_arr = np.load(result, mmap_mode='r')[im_file]
-                preds_arr = np.atleast_1d(preds_arr)
-                ensemble_preds_arr.append(preds_arr)
-            ensemble_preds_arr = np.stack(ensemble_preds_arr, axis=0)
-            tensor = torch.from_numpy(ensemble_preds_arr)
-            tensor = tensor.to(self.gpus)
-            # convert to float32 to avoid rounding to inf
-            score = np.float32(score_func(tensor).cpu().detach().numpy())
-            f.write(f"{im_file},{np.round(score, 7)}\n")
-            f.flush()
-        f.close()
+        with open(im_score_file, "w") as f:
+            for im_file in tqdm(filtered_im_files):
+                ensemble_preds_arr = []
+                for i, result in enumerate(train_results):
+                    preds_arr = np.load(result, mmap_mode='r')[im_file]
+                    preds_arr = np.atleast_1d(preds_arr)
+                    ensemble_preds_arr.append(preds_arr)
+                ensemble_preds_arr = np.stack(ensemble_preds_arr, axis=0)
+                tensor = torch.from_numpy(ensemble_preds_arr)
+                tensor = tensor.to(self.gpus)
+                # convert to float32 to avoid rounding to inf
+                score = np.float32(score_func(tensor).cpu().detach().numpy())
+                f.write(f"{im_file},{np.round(score, 7)}\n")
+                f.flush()
         # after obtaining scores, delete the *.npz files for the round
         if delete_preds:
             for result in train_results:
