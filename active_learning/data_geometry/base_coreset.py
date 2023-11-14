@@ -16,7 +16,7 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, dataset_type="ACDC",
-                 dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None, delete_preds=True,
+                 dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
                  uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0, max_dist=None,
                  wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0,
                  weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0,
@@ -38,7 +38,6 @@ class BaseCoreset(BaseDataGeometry):
             self.dataset_kwargs = dataset_kwargs
         self.use_uncertainty = use_uncertainty
         self.model_uncertainty = model_uncertainty
-        self.delete_preds = delete_preds
         self.uncertainty_score_file = uncertainty_score_file
         self.ann_type = ann_type
         self.use_labels = use_labels
@@ -141,10 +140,11 @@ class BaseCoreset(BaseDataGeometry):
         return coreset_inst
 
 
-    def get_coreset_inst_and_features_for_round(self, prev_round_dir, train_logits_path, uncertainty_kwargs=None):
+    def get_coreset_inst_and_features_for_round(self, prev_round_dir, train_logits_path, uncertainty_kwargs=None,
+                                                delete_preds=True):
         if self.use_model_features:
             print("Using Model Features")
-            feat = self.get_model_features(prev_round_dir, train_logits_path)
+            feat = self.get_model_features(prev_round_dir, train_logits_path, delete_preds=delete_preds)
             # assert len(feat.shape) == 2
             if feat is None:
                 print("Model features not found. Using image features instead")
@@ -155,7 +155,7 @@ class BaseCoreset(BaseDataGeometry):
                                                 uncertainty_kwargs=uncertainty_kwargs)
         return coreset_inst, feat
 
-    def get_model_features(self, prev_round_dir, train_logits_path):
+    def get_model_features(self, prev_round_dir, train_logits_path, delete_preds=True):
         if prev_round_dir is None:
             print("No model features for first round!")
             return None
@@ -192,7 +192,7 @@ class BaseCoreset(BaseDataGeometry):
         preds_arrs = preds_arrs.reshape(preds_arrs.shape[0], -1)
 
         # after obtaining features, delete the *.npz files for the round
-        if self.delete_preds:
+        if delete_preds:
             for train_result_ in train_results:
                 os.remove(train_result_)
 
