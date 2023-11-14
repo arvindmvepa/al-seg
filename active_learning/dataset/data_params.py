@@ -43,6 +43,29 @@ data_params = {
                       } 
             },
     "CHAOS_CT": {
+        "scribble":
+            {"data_root": os.path.join("wsl4mis_data",
+                                       "CHAOS",
+                                       "CT_LIVER"),
+             "train_file": os.path.join("wsl4mis",
+                                        "data",
+                                        "CHAOS",
+                                        "CT_LIVER",
+                                        "train.txt"),
+             "val_file": os.path.join("wsl4mis",
+                                      "data",
+                                      "CHAOS",
+                                      "CT_LIVER",
+                                      "val.txt"),
+             "test_file": os.path.join("wsl4mis",
+                                       "data",
+                                       "CHAOS",
+                                       "CT_LIVER",
+                                       "test.txt"),
+             "num_classes": 2,
+             "train_results_dir": "",
+             "train_logits_path": "train_preds.npz"
+             },
         "label":
             {   "data_root": os.path.join("wsl4mis_data", 
                                           "CHAOS",
@@ -68,6 +91,24 @@ data_params = {
             },    
             },
     "LVSC": {
+        "scribble":
+            {"data_root": os.path.join("wsl4mis_data", "LVSC"),
+             "train_file": os.path.join("wsl4mis",
+                                        "data",
+                                        "LVSC",
+                                        "train.txt"),
+             "val_file": os.path.join("wsl4mis",
+                                      "data",
+                                      "LVSC",
+                                      "val.txt"),
+             "test_file": os.path.join("wsl4mis",
+                                       "data",
+                                       "LVSC",
+                                       "test.txt"),
+             "num_classes": 2,
+             "train_results_dir": "",
+             "train_logits_path": "train_preds.npz"
+             },
         "label":
             {   "data_root": os.path.join("wsl4mis_data", "LVSC"),
                 "train_file": os.path.join("wsl4mis",
