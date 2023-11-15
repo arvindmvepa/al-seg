@@ -87,14 +87,15 @@ class StronglySupModel(WSL4MISModel):
                 outputs_soft = torch.softmax(outputs, dim=1)
 
                 # clean up label_batch in case values outside range
-                long_label_batch= label_batch[:].long()
-                high_mask = long_label_batch > (self.num_classes-1)
-                indices = torch.nonzero(high_mask)
-                long_label_batch[indices] = (self.num_classes-1)
-                low_mask = long_label_batch < 0
-                indices = torch.nonzero(low_mask)
-                long_label_batch[indices] = 0
-                loss_ce = ce_loss(outputs, long_label_batch)
+                #long_label_batch= label_batch[:].long()
+                #high_mask = long_label_batch > (self.num_classes-1)
+                #indices = torch.nonzero(high_mask)
+                #long_label_batch[indices] = (self.num_classes-1)
+                #low_mask = long_label_batch < 0
+                #indices = torch.nonzero(low_mask)
+                #long_label_batch[indices] = 0
+                #loss_ce = ce_loss(outputs, long_label_batch)
+                loss_ce = ce_loss(outputs, label_batch[:].long())
                 loss = 0.5 * (loss_ce + dice_loss(outputs_soft,
                                                   label_batch.unsqueeze(1)))
 
