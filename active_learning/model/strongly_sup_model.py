@@ -86,6 +86,8 @@ class StronglySupModel(WSL4MISModel):
                 outputs = model(volume_batch)
                 outputs_soft = torch.softmax(outputs, dim=1)
 
+                # round targets to avoid any interpolation issues with the masks
+                label_batch = torch.round(label_batch)
                 loss_ce = ce_loss(outputs, label_batch[:].long())
                 loss = 0.5 * (loss_ce + dice_loss(outputs_soft,
                                                   label_batch.unsqueeze(1)))
