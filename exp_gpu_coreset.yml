@@ -2,7 +2,7 @@ model:
   model_type: "strong"
   ann_type: "label"
   ensemble_size: 1
-  max_iterations: 10
+  max_iterations: 30000
   gpus: "cuda:0"
 policy:
   policy_type: ranked
