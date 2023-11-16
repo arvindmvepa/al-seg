@@ -203,8 +203,6 @@ class GPUkCenterGreedy(SamplingMethod):
 
             if self.use_uncertainty:
                 # dimensions will automatically broadcoast
-                print(f"self.wt_uncertainty_arr.shape: {self.wt_uncertainty_arr.shape}")
-                print(f"dist.shape: {dist.shape}")
                 dist = dist + self.wt_uncertainty_arr * 0.5
                 for j in range(x.shape[0]):
                     dist[:,j] = dist[:, j] + self.wt_uncertainty_arr[j]*0.5
