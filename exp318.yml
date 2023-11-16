@@ -15,6 +15,7 @@ policy:
   rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0],  [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
   dataset_type: "LVSC"
+  alg_string: gpu_kcenter_greedy
   data_geometry_type: kcenter_greedy
   seed: 1
   contrastive: True
