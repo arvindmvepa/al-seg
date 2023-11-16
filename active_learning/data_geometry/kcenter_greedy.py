@@ -268,6 +268,7 @@ class GPUkCenterGreedy(SamplingMethod):
         uncertainty_arr = None
         if self.use_uncertainty:
             uncertainty_arr = np.sum(self.X[:, self.uncertainty_starting_index:self.uncertainty_ending_index], axis=1) * self.uncertainty_wt
+            uncertainty_arr = uncertainty_arr.reshape((-1, 1))
             print("Using uncertainty, uncertainty array shape: ", uncertainty_arr.shape)
             uncertainty_arr = torch.from_numpy(uncertainty_arr).float().to(self.gpus)
         shape = im_features.shape
