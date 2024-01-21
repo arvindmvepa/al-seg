@@ -16,12 +16,13 @@ import torch
 class WSL4MISModel(SoftmaxMixin, BaseModel):
     """WSL4MIS Model class"""
 
-    def __init__(self, dataset="ACDC", ann_type="scribble", ensemble_size=1,
+    def __init__(self, dataset="ACDC", ann_type="scribble", scribble_gen=None, ensemble_size=1,
                  seg_model='unet_cct', batch_size=6, base_lr=0.01, max_iterations=60000,
                  deterministic=1, patch_size=(256, 256), inf_train_type="preds", feature_decoder_index=0, seed=0,
                  gpus="cuda:0", tag=""):
         super().__init__(ann_type=ann_type, dataset=dataset, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
+        self.scribble_gen = scribble_gen
         self.seg_model = seg_model
         self.batch_size = batch_size
         self.max_iterations = max_iterations

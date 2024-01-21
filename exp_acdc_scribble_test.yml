@@ -1,0 +1,15 @@
+model:
+  model_type: "dmpls"
+  ann_type: "label"
+  dataset: "ACDC"
+  ensemble_size: 3
+  gpus: "cuda:0"
+  scribble_gen: skeleton
+policy:
+  policy_type: random
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.05, 0]]
+exp_dir: "dpmls_acdc_scribble_test_run"
