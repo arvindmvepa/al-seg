@@ -46,7 +46,7 @@ class DMPLSModel(WSL4MISModel):
                                 data_root=self.data_root)
         db_val = BaseDataSets(split="val", val_file=self.orig_val_im_list_file, data_root=self.data_root)
 
-        trainloader = DataLoader(db_train, batch_size=self.batch_size, shuffle=True, num_workers=1, pin_memory=True)
+        trainloader = DataLoader(db_train, batch_size=self.batch_size, shuffle=True, num_workers=0, pin_memory=True)
         valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
 
         model.train()
