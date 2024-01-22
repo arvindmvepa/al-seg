@@ -76,7 +76,7 @@ class DMPLSModel(WSL4MISModel):
                     volume_batch)
                 outputs_soft1 = torch.softmax(outputs, dim=1)
                 outputs_soft2 = torch.softmax(outputs_aux1, dim=1)
-
+                print("debug, ", label_batch)
                 loss_ce1 = ce_loss(outputs, label_batch[:].long())
                 loss_ce2 = ce_loss(outputs_aux1, label_batch[:].long())
                 loss_ce = 0.5 * (loss_ce1 + loss_ce2)
