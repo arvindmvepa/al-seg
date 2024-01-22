@@ -53,8 +53,8 @@ class DMPLSModel(WSL4MISModel):
 
         optimizer = optim.SGD(model.parameters(), lr=self.base_lr,
                               momentum=0.9, weight_decay=0.0001)
-        ce_loss = CrossEntropyLoss(ignore_index=4)
-        dice_loss = losses.pDLoss(self.num_classes, ignore_index=4)
+        ce_loss = CrossEntropyLoss(ignore_index=self.num_classes)
+        dice_loss = losses.pDLoss(self.num_classes, ignore_index=self.num_classes)
 
         logging.info("{} iterations per epoch".format(len(trainloader)))
 
