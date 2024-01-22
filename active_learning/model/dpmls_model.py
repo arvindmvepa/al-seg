@@ -46,7 +46,7 @@ class DMPLSModel(WSL4MISModel):
                                 data_root=self.data_root)
         db_val = BaseDataSets(split="val", val_file=self.orig_val_im_list_file, data_root=self.data_root)
 
-        trainloader = DataLoader(db_train, batch_size=self.batch_size, shuffle=True, num_workers=0, pin_memory=True)
+        trainloader = DataLoader(db_train, batch_size=self.batch_size, shuffle=True, num_workers=1, pin_memory=True)
         valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
 
         model.train()
@@ -76,7 +76,6 @@ class DMPLSModel(WSL4MISModel):
                     volume_batch)
                 outputs_soft1 = torch.softmax(outputs, dim=1)
                 outputs_soft2 = torch.softmax(outputs_aux1, dim=1)
-                print("debug, ", torch.unique(label_batch))
                 loss_ce1 = ce_loss(outputs, label_batch[:].long())
                 loss_ce2 = ce_loss(outputs_aux1, label_batch[:].long())
                 loss_ce = 0.5 * (loss_ce1 + loss_ce2)
