@@ -1,0 +1,37 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 3
+  max_iterations: 30000
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 2
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+    inf_train: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 2
+  contrastive: True
+  feature_model: True
+  extra_feature_wt: 1.0
+  uncertainty_wt: 1.0
+  use_uncertainty: True
+  use_labels: True
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 8
+    fuse_image_data: True
+    fuse_image_data_size_prop: .2
+    seed: 2
+    use_phase: True
+    pos_loss1: True
+    pos_loss1_wt: .1
+    reset_sampler_every_epoch: True
+model_uncertainty:
+  model_uncertainty_type: ensemble
+  score_func: entropy_w_label_probs
+exp_dir: "DMPLS_exp2_coreset_fuse20_pos_loss1_wt01_use_phase_uncertainty1_v13"
