@@ -1,5 +1,5 @@
 model:
-  model_type: "db_strong"
+  model_type: "strong"
   ann_type: "label"
   dataset: "CHAOS_CT"
   ensemble_size: 3
@@ -19,4 +19,4 @@ data_geometry:
   use_model_features: True
   starting_sample: 10
   dataset_type: "CHAOS_CT"
-exp_dir: "DMPLS_exp0_coregcn_model_fts_ss10_rstart_CHAOS_exp0_v13"
+exp_dir: "DMPLS_exp1_coregcn_model_fts_ss10_rstart_CHAOS_v13"
