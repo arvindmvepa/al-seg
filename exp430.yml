@@ -18,4 +18,5 @@ data_geometry:
   seed: 1
   use_model_features: True
   starting_sample: 10
+  dataset_type: "CHAOS_CT"
 exp_dir: "DMPLS_exp0_coregcn_model_fts_ss10_rstart_CHAOS_exp0_v13"
