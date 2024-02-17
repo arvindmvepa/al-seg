@@ -12,9 +12,9 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: True
-  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0],  [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+  rounds: [[.01, 0, random, True], [.01, 0], [.01, 0], [.01, 0], [.01, 0],  [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
   data_geometry_type: vaal
   seed: 1
   dataset_type: "CHAOS_CT"
-exp_dir: "DMPLS_exp1_vaal_CHAOS_v13"
+exp_dir: "DMPLS_sup_exp1_vaal_CHAOS_v13"
