@@ -252,6 +252,8 @@ class SoftmaxMixin:
             filtered_im_files = [im_file for im_file in im_files if im_file not in ignore_im_files]
         else:
             filtered_im_files = im_files
+        print("debug: im_files[:5]", im_files[:5])
+        print("debug: ignore_ims_dict[self.im_key][:5]", ignore_ims_dict[self.im_key][:5])
         print("debug: len(filtered_im_files)", len(filtered_im_files))
         print("debug: len(im_files)", len(im_files))
         # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
