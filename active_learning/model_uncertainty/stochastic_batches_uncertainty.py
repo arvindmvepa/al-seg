@@ -63,13 +63,11 @@ class StochasticBatchesUncertainty(EnsembleUncertainty):
             group, group_score = group_and_score
             for im_file, _ in group:
                 flattened_scores_list.append((im_file, group_score))
-        print(flattened_scores_list)
-        """
+
         with open(im_score_file, "w") as f:
             for im_file, score in flattened_scores_list:
                 f.write(f"{im_file},{np.round(score, 7)}\n")
                 f.flush()
-        """
 
 
 
