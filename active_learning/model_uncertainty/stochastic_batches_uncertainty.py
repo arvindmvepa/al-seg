@@ -34,7 +34,7 @@ class StochasticBatchesUncertainty(EnsembleUncertainty):
         im_scores_list = [im_score.strip().split(",") for im_score in im_scores_list]
         im_scores_list = [(im_score[0], float(im_score[1])) for im_score in im_scores_list]
 
-        unann_im_files = [im_score for im_score in im_scores_list if im_score[0] not in ignore_ims_dict[self.im_key]]
+        unann_im_files = [im_score for im_score in im_scores_list if im_score[0] not in ignore_ims_dict[self.model.im_key]]
         shuffled_unann_im_files = sample(unann_im_files, len(unann_im_files))
 
         # Calculate the number of full groups and the remainder
