@@ -1,5 +1,6 @@
 from random import sample
 import numpy as np
+import os
 from active_learning.model_uncertainty.ensemble_uncertainty import EnsembleUncertainty
 from active_learning.model_uncertainty.uncertainty_scoring_functions import scoring_functions
 
@@ -33,6 +34,10 @@ class StochasticBatchesUncertainty(EnsembleUncertainty):
         # get the scores per image from the score file in this format: img_name, score
         im_scores_list = [im_score.strip().split(",") for im_score in im_scores_list]
         im_scores_list = [(im_score[0], float(im_score[1])) for im_score in im_scores_list]
+
+        # make sure to ignore the images that are in the ignore_ims_dict
+        ignore_im_files = [os.path.basename(im_file) for im_file in ignore_ims_dict[self.model.im_key]]
+        im_scores_list = [(im_file,score) for im_file,score in im_scores_list if os.path.basename(im_file) not in ignore_im_files]
 
         unann_im_files = [im_score for im_score in im_scores_list if im_score[0] not in ignore_ims_dict[self.model.im_key]]
         shuffled_unann_im_files = sample(unann_im_files, len(unann_im_files))
