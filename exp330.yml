@@ -1,0 +1,19 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  dataset: "CHAOS_CT"
+  ensemble_size: 3
+  max_iterations: 30000
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 1
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0],  [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  dataset_type: "CHAOS_CT"
+  data_geometry_type: kcenter_greedy
+  seed: 1
+exp_dir: "DMPLS_sup_CHAOS_exp1_coreset_v13"
