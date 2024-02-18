@@ -55,13 +55,13 @@ class StochasticBatchesUncertainty(EnsembleUncertainty):
         group_scores = []
         for group in groups:
             group_score = np.mean([im_score[1] for im_score in group])
-            group_scores.append((group_scores, group_score))
+            group_scores.append((group, group_score))
 
         sorted_group_scores_list = sorted(group_scores, key=lambda x: x[1])
         flattened_scores_list = []
         for group_and_score in sorted_group_scores_list:
             group, group_score = group_and_score
-            for im_file, im_score in group:
+            for im_file, _ in group:
                 flattened_scores_list.append((im_file, group_score))
         print(flattened_scores_list)
         """
