@@ -17,4 +17,5 @@ policy:
 model_uncertainty:
   model_uncertainty_type: stochastic
   score_func: entropy_w_label_probs
+  seed: 0
 exp_dir: "dmpls_stochastic_test_run"

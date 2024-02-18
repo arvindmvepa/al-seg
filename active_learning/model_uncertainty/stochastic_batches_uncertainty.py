@@ -1,4 +1,4 @@
-from random import sample
+from random import Random
 import numpy as np
 import os
 from active_learning.model_uncertainty.ensemble_uncertainty import EnsembleUncertainty
@@ -16,9 +16,11 @@ class StochasticBatchesUncertainty(EnsembleUncertainty):
     """
 
 
-    def __init__(self, sbatch_size=10, **kwargs):
+    def __init__(self, sbatch_size=10, seed=0, **kwargs):
         super().__init__(**kwargs)
         self.sbatch_size=sbatch_size
+        self.seed = seed
+        self.random_gen = Random(self.seed)
 
     def calculate_uncertainty(self, im_score_file, round_dir, ignore_ims_dict=None, skip=False, **kwargs):
         if skip:
@@ -40,7 +42,7 @@ class StochasticBatchesUncertainty(EnsembleUncertainty):
         im_scores_list = [(im_file,score) for im_file,score in im_scores_list if os.path.basename(im_file) not in ignore_im_files]
 
         unann_im_files = [im_score for im_score in im_scores_list if im_score[0] not in ignore_ims_dict[self.model.im_key]]
-        shuffled_unann_im_files = sample(unann_im_files, len(unann_im_files))
+        shuffled_unann_im_files = self.random_gen.sample(unann_im_files, len(unann_im_files))
 
         # Calculate the number of full groups and the remainder
         num_groups, remainder = divmod(len(shuffled_unann_im_files), self.sbatch_size)
