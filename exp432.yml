@@ -1,0 +1,20 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  dataset: "CHAOS_CT"
+  ensemble_size: 3
+  max_iterations: 30000
+  gpus: "cuda:0"
+  inf_train_type: "features"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0, random, True], [.01, 0], [.01, 0], [.01, 0], [.01, 0],  [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  data_geometry_type: vaal
+  seed: 0
+  dataset_type: "CHAOS_CT"
+exp_dir: "DMPLS_sup_exp0_vaal_CHAOS_v13"
