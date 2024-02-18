@@ -1,6 +1,7 @@
 from active_learning.data_geometry.base_data_geometry import NoDataGeometry
 from active_learning.data_geometry.kcenter_greedy_coreset import KCenterGreedyCoreset
 from active_learning.data_geometry.coregcn_coreset import CoreGCN
+from active_learning.data_geometry.variational_adversarial import VAAL
 
 
 class DataGeometryFactory:
@@ -15,6 +16,8 @@ class DataGeometryFactory:
             geometry = KCenterGreedyCoreset(**geometry_kwargs)
         elif data_geometry_type == "coregcn":
             geometry = CoreGCN(**geometry_kwargs)
+        elif data_geometry_type == "vaal":
+            geometry = VAAL(**geometry_kwargs)
         else:
             raise ValueError(f"There is no geometry_type {data_geometry_type}")
         return geometry

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from active_learning.model.model_params import model_params
+from active_learning.dataset.data_params import data_params
 import os
 from random import Random
 from tqdm import tqdm
@@ -44,10 +44,12 @@ class BaseModel(ABC):
 
     """
 
-    def __init__(self, ann_type="box", data_root=".", ensemble_size=1,  seed=0, gpus="0", tag=""):
-        self.model_params = model_params[self.model_string][ann_type]
+    def __init__(self, ann_type="box", dataset="ACDC", ensemble_size=1,  seed=0, gpus="cuda:0", tag=""):
+        self.data_params = data_params[dataset][ann_type]
         self.ann_type = ann_type
-        self.data_root = data_root
+        self.dataset = dataset
+        self.data_root = data_params[self.dataset][ann_type]["data_root"]
+        self.num_classes = data_params[self.dataset][ann_type]["num_classes"]
         self.ensemble_size = ensemble_size
         self.seed = seed
         self.random_gen = Random(seed)
@@ -192,7 +194,7 @@ class MajorityVoteMixin:
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
         f = open(im_score_file, "w")
         train_results_dirs = sorted(list(glob(os.path.join(round_dir, "*",
-                                                           self.model_params['train_results_dir']))))
+                                                           self.data_params['train_results_dir']))))
         filt_models_result_files = self._filter_unann_ims(train_results_dirs, ignore_ims_dict)
         for models_result_file in tqdm(zip(*filt_models_result_files)):
             results_arr, base_name = self._convert_ensemble_results_to_arr(models_result_file)
@@ -241,8 +243,7 @@ class MajorityVoteMixin:
 class SoftmaxMixin:
 
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict=None, delete_preds=True):
-        f = open(im_score_file, "w")
-        train_logits_path = os.path.join(round_dir, "*", self.model_params['train_logits_path'])
+        train_logits_path = os.path.join(round_dir, "*", self.data_params['train_logits_path'])
         train_results = sorted(list(glob(train_logits_path)))
         im_files = sorted(np.load(train_results[0], mmap_mode='r').files)
         if ignore_ims_dict is not None:
@@ -250,20 +251,20 @@ class SoftmaxMixin:
         else:
             filtered_im_files = im_files
         # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
-        for im_file in tqdm(filtered_im_files):
-            ensemble_preds_arr = []
-            for i, result in enumerate(train_results):
-                preds_arr = np.load(result, mmap_mode='r')[im_file]
-                preds_arr = np.atleast_1d(preds_arr)
-                ensemble_preds_arr.append(preds_arr)
-            ensemble_preds_arr = np.stack(ensemble_preds_arr, axis=0)
-            tensor = torch.from_numpy(ensemble_preds_arr)
-            tensor = tensor.to(self.gpus)
-            # convert to float32 to avoid rounding to inf
-            score = np.float32(score_func(tensor).cpu().detach().numpy())
-            f.write(f"{im_file},{np.round(score, 7)}\n")
-            f.flush()
-        f.close()
+        with open(im_score_file, "w") as f:
+            for im_file in tqdm(filtered_im_files):
+                ensemble_preds_arr = []
+                for i, result in enumerate(train_results):
+                    preds_arr = np.load(result, mmap_mode='r')[im_file]
+                    preds_arr = np.atleast_1d(preds_arr)
+                    ensemble_preds_arr.append(preds_arr)
+                ensemble_preds_arr = np.stack(ensemble_preds_arr, axis=0)
+                tensor = torch.from_numpy(ensemble_preds_arr)
+                tensor = tensor.to(self.gpus)
+                # convert to float32 to avoid rounding to inf
+                score = np.float32(score_func(tensor).cpu().detach().numpy())
+                f.write(f"{im_file},{np.round(score, 7)}\n")
+                f.flush()
         # after obtaining scores, delete the *.npz files for the round
         if delete_preds:
             for result in train_results:

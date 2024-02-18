@@ -1,5 +1,5 @@
 import sys
-from active_learning.model.wsl4mis_model import WSL4MISModel
+from active_learning.model.wsl4mis_model import WSL4MISModel, DeepBayesianWSL4MISMixin
 import json
 import os
 import logging
@@ -19,13 +19,12 @@ import torch
 class StronglySupModel(WSL4MISModel):
     """Strong supervision model for active learning."""
 
-    def __init__(self, ann_type="label", data_root="wsl4mis_data/ACDC", ensemble_size=1,
-                 seg_model='unet', num_classes=4, batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
-                 patch_size=(256, 256), seed=0, gpus="0", tag=""):
-        super().__init__(ann_type=ann_type, data_root=data_root, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
-                         tag=tag)
+    def __init__(self, dataset="ACDC", ann_type="label", ensemble_size=1,
+                 seg_model='unet', batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
+                 patch_size=(256, 256), seed=0, gpus="cuda:0", tag="", **kwargs):
+        super().__init__(ann_type=ann_type, dataset=dataset, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
+                         tag=tag, **kwargs)
         self.seg_model = seg_model
-        self.num_classes = num_classes
         self.batch_size = batch_size
         self.max_iterations = max_iterations
         self.deterministic = deterministic
@@ -87,6 +86,15 @@ class StronglySupModel(WSL4MISModel):
                 outputs = model(volume_batch)
                 outputs_soft = torch.softmax(outputs, dim=1)
 
+                # clean up label_batch in case values outside range
+                #long_label_batch= label_batch[:].long()
+                #high_mask = long_label_batch > (self.num_classes-1)
+                #indices = torch.nonzero(high_mask)
+                #long_label_batch[indices] = (self.num_classes-1)
+                #low_mask = long_label_batch < 0
+                #indices = torch.nonzero(low_mask)
+                #long_label_batch[indices] = 0
+                #loss_ce = ce_loss(outputs, long_label_batch)
                 loss_ce = ce_loss(outputs, label_batch[:].long())
                 loss = 0.5 * (loss_ce + dice_loss(outputs_soft,
                                                   label_batch.unsqueeze(1)))
@@ -177,5 +185,22 @@ class StronglySupModel(WSL4MISModel):
     def __repr__(self):
         mapping = self.__dict__
         mapping["model_cls"] = "StronglySupModel"
+        return json.dumps(mapping)
+
+
+class DeepBayesianStronglySupModel(DeepBayesianWSL4MISMixin, StronglySupModel):
+
+    def __init__(self, T=40, db_score_func="mean_probs", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.T = T
+        self.db_score_func = db_score_func
+
+    @property
+    def model_string(self):
+        return "db_strong"
+
+    def __repr__(self):
+        mapping = self.__dict__
+        mapping["model_cls"] = "DeepBayesianStrongModel"
         return json.dumps(mapping)
  

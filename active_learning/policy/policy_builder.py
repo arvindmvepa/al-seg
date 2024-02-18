@@ -43,6 +43,7 @@ class PolicyBuilder:
         if hasattr(self, "_data_geometry_params"):
             data_geometry = DataGeometryFactory.create_data_geometry(model_uncertainty=model_uncertainty,
                                                                      ann_type=model.ann_type,
+                                                                     gpus=model.gpus,
                                                                      **self._data_geometry_params)
         return PolicyFactory.create_policy(model=model, model_uncertainty=model_uncertainty,
                                            data_geometry=data_geometry, exp_dir=self._exp_dir, **self._policy_params)
