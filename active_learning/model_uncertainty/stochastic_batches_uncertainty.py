@@ -26,6 +26,7 @@ class StochasticBatchesUncertainty(EnsembleUncertainty):
         print("Starting to Ensemble Predictions")
         self.model.get_ensemble_scores(score_func=scoring_functions[self.score_func], round_dir=round_dir,
                                        im_score_file=im_score_file, ignore_ims_dict=ignore_ims_dict, **kwargs)
+        """
         print("Generating Stochastic Batches")
         with open(im_score_file, "r") as f:
             im_scores_list = f.readlines()
@@ -66,9 +67,9 @@ class StochasticBatchesUncertainty(EnsembleUncertainty):
 
         with open(im_score_file, "w") as f:
             for im_file, score in flattened_scores_list:
-                f.write(f"{im_file},{score}\n")
                 f.write(f"{im_file},{np.round(score, 7)}\n")
                 f.flush()
+        """
 
 
 
