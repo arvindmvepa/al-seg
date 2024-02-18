@@ -247,15 +247,11 @@ class SoftmaxMixin:
         train_results = sorted(list(glob(train_logits_path)))
         im_files = sorted(np.load(train_results[0], mmap_mode='r').files)
         im_files = [os.path.basename(im_file) for im_file in im_files]
-        ignore_im_files = [os.path.basename(im_file) for im_file in ignore_ims_dict[self.im_key]]
         if ignore_ims_dict is not None:
+            ignore_im_files = [os.path.basename(im_file) for im_file in ignore_ims_dict[self.im_key]]
             filtered_im_files = [im_file for im_file in im_files if im_file not in ignore_im_files]
         else:
             filtered_im_files = im_files
-        print("debug: im_files[:5]", im_files[:5])
-        print("debug: ignore_ims_dict[self.im_key][:5]", ignore_ims_dict[self.im_key][:5])
-        print("debug: len(filtered_im_files)", len(filtered_im_files))
-        print("debug: len(im_files)", len(im_files))
         # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode
         with open(im_score_file, "w") as f:
             for im_file in tqdm(filtered_im_files):
