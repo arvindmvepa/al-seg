@@ -1,5 +1,5 @@
 model:
-  model_type: "dpmls"
+  model_type: "dmpls"
   ann_type: "scribble"
   ensemble_size: 2
   max_iterations: 30000
@@ -17,4 +17,4 @@ policy:
 model_uncertainty:
   model_uncertainty_type: stochastic
   score_func: entropy_w_label_probs
-exp_dir: "dpmls_stochastic_test_run"
+exp_dir: "dmpls_stochastic_test_run"
