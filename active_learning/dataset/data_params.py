@@ -161,7 +161,7 @@ data_params = {
                                        "data",
                                        "MSCMR",
                                        "test.txt"),
-             "num_classes": 4,
+             "num_classes": 5,
              "train_results_dir": "",
              "train_logits_path": "train_preds.npz"
              },
