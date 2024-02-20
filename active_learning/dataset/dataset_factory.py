@@ -13,6 +13,8 @@ class DatasetFactory:
             dataset = CHAOS_CT_Dataset(**dataset_kwargs)
         elif dataset_type == "LVSC":
             dataset = LVSC_Dataset(**dataset_kwargs)
+        elif dataset_type == "MSCMR":
+            dataset = LVSC_Dataset(**dataset_kwargs)
         else:
             raise ValueError(f"There is no dataset_type {dataset_type}")
         return dataset
