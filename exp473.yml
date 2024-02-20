@@ -1,0 +1,21 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  dataset: "MSCMR"
+  ensemble_size: 3
+  max_iterations: 30000
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0],  [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  data_geometry_type: coregcn
+  seed: 0
+  starting_sample: 10
+  use_model_features: True
+  dataset_type: "MSCMR"
+exp_dir: "DMPLS_MSCMR_exp0_coregcn_ss10_v13"
