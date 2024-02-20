@@ -5,6 +5,7 @@ model:
   ensemble_size: 3
   max_iterations: 30000
   gpus: "cuda:0"
+  inf_train_type: "features"
 policy:
   policy_type: ranked
   seed: 2
@@ -18,4 +19,4 @@ data_geometry:
   starting_sample: 10
   use_model_features: True
   dataset_type: "MSCMR"
-exp_dir: "DMPLS_MSCMR_exp2_coregcn_ss10_v13"
+exp_dir: "DMPLS_MSCMR_exp2_coregcn_ss3_v13"
