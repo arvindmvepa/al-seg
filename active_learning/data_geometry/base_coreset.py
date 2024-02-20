@@ -207,7 +207,8 @@ class BaseCoreset(BaseDataGeometry):
             # only update points that are part of the image features
             assert processed_data.shape[1] >= labels.shape[1]
             im_features = processed_data[:, :labels.shape[1]]
-            label_mask = np.where(labels != 4, self.label_wt, 1)
+            # hard-coded number of classes to be (background + 3)
+            label_mask = np.where(labels < 4, self.label_wt, 1)
             im_features = im_features * label_mask
             processed_data[:, :labels.shape[1]] = im_features
         features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
