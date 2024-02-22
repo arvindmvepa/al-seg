@@ -8,8 +8,7 @@ model:
 policy:
   policy_type: ranked
   seed: 4
-  use_labels: True
-  label_wt: 2.0
+  resume: True
   ensemble_kwargs:
     skip: False
     inf_test: True
