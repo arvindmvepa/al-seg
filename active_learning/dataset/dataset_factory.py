@@ -1,4 +1,4 @@
-from active_learning.dataset import ACDC_Dataset, CHAOS_CT_Dataset, LVSC_Dataset, MSCMR_Dataset
+from active_learning.dataset import ACDC_Dataset, CHAOS_CT_Dataset, LVSC_Dataset, MSCMR_Dataset, DAVIS_Dataset
 
 
 class DatasetFactory:
@@ -15,6 +15,8 @@ class DatasetFactory:
             dataset = LVSC_Dataset(**dataset_kwargs)
         elif dataset_type == "MSCMR":
             dataset = MSCMR_Dataset(**dataset_kwargs)
+        elif dataset_type == "DAVIS":
+            dataset = DAVIS_Dataset(**dataset_kwargs)
         else:
             raise ValueError(f"There is no dataset_type {dataset_type}")
         return dataset

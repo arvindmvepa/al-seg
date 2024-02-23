@@ -1,0 +1,18 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  dataset: "DAVIS"
+  ensemble_size: 1
+  max_iterations: 30000
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: False
+  rounds: [[.1, 0], [.05, 0], [.05, 0], [.05, 0], [.05, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  dataset_type: "DAVIS"
+exp_dir: "DMPLS_DAVIS_coreset_test_run"
