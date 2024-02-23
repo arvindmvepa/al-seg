@@ -47,9 +47,9 @@ class DAVIS_Dataset(BaseDataset):
         return non_image_indices
 
     def _extract_volume_name(self, im_path):
-        patient_num_string_raw = im_path[self._get_volume_name_start_index(im_path):]
-        patient_num_string = patient_num_string_raw[:patient_num_string_raw.index("_")]
-        return int(patient_num_string)
+        volume_name_raw = im_path[self._get_volume_name_start_index(im_path):]
+        volume_name = volume_name_raw[:volume_name_raw.index("_")]
+        return volume_name
 
     def _get_volume_name_start_index(self, im_path):
         patient_prefix = "/"
