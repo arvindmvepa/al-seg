@@ -11,9 +11,9 @@ policy:
   seed: 0
   ensemble_kwargs:
     skip: False
-    inf_test: False
+    inf_test: True
   uncertainty_kwargs:
     skip: False
     delete_preds: True
-  rounds: [[.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0]]
+  rounds: [[.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0]]
 exp_dir: "DMPLS_strong_DAVIS_test_run"
