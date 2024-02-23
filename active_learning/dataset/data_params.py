@@ -153,7 +153,7 @@ data_params = {
             {"data_root": os.path.join("wsl4mis_data", "DAVIS"),
              "train_file": os.path.join("wsl4mis",
                                         "data",
-                                        "MSCMR",
+                                        "DAVIS",
                                         "train.txt"),
              "val_file": os.path.join("wsl4mis",
                                       "data",
