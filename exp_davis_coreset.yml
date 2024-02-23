@@ -4,6 +4,7 @@ model:
   dataset: "DAVIS"
   ensemble_size: 1
   max_iterations: 30000
+  in_chns: 3
   gpus: "cuda:0"
 policy:
   policy_type: ranked
