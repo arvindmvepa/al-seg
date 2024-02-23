@@ -24,8 +24,13 @@ class BaseDataset(ABC):
 
     @staticmethod
     def _patch_im(im, patch_size):
-        x, y = im.shape
-        image = zoom(im, (patch_size[0] / x, patch_size[1] / y), order=0)
+        x, y = im.shape[0], im.shape[1]
+        if len(im.shape) == 2:
+            image = zoom(im, (patch_size[0] / x, patch_size[1] / y), order=0)
+        elif len(im.shape) == 3:
+            image = zoom(im, (patch_size[0] / x, patch_size[1] / y, 1), order=0)
+        else:
+            raise ValueError("Image shape not supported")
         return image
 
     def _load_image(self, case):
