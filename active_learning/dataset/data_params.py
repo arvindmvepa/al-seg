@@ -148,4 +148,24 @@ data_params = {
              "train_logits_path": "train_preds.npz"
              },
     },
+    "DAVIS": {
+        "label":
+            {"data_root": os.path.join("wsl4mis_data", "DAVIS"),
+             "train_file": os.path.join("wsl4mis",
+                                        "data",
+                                        "MSCMR",
+                                        "train.txt"),
+             "val_file": os.path.join("wsl4mis",
+                                      "data",
+                                      "DAVIS",
+                                      "val.txt"),
+             "test_file": os.path.join("wsl4mis",
+                                       "data",
+                                       "DAVIS",
+                                       "test.txt"),
+             "num_classes": 2,
+             "train_results_dir": "",
+             "train_logits_path": "train_preds.npz"
+             },
+    },
     }

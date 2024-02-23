@@ -1,0 +1,19 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  dataset: "DAVIS"
+  ensemble_size: 1
+  max_iterations: 30000
+  in_chns: 3
+  gpus: "cuda:0"
+policy:
+  policy_type: random
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: False
+  uncertainty_kwargs:
+    skip: False
+    delete_preds: True
+  rounds: [[.005, 0], [.005, 0]]
+exp_dir: "DMPLS_strong_DAVIS_test_run"
