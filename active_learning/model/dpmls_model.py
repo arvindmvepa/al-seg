@@ -34,7 +34,7 @@ class DMPLSModel(WSL4MISModel):
         logging.info(str(self.__dict__))
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
-        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
+        model = net_factory(net_type=self.seg_model, in_chns=self.in_chns, class_num=self.num_classes)
         model = model.to(self.gpus)
 
         train_file = self.get_round_train_file_paths(round_dir=round_dir,
