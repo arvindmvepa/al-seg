@@ -16,7 +16,7 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, dataset_type="ACDC",
-                 dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
+                 in_chns=1, dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
                  uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0, max_dist=None,
                  wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0,
                  weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0,
@@ -36,6 +36,7 @@ class BaseCoreset(BaseDataGeometry):
             self.dataset_kwargs = {}
         else:
             self.dataset_kwargs = dataset_kwargs
+        self.in_chns = in_chns
         self.use_uncertainty = use_uncertainty
         self.model_uncertainty = model_uncertainty
         self.uncertainty_score_file = uncertainty_score_file

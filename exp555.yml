@@ -25,6 +25,7 @@ data_geometry:
   feature_model_params:
     encoder: resnet18
     batch_size: 8
+    in_chns: 3
     fuse_image_data: True
     fuse_image_data_size_prop: .20
     seed: 0

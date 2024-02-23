@@ -13,12 +13,13 @@ from active_learning.feature_model.contrastive_loss import losses
 
 class FeatureModel(object):
 
-    def __init__(self, exp_dir=None, encoder='resnet18', patch_size=(256, 256), pretrained=True, inf_batch_size=128,
-                 fuse_image_data=False, fuse_image_data_size_prop=.10, gpus="cuda:0"):
+    def __init__(self, exp_dir=None, encoder='resnet18', patch_size=(256, 256), in_chns=1, pretrained=True,
+                 inf_batch_size=128, fuse_image_data=False, fuse_image_data_size_prop=.10, gpus="cuda:0"):
         super().__init__()
         self.exp_dir = exp_dir
         self.encoder = encoder
         self.patch_size = patch_size
+        self.in_chns = in_chns
         self.pretrained = pretrained
         self.inf_batch_size = inf_batch_size
         self.gpus = gpus
@@ -59,10 +60,10 @@ class FeatureModel(object):
     def get_encoder(self):
         if self.encoder == 'resnet18':
             print("Using Resnet18 for feature extraction...")
-            encoder = resnet18(pretrained=self.pretrained)
+            encoder = resnet18(pretrained=self.pretrained, inchans=self.in_chns)
         elif self.encoder == 'resnet50':
             print("Using Resnet50 for feature extraction...")
-            encoder = resnet50(pretrained=self.pretrained)
+            encoder = resnet50(pretrained=self.pretrained, inchans=self.in_chns)
         else:
             raise ValueError(f"Unknown feature model {self.encoder}")
         encoder = encoder.to(self.gpus)
@@ -160,10 +161,10 @@ class ContrastiveFeatureModel(FeatureModel):
     def get_encoder(self):
         if self.encoder == 'resnet18':
             print("Using Resnet18 for feature extraction...")
-            encoder = resnet18(pretrained=self.pretrained, inchans=1)
+            encoder = resnet18(pretrained=self.pretrained, inchans=self.in_chns)
         elif self.encoder == 'resnet50':
             print("Using Resnet50 for feature extraction...")
-            encoder = resnet50(pretrained=self.pretrained, inchans=1)
+            encoder = resnet50(pretrained=self.pretrained, inchans=self.in_chns)
         else:
             raise ValueError(f"Unknown feature model {self.encoder}")
         encoder = ContrastiveLearner(encoder, projection_dim=self.projection_dim)
