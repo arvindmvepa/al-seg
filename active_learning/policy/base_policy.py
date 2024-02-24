@@ -185,6 +185,12 @@ class BaseActiveLearningPolicy:
             if calculate_model_uncertainty and (self._round_num < (self.num_rounds - 1)):
                 # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
                 if (not self.resume) or (not os.path.exists(im_score_file)):
+                    # do inference, if necessary, here. sort of a hacky way to do this
+                    inf_train = ensemble_kwargs.pop("inf_train", inf_train)
+                    self.model.train_ensemble(round_dir=self.round_dir,
+                                              cur_total_oracle_split=self.cur_total_oracle_split,
+                                              cur_total_pseudo_split=self.cur_total_pseudo_split, train = False,
+                                              inf_train = inf_train, inf_val = False, inf_test = False)
                     self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
                     torch.cuda.empty_cache()
                 else:
