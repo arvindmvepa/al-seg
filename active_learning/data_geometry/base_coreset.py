@@ -218,6 +218,11 @@ class BaseCoreset(BaseDataGeometry):
                 uncertainty_kwargs = dict()
             uncertainty_round_score_file = os.path.join(prev_round_dir, self.uncertainty_score_file)
             if not os.path.exists(uncertainty_round_score_file):
+                self.model_uncertainty.model.train_ensemble(round_dir=prev_round_dir,
+                                                            cur_total_oracle_split=None,
+                                                            cur_total_pseudo_split=None,
+                                                            train=False, inf_train=True,
+                                                            inf_val=False, inf_test=False)
                 self.model_uncertainty.calculate_uncertainty(im_score_file=uncertainty_round_score_file,
                                                              round_dir=prev_round_dir, **uncertainty_kwargs)
             uncertainty_features = self._extract_uncertainty_features(uncertainty_round_score_file)
