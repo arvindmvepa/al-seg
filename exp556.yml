@@ -8,10 +8,12 @@ model:
   gpus: "cuda:0"
 policy:
   policy_type: ranked
+  resume: True
   seed: 1
   ensemble_kwargs:
     skip: False
     inf_test: True
+    inf_train: True
   rounds: [[.2, 0], [.2, 0], [.2, 0], [.2, 0]]
 data_geometry:
   dataset_type: "DAVIS"
