@@ -34,6 +34,10 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         self.gpus = gpus
 
     def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
+        if os.path.exists(train_preds_path):
+            print(f"Train preds already exist in {train_preds_path}")
+            return
         model = self.load_best_model(snapshot_dir).to(self.gpus)
         if self.inf_train_type == "features":
             model = model.encoder
@@ -52,7 +56,6 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
             outputs = model(volume_batch)
             outputs_ = self.extract_train_features(outputs)
             train_preds[slice_basename] = np.float16(outputs_.cpu().detach().numpy())
-        train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
         np.savez_compressed(train_preds_path, **train_preds)
 
     def inf_eval_model(self, eval_file, model_no, snapshot_dir, round_dir, metrics_file, cur_total_oracle_split=0,
