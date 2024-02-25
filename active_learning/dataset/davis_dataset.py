@@ -6,7 +6,6 @@ import numpy as np
 class DAVIS_Dataset(BaseDataset):
 
     def _load_meta_data(self, im_data_file):
-        print("debug: im_data_file: ", im_data_file)
         meta_data = {}
         meta_data['VOLUME_NAME'] = self._extract_volume_name(im_data_file)
         meta_data['SLICE_NO'] = self._extract_slice_no(im_data_file)
@@ -51,6 +50,7 @@ class DAVIS_Dataset(BaseDataset):
 
     def _extract_volume_name(self, im_path):
         volume_name_raw = im_path[self._get_volume_name_start_index(im_path):]
+        print("debug: volume_name_raw: ", volume_name_raw)
         volume_name = volume_name_raw[:volume_name_raw.index("_")]
         return volume_name
 
