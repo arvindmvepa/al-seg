@@ -52,6 +52,7 @@ class DAVIS_Dataset(BaseDataset):
         volume_name_raw = im_path[self._get_volume_name_start_index(im_path):]
         print("debug: volume_name_raw: ", volume_name_raw)
         volume_name = volume_name_raw[:volume_name_raw.index("_")]
+        print("debug: volume_name: ", volume_name)
         return volume_name
 
     def _get_volume_name_start_index(self, im_path):
