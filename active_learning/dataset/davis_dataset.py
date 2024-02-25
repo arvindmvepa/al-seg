@@ -54,7 +54,7 @@ class DAVIS_Dataset(BaseDataset):
         return volume_name
 
     def _get_volume_name_start_index(self, im_path):
-        patient_prefix = "/"
+        patient_prefix = "training_slices/"
         patient_prefix_len = len(patient_prefix)
         patient_prefix_index = im_path.index(patient_prefix)
         patient_num_start_index = patient_prefix_index + patient_prefix_len
