@@ -20,9 +20,7 @@ class DAVIS_Dataset(BaseDataset):
 
             # add patient number
             volume_name = im_meta_datum['VOLUME_NAME']
-            print("debug: volume_name: ", volume_name)
             patient_num = counter[volume_name]
-            print("debug: patient_num: ", patient_num)
             extra_features.append(patient_num)
 
             # add constant for phase
@@ -50,9 +48,7 @@ class DAVIS_Dataset(BaseDataset):
 
     def _extract_volume_name(self, im_path):
         volume_name_raw = im_path[self._get_volume_name_start_index(im_path):]
-        print("debug: volume_name_raw: ", volume_name_raw)
         volume_name = volume_name_raw[:volume_name_raw.index("_")]
-        print("debug: volume_name: ", volume_name)
         return volume_name
 
     def _get_volume_name_start_index(self, im_path):
