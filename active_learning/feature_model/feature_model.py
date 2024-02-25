@@ -294,8 +294,6 @@ class ContrastiveFeatureModel(FeatureModel):
         hierarchical_image_data_dict = {}
         for (datum, cfg_arr) in zip(data, cfgs_arr):
             patient_id = cfg_arr[self._cfg_indices['patient_starting_index']:self._cfg_indices['patient_ending_index']][0]
-            #print("debugging cfg_arr: ", cfg_arr[:50])
-            #print("debugging patient_id: ", patient_id)
             patient_dict = hierarchical_image_data_dict.get(patient_id, {})
             group_id = cfg_arr[self._cfg_indices['phase_starting_index']:self._cfg_indices['phase_ending_index']][0]
             group_dict = patient_dict.get(group_id, {})
@@ -306,7 +304,6 @@ class ContrastiveFeatureModel(FeatureModel):
         hierarchical_image_data_list = []
         hierarchical_flat_image_data_list = []
         hierarchical_flat_cfg_info_list = []
-        #print("debugging len(hierarchical_image_data_dict): ", len(hierarchical_image_data_dict))
         for patient_id in sorted(hierarchical_image_data_dict.keys()):
             patient_dict = hierarchical_image_data_dict[patient_id]
             patient_lst = []
