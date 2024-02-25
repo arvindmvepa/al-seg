@@ -304,6 +304,7 @@ class ContrastiveFeatureModel(FeatureModel):
         hierarchical_image_data_list = []
         hierarchical_flat_image_data_list = []
         hierarchical_flat_cfg_info_list = []
+        print("debugging len(hierarchical_image_data_dict): ", len(hierarchical_image_data_dict))
         for patient_id in sorted(hierarchical_image_data_dict.keys()):
             patient_dict = hierarchical_image_data_dict[patient_id]
             patient_lst = []
