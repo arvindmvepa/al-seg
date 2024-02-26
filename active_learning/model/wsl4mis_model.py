@@ -65,19 +65,25 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         db_eval = BaseDataSets(split="val", val_file=eval_file, data_root=self.data_root)
         evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
         metric_list = 0.0
+        results_map = {}
         for i_batch, sampled_batch in enumerate(evalloader):
             metric_i = test_single_volume_cct(
                 sampled_batch["image"], sampled_batch["label"],
                 model, classes=self.num_classes, gpus=self.gpus)
-            metric_list += np.array(metric_i)
+            metric_i = np.array(metric_i)
+            results_map[sampled_batch["case"]] = metric_i
+            metric_list += metric_i
         metric_list = metric_list / len(db_eval)
-
         performance = np.mean(metric_list, axis=0)[0]
         mean_hd95 = np.mean(metric_list, axis=0)[1]
         metrics = {"performance": performance, "mean_hd95": mean_hd95}
         metrics_file = os.path.join(snapshot_dir, metrics_file)
         with open(metrics_file, "w") as outfile:
             json_object = json.dumps(metrics, indent=4)
+            outfile.write(json_object)
+        results_map_file = os.path.join(snapshot_dir, os.path.basename(metrics_file)+"_map.json")
+        with open(results_map_file, "w") as outfile:
+            json_object = json.dumps(results_map, indent=4)
             outfile.write(json_object)
 
     def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
