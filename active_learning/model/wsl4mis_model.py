@@ -71,6 +71,7 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
                 sampled_batch["image"], sampled_batch["label"],
                 model, classes=self.num_classes, gpus=self.gpus)
             metric_i = np.array(metric_i)
+            print(metric_i)
             results_map[sampled_batch["case"][0]] = float(metric_i)
             metric_list += metric_i
         metric_list = metric_list / len(db_eval)
