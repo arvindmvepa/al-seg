@@ -71,8 +71,9 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
                 sampled_batch["image"], sampled_batch["label"],
                 model, classes=self.num_classes, gpus=self.gpus)
             metric_i = np.array(metric_i)
-            print(metric_i)
-            results_map[sampled_batch["case"][0]] = float(metric_i)
+            print(metric_i[:, 0])
+            print(np.mean(metric_i[:, 0]))
+            results_map[sampled_batch["case"][0]] = np.mean(metric_i[:, 0])
             metric_list += metric_i
         metric_list = metric_list / len(db_eval)
         performance = np.mean(metric_list, axis=0)[0]
