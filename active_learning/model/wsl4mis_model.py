@@ -110,7 +110,7 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
             if not any(prediction_im in sampled_batch["case"][0] for prediction_im in prediction_ims):
                 continue
             prediction_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model,
-                                                  classes=self.num_classes, gpus=self.gpus)
+                                                  classes=self.num_classes, gpus=self.gpus, generate=True)
             prediction_i = np.stack(prediction_i, axis=0)
             pred_h5 = os.path.join(snapshot_dir, case_wo_ext + "_pred.h5")
             with h5py.File(pred_h5, "w") as h5f:
