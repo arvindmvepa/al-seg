@@ -111,7 +111,7 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
                 continue
             prediction_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model,
                                                   classes=self.num_classes, gpus=self.gpus)
-            prediction_i = prediction_i.astype(np.float32)
+            prediction_i = np.stack(prediction_i, axis=0)
             pred_h5 = os.path.join(snapshot_dir, case_wo_ext + "_pred.h5")
             with h5py.File(pred_h5, "w") as h5f:
                 h5f.create_dataset("data", data=prediction_i, dtype=np.float32)
