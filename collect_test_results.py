@@ -4,7 +4,7 @@ from active_learning.policy.policy_builder import PolicyBuilder
 
 if __name__ == '__main__':
     root_dir = "."
-    model_dirs = ["/home/asjchoi/al-seg4/DMPLS_exp4_coreset_fuse20_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_uncertainty1_v10/round_4/1"]
+    model_dirs = [r"/home/asjchoi/al-seg4/DMPLS_exp4_coreset_fuse20_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_uncertainty1_v10/round_4/1", r"C:\Users\Arvind\Documents\al-seg-arvind2\DMPLS_exp1_random_v10\round_4\2"]
     prediction_ims = ["patient109_frame10.h5", "patient130_frame11.h5", "patient125_frame07.h5", "patient139_frame08.h5", "patient110_frame11.h5"]
 
     for model_dir in model_dirs:
