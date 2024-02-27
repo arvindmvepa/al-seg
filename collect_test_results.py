@@ -1,6 +1,6 @@
 import os
 from active_learning.policy.policy_builder import PolicyBuilder
-from glob import glob
+
 
 if __name__ == '__main__':
     root_dir = "."
@@ -12,7 +12,7 @@ if __name__ == '__main__':
         if not os.path.exists(model_pth):
             continue
         model_no = int(os.path.basename(model_dir))
-        round_num = int(os.path.dirname(model_dir).split("_")[1])
+        round_num = int(os.path.basename(os.path.dirname(model_dir)).split("_")[1])
         exp_dir = os.path.dirname(os.path.dirname(model_dir))
         exp_file = os.path.join(exp_dir, "exp.yml")
         policy = PolicyBuilder.build_policy(exp_file)
