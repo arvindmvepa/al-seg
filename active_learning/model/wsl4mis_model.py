@@ -11,6 +11,7 @@ from wsl4mis.code.val_2D import test_single_volume_cct
 from torchvision import transforms
 from torch.utils.data import DataLoader
 import torch
+import h5py
 
 
 class WSL4MISModel(SoftmaxMixin, BaseModel):
@@ -67,7 +68,7 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         metric_list = 0.0
         results_map = {}
         for i_batch, sampled_batch in enumerate(evalloader):
-            metric_i = test_single_volume_cct(
+            prediction_i,_ = test_single_volume_cct(
                 sampled_batch["image"], sampled_batch["label"],
                 model, classes=self.num_classes, gpus=self.gpus)
             metric_i = np.array(metric_i)
@@ -97,6 +98,23 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
                             metrics_file="test_metrics.json", round_dir=round_dir,
                             cur_total_oracle_split=cur_total_oracle_split,
                             cur_total_pseudo_split=cur_total_pseudo_split)
+
+    def generate_model_results(self, snapshot_dir, prediction_ims=None):
+        model = self.load_best_model(snapshot_dir).to(self.gpus)
+        model.eval()
+        db_eval = BaseDataSets(split="val", val_file=self.orig_test_im_list_file, data_root=self.data_root)
+        evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
+        for i_batch, sampled_batch in enumerate(evalloader):
+            case = sampled_batch["case"][0]
+            case_wo_ext = os.path.basename(case).split(".")[0]
+            if not any(prediction_im in sampled_batch["case"][0] for prediction_im in prediction_ims):
+                continue
+            prediction_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model,
+                                                  classes=self.num_classes, gpus=self.gpus)
+            prediction_i = prediction_i.astype(np.float32)
+            pred_h5 = os.path.join(snapshot_dir, case_wo_ext + "_pred.h5")
+            with h5py.File(pred_h5, "w") as h5f:
+                h5f.create_dataset("data", data=prediction_i, dtype=np.float32)
 
     def load_best_model(self, snapshot_dir):
         model = net_factory(net_type=self.seg_model, in_chns=self.in_chns, class_num=self.num_classes)
