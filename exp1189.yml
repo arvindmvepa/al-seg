@@ -1,0 +1,18 @@
+model:
+  model_type: "lvm_med"
+  ann_type: "label"
+  ensemble_size: 5
+  gpus: "cuda:0"
+  encoder_name: "resnet18"
+  base_original_checkpoint: /local2/amvepa91/al-seg1/DMPLS_exp4_coreset_pos_wt1000_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_label1_v15/cl_feature_model.pt
+  in_chns: 1
+  val_epoch: 5
+policy:
+  policy_type: random
+  seed: 4
+  resume: True
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+exp_dir: "LVMMED_clf_sup_exp4_random_v18"

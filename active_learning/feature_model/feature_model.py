@@ -13,12 +13,13 @@ from active_learning.feature_model.contrastive_loss import losses
 
 class FeatureModel(object):
 
-    def __init__(self, exp_dir=None, encoder='resnet18', patch_size=(256, 256), pretrained=True, inf_batch_size=128,
-                 fuse_image_data=False, fuse_image_data_size_prop=.10, gpus="cuda:0"):
+    def __init__(self, exp_dir=None, encoder='resnet18', patch_size=(256, 256), in_chns=1, pretrained=True,
+                 inf_batch_size=128, fuse_image_data=False, fuse_image_data_size_prop=.10, gpus="cuda:0"):
         super().__init__()
         self.exp_dir = exp_dir
         self.encoder = encoder
         self.patch_size = patch_size
+        self.in_chns = in_chns
         self.pretrained = pretrained
         self.inf_batch_size = inf_batch_size
         self.gpus = gpus
@@ -59,10 +60,10 @@ class FeatureModel(object):
     def get_encoder(self):
         if self.encoder == 'resnet18':
             print("Using Resnet18 for feature extraction...")
-            encoder = resnet18(pretrained=self.pretrained)
+            encoder = resnet18(pretrained=self.pretrained, inchans=self.in_chns)
         elif self.encoder == 'resnet50':
             print("Using Resnet50 for feature extraction...")
-            encoder = resnet50(pretrained=self.pretrained)
+            encoder = resnet50(pretrained=self.pretrained, inchans=self.in_chns)
         else:
             raise ValueError(f"Unknown feature model {self.encoder}")
         encoder = encoder.to(self.gpus)
@@ -73,6 +74,8 @@ class FeatureModel(object):
         if self.fuse_image_data:
             return self.fuse_image_data_with_model_features(model_features)
         else:
+            print("Returning model features without fusing image data...")
+            print("Model Features Shape: ", model_features.shape)
             return model_features
 
     def fuse_image_data_with_model_features(self, model_features):
@@ -108,7 +111,7 @@ class ContrastiveFeatureModel(FeatureModel):
                  num_epochs=100, patch_size=(256,256), loss="nt_xent", loss_wt=1.0, neg_loss=None, neg_loss_wt=0.1,
                  pos_loss1=None, pos_loss1_wt=0.1, pos_loss1_mask=(), pos_loss2=None, pos_loss2_wt=0.1,
                  pos_loss2_mask=(), pos_loss3=None, pos_loss3_wt=0.1, pos_loss3_mask=(),
-                 patience=5, tol=.01, cl_model_save_name="cl_feature_model.pt", use_patient=False,
+                 patience=5, tol=.01, cl_model_save_name="cl_feature_model.pt", cl_prev_path=None, use_patient=False,
                  use_phase=False, use_slice_pos=False, reset_sampler_every_epoch=False, seed=0, debug=False, **kwargs):
         super().__init__(**kwargs)
         self.lr = lr
@@ -138,6 +141,7 @@ class ContrastiveFeatureModel(FeatureModel):
         self.patience = patience
         self.tol = tol
         self.cl_model_save_path = os.path.join(self.exp_dir, cl_model_save_name)
+        self.cl_prev_path = cl_prev_path
         self.use_patient = use_patient
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
@@ -160,10 +164,10 @@ class ContrastiveFeatureModel(FeatureModel):
     def get_encoder(self):
         if self.encoder == 'resnet18':
             print("Using Resnet18 for feature extraction...")
-            encoder = resnet18(pretrained=self.pretrained, inchans=1)
+            encoder = resnet18(pretrained=self.pretrained, inchans=self.in_chns)
         elif self.encoder == 'resnet50':
             print("Using Resnet50 for feature extraction...")
-            encoder = resnet50(pretrained=self.pretrained, inchans=1)
+            encoder = resnet50(pretrained=self.pretrained, inchans=self.in_chns)
         else:
             raise ValueError(f"Unknown feature model {self.encoder}")
         encoder = ContrastiveLearner(encoder, projection_dim=self.projection_dim)
@@ -188,6 +192,10 @@ class ContrastiveFeatureModel(FeatureModel):
         return feat
 
     def train(self, model):
+        if self.cl_prev_path is not None and isinstance(self.cl_prev_path, str) and os.path.exists(self.cl_prev_path):
+            model.load_state_dict(torch.load(self.cl_prev_path))
+            print("Loaded prev contrastive feature model from disk")
+            return
         if os.path.exists(self.cl_model_save_path):
             model.load_state_dict(torch.load(self.cl_model_save_path))
             print("Loaded contrastive feature model from disk")

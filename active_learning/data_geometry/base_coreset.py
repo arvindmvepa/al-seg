@@ -16,12 +16,12 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, dataset_type="ACDC",
-                 dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
-                 uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0, max_dist=None,
-                 wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0,
-                 weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0,
-                 feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False, seed=0,
-                 gpus="cuda:0", **kwargs):
+                 in_chns=1, dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
+                 uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0,
+                 default_pos_val=1, max_dist=None, pos_wt=1.0, normalize_pos_by_label_ct=False, wt_max_dist_mult=1.0,
+                 extra_feature_wt=1.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
+                 slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0, feature_model=False,
+                 feature_model_params=None, contrastive=False, use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -36,19 +36,26 @@ class BaseCoreset(BaseDataGeometry):
             self.dataset_kwargs = {}
         else:
             self.dataset_kwargs = dataset_kwargs
+        if not isinstance(feature_model_params, dict):
+            self.feature_model_params = {}
+        else:
+            self.feature_model_params = feature_model_params
+        self.in_chns = in_chns
         self.use_uncertainty = use_uncertainty
         self.model_uncertainty = model_uncertainty
         self.uncertainty_score_file = uncertainty_score_file
         self.ann_type = ann_type
         self.use_labels = use_labels
         self.label_wt = label_wt
+        self.default_pos_val = default_pos_val
         self.max_dist = max_dist
+        self.pos_wt = pos_wt
+        self.normalize_pos_by_label_ct = normalize_pos_by_label_ct
         self.wt_max_dist_mult = wt_max_dist_mult
-
         self.contrastive = contrastive
         self.gpus = gpus
         self.feature_model = feature_model
-        self.feature_model_params = feature_model_params
+        self.fuse_image_data = self.feature_model_params.get("fuse_image_data", False)
         self.use_model_features = use_model_features
         self.seed = seed
         self.random_state = RandomState(seed=self.seed)
@@ -102,7 +109,7 @@ class BaseCoreset(BaseDataGeometry):
     def setup_image_features(self):
         print("Setting up image features...")
         print("Getting data")
-        image_data, self.image_meta_data, self.image_labels_arr,  =  self.dataset.get_data(self.use_labels)
+        image_data, self.image_meta_data, self.image_labels_arr  =  self.dataset.get_data()
         print("Processing meta_data...")
         self.image_meta_data_arr = self.dataset.process_meta_data(self.image_meta_data)
         self.non_image_indices = self.dataset.get_non_image_indices()
@@ -160,8 +167,17 @@ class BaseCoreset(BaseDataGeometry):
             print("No model features for first round!")
             return None
         train_logits_path = os.path.join(prev_round_dir, "*", train_logits_path)
-        print(f"Looking for model features in {train_logits_path}")
         train_results = sorted(list(glob(train_logits_path)))
+        print(f"Looking for model features in {train_logits_path}")
+        if len(train_results) == 0:
+            print("No model features found! Re-doing inference")
+            self.model_uncertainty.model.train_ensemble(round_dir=prev_round_dir,
+                                                        cur_total_oracle_split=None,
+                                                        cur_total_pseudo_split=None,
+                                                        train=False, inf_train=True,
+                                                        inf_val=False, inf_test=False)
+            train_logits_path = os.path.join(prev_round_dir, "*", train_logits_path)
+            train_results = sorted(list(glob(train_logits_path)))
         if len(train_results) == 1:
             train_result = train_results[0]
             print(f"Found {train_result}")
@@ -200,22 +216,38 @@ class BaseCoreset(BaseDataGeometry):
 
     def get_coreset_metric_and_features(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
         num_im_features = processed_data.shape[1]
+        # check that number of pixels in image is greater than number of labels
+        # only update points that are part of the image features
         if self.use_labels:
             print(f"Using labels with weight {self.label_wt}")
             labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
-            # check that number of pixels in image is greater than number of labels
-            # only update points that are part of the image features
             assert processed_data.shape[1] >= labels.shape[1]
-            im_features = processed_data[:, :labels.shape[1]]
-            label_mask = np.where(labels != 4, self.label_wt, 1)
-            im_features = im_features * label_mask
-            processed_data[:, :labels.shape[1]] = im_features
-        features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
+            num_label_features = labels.shape[1]
+            # hard-coded number of classes to be (background + 3)
+            print(f"Using default pos val {self.default_pos_val}")
+            label_mask = np.where(labels < 4, self.label_wt, self.default_pos_val)
+            features = np.concatenate([processed_data, label_mask, self.image_meta_data_arr], axis=1)
+        # hard code 1 labels for hacky fix to the metric to keep track of position
+        elif self.fuse_image_data:
+            labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
+            assert processed_data.shape[1] >= labels.shape[1]
+            num_label_features = labels.shape[1]
+            label_mask = np.ones(labels.shape)
+            features = np.concatenate([processed_data, label_mask, self.image_meta_data_arr], axis=1)
+        else:
+            num_label_features = 0
+            features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
         if self.use_uncertainty and (prev_round_dir is not None):
+            print("Using Uncertainty Features, Uncertainty Weight: ", self.non_image_wts["uncertainty_wt"])
             if uncertainty_kwargs is None:
                 uncertainty_kwargs = dict()
             uncertainty_round_score_file = os.path.join(prev_round_dir, self.uncertainty_score_file)
             if not os.path.exists(uncertainty_round_score_file):
+                self.model_uncertainty.model.train_ensemble(round_dir=prev_round_dir,
+                                                            cur_total_oracle_split=None,
+                                                            cur_total_pseudo_split=None,
+                                                            train=False, inf_train=True,
+                                                            inf_val=False, inf_test=False)
                 self.model_uncertainty.calculate_uncertainty(im_score_file=uncertainty_round_score_file,
                                                              round_dir=prev_round_dir, **uncertainty_kwargs)
             uncertainty_features = self._extract_uncertainty_features(uncertainty_round_score_file)
@@ -228,7 +260,11 @@ class BaseCoreset(BaseDataGeometry):
             non_image_kwargs.update(self.non_image_indices)
         if self.non_image_wts is not None:
             non_image_kwargs.update(self.non_image_wts)
-        coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist, num_im_features=num_im_features,
+        print("Using pos_wt: ", self.pos_wt)
+        print("Using normalize_pos_by_label_ct: ", self.normalize_pos_by_label_ct)
+        coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist,
+                                 num_im_features=num_im_features, num_label_features=num_label_features,
+                                 pos_wt=self.pos_wt, normalize_pos_by_label_ct=self.normalize_pos_by_label_ct,
                                  **non_image_kwargs)
         return coreset_metric, features
 

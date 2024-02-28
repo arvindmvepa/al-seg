@@ -1,0 +1,47 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  dataset: "MSCMR"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 4
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 4
+  contrastive: True
+  feature_model: True
+  use_labels: True
+  label_wt: 4.0
+  uncertainty_wt: 1.0
+  use_uncertainty: True
+  dataset_type: "MSCMR"
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 8
+    fuse_image_data: True
+    seed: 4
+    use_slice_pos: True
+    use_phase: True
+    use_patient: True
+    pos_loss1: True
+    pos_loss1_wt: .2
+    pos_loss1_mask:
+      - 2
+      - 3
+    pos_loss2: True
+    pos_loss2_wt: .1
+    pos_loss2_mask:
+      - 3
+    pos_loss3: True
+    pos_loss3_wt: .05
+    reset_sampler_every_epoch: True
+model_uncertainty:
+  model_uncertainty_type: ensemble
+  score_func: entropy_w_label_probs
+exp_dir: "DMPLS_MSCMR_exp4_coreset_fuse10_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_label4_uncertainty1_v15"

@@ -1,0 +1,23 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  dataset: "DAVIS"
+  ensemble_size: 3
+  in_chns: 3
+  max_iterations: 30000
+  gpus: "cuda:0"
+  inf_train_type: "features"
+policy:
+  policy_type: ranked
+  seed: 1
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.1, 0], [.1, 0], [.1, 0], [.1, 0]]
+data_geometry:
+  dataset_type: "DAVIS"
+  data_geometry_type: coregcn
+  seed: 1
+  use_model_features: True
+  starting_sample: 10
+exp_dir: "DMPLS_sup_DAVIS_exp1_coregcn_model_fts_ss10_rstart_v14"

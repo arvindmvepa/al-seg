@@ -1,0 +1,17 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 6
+  resume: True
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 6
+exp_dir: "DMPLS_exp6_coreset_v10"

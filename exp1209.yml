@@ -1,0 +1,37 @@
+model:
+  model_type: "lvm_med"
+  ann_type: "label"
+  ensemble_size: 5
+  gpus: "cuda:0"
+  encoder_name: "resnet18"
+  base_original_checkpoint: /local2/amvepa91/al-seg1/DMPLS_exp4_coreset_pos_wt1000_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_label1_v15/cl_feature_model.pt
+  in_chns: 1
+  val_epoch: 5
+policy:
+  policy_type: ranked
+  seed: 4
+  resume: True
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 4
+  contrastive: True
+  feature_model: True
+  feature_model_params:
+    cl_prev_path: /local2/amvepa91/al-seg3/LVMMED_sup_exp4_coreset_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_v18/cl_feature_model.pt
+    encoder: resnet18
+    batch_size: 9
+    seed: 4
+    use_phase: True
+    use_patient: True
+    pos_loss1: True
+    pos_loss1_wt: .35
+    pos_loss1_mask:
+      - 2
+    pos_loss2: True
+    pos_loss2_wt: .05
+    reset_sampler_every_epoch: True
+exp_dir: "LVMMED_clf_sup_exp4_coreset_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_v18"

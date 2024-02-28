@@ -1,0 +1,17 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  dataset: "ACDC"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: random
+  seed: 6
+  ensemble_kwargs:
+    skip: False
+    inf_test: False
+  uncertainty_kwargs:
+    skip: False
+    delete_preds: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+exp_dir: "DMPLS_sup_exp6_random_v10"
