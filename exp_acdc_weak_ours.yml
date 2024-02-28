@@ -6,38 +6,38 @@ model:
   gpus: "cuda:0"
 policy:
   policy_type: ranked
-  seed: 1
+  resume: True
+  seed: 0
   ensemble_kwargs:
     skip: False
     inf_test: True
-  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  seed: 1
+  seed: 0
   contrastive: True
   feature_model: True
+  pos_wt: 1500
+  default_pos_val: 0
   use_labels: True
-  label_wt: 2.0
-  uncertainty_wt: 1.0
-  use_uncertainty: True
+  label_wt: 1.0
+  normalize_pos_by_label_ct: True
   feature_model_params:
     encoder: resnet18
-    batch_size: 8
+    batch_size: 9
+    seed: 0
     fuse_image_data: True
-    seed: 1
-    use_slice_pos: True
+    fuse_image_data_size_prop: .10
     use_phase: True
     use_patient: True
     pos_loss1: True
-    pos_loss1_wt: .2
+    pos_loss1_wt: .35
     pos_loss1_mask:
       - 2
-      - 3
     pos_loss2: True
-    pos_loss2_wt: .1
-    pos_loss2_mask:
-      - 3
-    pos_loss3: True
-    pos_loss3_wt: .05
+    pos_loss2_wt: .05
     reset_sampler_every_epoch: True
+model_uncertainty:
+  model_uncertainty_type: ensemble
+  score_func: entropy_w_label_probs
 exp_dir: "exp_acdc_weak_ours"

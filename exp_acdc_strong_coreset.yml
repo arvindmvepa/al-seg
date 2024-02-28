@@ -1,0 +1,20 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  dataset: "ACDC"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: False
+  uncertainty_kwargs:
+    skip: False
+    delete_preds: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  dataset_type: "ACDC"
+exp_dir: "exp_acdc_strong_coreset"

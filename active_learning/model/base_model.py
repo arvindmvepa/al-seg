@@ -75,7 +75,7 @@ class BaseModel(ABC):
     def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         raise NotImplementedError()
 
-    def inf_test_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+    def generate_model_results(self, snapshot_dir, prediction_ims=None):
         raise NotImplementedError()
 
     def inf_train(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
@@ -92,6 +92,7 @@ class BaseModel(ABC):
         self.inf_test_model(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
                             cur_total_oracle_split=cur_total_oracle_split,
                             cur_total_pseudo_split=cur_total_pseudo_split)
+
 
     def train_ensemble(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0, resume=False,
                        resume_on_val=True, resume_on_test=False, skip=False, train=True, inf_train=False, inf_val=True,
@@ -131,6 +132,12 @@ class BaseModel(ABC):
                 self.inf_test(model_no=model_no, snapshot_dir=snapshot_dir, round_dir=round_dir,
                               cur_total_oracle_split=cur_total_oracle_split,
                               cur_total_pseudo_split=cur_total_pseudo_split)
+        print("Finished Training Ensemble")
+
+
+    def generate_results(self, round_dir, model_no, prediction_ims):
+        snapshot_dir = os.path.join(round_dir, str(model_no))
+        self.generate_model_results(snapshot_dir=snapshot_dir, prediction_ims=prediction_ims)
         print("Finished Training Ensemble")
 
     def get_ensemble_scores(self, score_func, im_score_file, round_dir, ignore_ims_dict, delete_preds=True):
@@ -246,8 +253,10 @@ class SoftmaxMixin:
         train_logits_path = os.path.join(round_dir, "*", self.data_params['train_logits_path'])
         train_results = sorted(list(glob(train_logits_path)))
         im_files = sorted(np.load(train_results[0], mmap_mode='r').files)
+        im_files = [os.path.basename(im_file) for im_file in im_files]
         if ignore_ims_dict is not None:
-            filtered_im_files = [im_file for im_file in im_files if im_file not in ignore_ims_dict[self.im_key]]
+            ignore_im_files = [os.path.basename(im_file) for im_file in ignore_ims_dict[self.im_key]]
+            filtered_im_files = [im_file for im_file in im_files if im_file not in ignore_im_files]
         else:
             filtered_im_files = im_files
         # useful for how to load npz (using "incorrect version): https://stackoverflow.com/questions/61985025/numpy-load-part-of-npz-file-in-mmap-mode

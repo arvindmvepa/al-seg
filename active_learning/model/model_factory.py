@@ -26,6 +26,10 @@ class ModelFactory:
             sys.path.append("./wsl4mis/code")
             from active_learning.model.strongly_sup_model import StronglySupModel
             model = StronglySupModel(**model_kwargs)
+        elif model_type == "lvm_med":
+            sys.path.append("./lvm_med")
+            from active_learning.model.lvm_med_model import LVMMedModel
+            model = LVMMedModel(**model_kwargs)
         elif model_type == "db_strong":
             sys.path.append("./wsl4mis/code")
             from active_learning.model.strongly_sup_model import DeepBayesianStronglySupModel
