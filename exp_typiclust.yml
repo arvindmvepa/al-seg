@@ -3,7 +3,7 @@ model:
   ann_type: "scribble"
   ensemble_size: 1
   max_iterations: 6000
-  gpus: "mps"
+  gpus: "cuda:0"
 policy:
   policy_type: ranked
   seed: 0
