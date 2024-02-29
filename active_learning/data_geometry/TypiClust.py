@@ -60,14 +60,7 @@ class Typiclust(BaseTypiclust):
                     score = 0
                 f.write(f"{im_file},{score}\n")
 
-        return [self.all_train_im_files[i] for i in activeSet] 
-        
-    
-    @staticmethod
-    def read_data(dataloader):
-        while True:
-            for img in dataloader:
-                yield img
+        return [self.all_train_im_files[i] for i in activeSet]
 
 
     def select_samples(self, knn_model, lSet, uSet, clusters, budgetSize):

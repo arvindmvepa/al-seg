@@ -14,4 +14,10 @@ policy:
 data_geometry:
   data_geometry_type: typiclust
   knn_model: "sklearn"
+  feature_model: True
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 8
+    patience: 1
+    num_epochs: 5
 exp_dir: "DMPLS_w_typiclust_test_run"
