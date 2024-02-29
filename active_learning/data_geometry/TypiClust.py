@@ -37,7 +37,7 @@ class Typiclust(BaseTypiclust):
         
         num_clusters = min(len(already_selected_indices) + num_samples, self.max_num_clusters)
         print(f'Clustering into {num_clusters} clusters..')
-        clusters = kmeans(self.features, num_clusters=num_clusters)
+        clusters = kmeans(self.features, num_clusters=num_clusters, random_state=self.seed)
         print(f'Finished clustering into {num_clusters} clusters.')
         
         print("Start selecting representative samples..")
@@ -148,11 +148,11 @@ def calculate_typicality(model, features, num_neighbors):
     return typicality
 
 
-def kmeans(features, num_clusters):
+def kmeans(features, num_clusters, seed=0):
     if num_clusters <= 50:
-        km = KMeans(n_clusters=num_clusters, random_state=42)
+        km = KMeans(n_clusters=num_clusters, random_state=seed)
         km.fit_predict(features)
     else:
-        km = MiniBatchKMeans(n_clusters=num_clusters, batch_size=256, random_state=42)
+        km = MiniBatchKMeans(n_clusters=num_clusters, random_state=seed)
         km.fit_predict(features)
     return km.labels_
