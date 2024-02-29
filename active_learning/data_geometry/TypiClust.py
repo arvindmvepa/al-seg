@@ -148,11 +148,11 @@ def calculate_typicality(model, features, num_neighbors):
     return typicality
 
 
-def kmeans(features, num_clusters, seed=0):
+def kmeans(features, num_clusters, random_state=0):
     if num_clusters <= 50:
-        km = KMeans(n_clusters=num_clusters, random_state=seed)
+        km = KMeans(n_clusters=num_clusters, random_state=random_state)
         km.fit_predict(features)
     else:
-        km = MiniBatchKMeans(n_clusters=num_clusters, random_state=seed)
+        km = MiniBatchKMeans(n_clusters=num_clusters, random_state=random_state)
         km.fit_predict(features)
     return km.labels_
