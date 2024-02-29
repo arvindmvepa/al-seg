@@ -24,7 +24,7 @@ class BaseTypiclust(BaseDataGeometry):
         self.feature_model_params = feature_model_params
         self.contrastive = contrastive
         self.use_model_features = use_model_features
-        self.user_labels = use_labels
+        self.use_labels = use_labels
         self.seed = seed
         self.random_state = RandomState(seed=self.seed)
         
