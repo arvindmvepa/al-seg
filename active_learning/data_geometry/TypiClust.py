@@ -26,11 +26,10 @@ class Typiclust(BaseTypiclust):
         self.k_nn = k_nn
         self.knn_model = knn_model
 
-    def calculate_representativeness(self, im_score_file, num_samples, already_selected=[], skip=False, seed=42, **kwargs):
+    def calculate_representativeness(self, im_score_file, num_samples, already_selected=[], skip=False, **kwargs):
         if skip:
             print("Skipping Calculating Typiclust!")
             return
-        print(f"debug: {num_samples}, len(already_selected): {len(already_selected)}")
         print("Calculating Representative Clustering..")
         all_indices = np.arange(len(self.all_train_im_files))
         already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
