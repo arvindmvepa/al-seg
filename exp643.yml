@@ -1,0 +1,27 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  ensemble_size: 5
+  gpus: "cuda:0"
+  dataset: "CHAOS_CT"
+policy:
+  policy_type: ranked
+  seed: 0
+  resume: True
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0, random, True], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  dataset_type: "CHAOS_CT"
+  data_geometry_type: typiclust
+  knn_model: "sklearn"
+  feature_model: True
+  contrastive: True
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 8
+    num_epochs: 50
+    seed: 0
+    reset_sampler_every_epoch: True
+exp_dir: "DMPLS_sup_CHAOS_exp0_typiclust_v10"
