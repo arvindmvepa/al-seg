@@ -68,9 +68,8 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         metric_list = 0.0
         results_map = {}
         for i_batch, sampled_batch in enumerate(evalloader):
-            prediction_i,_ = test_single_volume_cct(
-                sampled_batch["image"], sampled_batch["label"],
-                model, classes=self.num_classes, gpus=self.gpus)
+            metric_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model,
+                                              classes=self.num_classes, gpus=self.gpus)
             metric_i = np.array(metric_i)
             results_map[sampled_batch["case"][0]] = np.mean(metric_i[:, 0])
             metric_list += metric_i
