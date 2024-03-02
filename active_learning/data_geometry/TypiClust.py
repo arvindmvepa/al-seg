@@ -92,8 +92,20 @@ class Typiclust(BaseTypiclust):
             if rel_feats.shape[0] == 0:
                 bad_clusters += 1
                 continue
-            # in case we have too small cluster, calculate density among half of the cluster
-            typicality = calculate_typicality(knn_model, rel_feats, max(min(self.k_nn, len(indices) // 2),1))
+            elif rel_feats.shape[0] == 1:
+                selected.append(indices[0])
+                labels[indices[0]] = -1
+                continue
+            elif rel_feats.shape[0] == 2:
+                num_neighbors = 1
+            else:
+                # in case we have too small cluster, calculate density among half of the cluster
+                num_neighbors = max(min(self.k_nn, len(indices) // 2), 1)
+                if rel_feats.shape[0] == num_neighbors:
+                    num_neighbors -= 1
+                elif (rel_feats.shape[0] - num_neighbors) > 1:
+                    num_neighbors += 1
+            typicality = calculate_typicality(knn_model, rel_feats, num_neighbors)
             idx = indices[typicality.argmax()]
             selected.append(idx)
             labels[idx] = -1
@@ -135,10 +147,6 @@ class Typiclust(BaseTypiclust):
 
 def get_nn_sklearn(features, num_neighbors):
     # calculates nearest neighbors with sklearn
-    if features.shape[0] == 1:
-        num_neighbors = 1
-    else:
-        num_neighbors = num_neighbors + 1
     nn = NearestNeighbors(n_neighbors=num_neighbors, n_jobs=-1)
     nn.fit(features)
     distances, indices = nn.kneighbors(features)
