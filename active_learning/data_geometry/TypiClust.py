@@ -112,7 +112,7 @@ class Typiclust(BaseTypiclust):
             labels[idx] = -1
         print("len(np.intersect1d(selected, existing_indices)): ", len(np.intersect1d(selected, existing_indices)))
         if bad_clusters > 0:
-            remaining_unlabeled = [sample for sample in all_indices if (sample not in selected) or (sample not in existing_indices)]
+            remaining_unlabeled = [sample for sample in all_indices if (sample not in selected) and (sample not in existing_indices)]
             addtl_samples = self.random_state.choice(remaining_unlabeled, bad_clusters, replace=False)
             print("len(np.intersect1d(addtl_samples, existing_indices)): ", len(np.intersect1d(addtl_samples, existing_indices)))
             selected.extend(addtl_samples.tolist())
