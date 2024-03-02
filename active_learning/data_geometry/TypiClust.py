@@ -97,13 +97,14 @@ class Typiclust(BaseTypiclust):
             idx = indices[typicality.argmax()]
             selected.append(idx)
             labels[idx] = -1
+        print("len(np.intersect1d(selected, existing_indices)): ", len(np.intersect1d(selected, existing_indices)))
         if bad_clusters > 0:
             remaining_unlabeled = [sample for sample in uSet if sample not in selected]
             addtl_samples = self.random_state.choice(remaining_unlabeled, bad_clusters,
                                                      replace=False)
+            print("len(np.intersect1d(addtl_samples, existing_indices)): ", len(np.intersect1d(addtl_samples, existing_indices)))
             selected.extend(addtl_samples.tolist())
             print(f'Had {bad_clusters} clusters with no samples, adding random samples..')
-
         selected = np.array(selected)
         assert len(selected) == budgetSize, 'added a different number of samples'
         assert len(np.intersect1d(selected, existing_indices)) == 0, 'should be new samples'
@@ -146,9 +147,12 @@ def get_nn_sklearn(features, num_neighbors):
 
 def get_mean_nn_dist(model, features, num_neighbors, return_indices=False):
     # if model == 'sklearn':
+    print("features.shape", features.shape)
+    print("num_neighbors", num_neighbors)
     distances, indices = get_nn_sklearn(features, num_neighbors)
     # elif model == 'faiss':
     #     distances, indices = get_nn(features, num_neighbors)
+    print("distances.shape", distances.shape)
     mean_distance = distances.mean(axis=1)
     if return_indices:
         return mean_distance, indices
