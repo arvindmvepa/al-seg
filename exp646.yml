@@ -23,6 +23,7 @@ data_geometry:
     encoder: resnet18
     batch_size: 8
     num_epochs: 50
+    in_chns: 3
     seed: 0
     reset_sampler_every_epoch: True
 exp_dir: "DMPLS_sup_DAVIS_exp0_typiclust_v10"
