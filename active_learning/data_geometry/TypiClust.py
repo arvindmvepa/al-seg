@@ -84,15 +84,25 @@ class Typiclust(BaseTypiclust):
         selected = []
 
         print(f'Getting nearest neighbors using {self.knn_model} knn...')
+        bad_clusters = 0
         for i in tqdm(range(budgetSize)):
             cluster = clusters_df.iloc[i % len(clusters_df)].cluster_id
             indices = (labels == cluster).nonzero()[0]
             rel_feats = features[indices]
+            if rel_feats.shape[0] == 0:
+                bad_clusters += 1
+                continue
             # in case we have too small cluster, calculate density among half of the cluster
-            typicality = calculate_typicality(knn_model, rel_feats, min(self.k_nn, len(indices) // 2))
+            typicality = calculate_typicality(knn_model, rel_feats, max(min(self.k_nn, len(indices) // 2),1))
             idx = indices[typicality.argmax()]
             selected.append(idx)
             labels[idx] = -1
+        if bad_clusters > 0:
+            remaining_unlabeled = [sample for sample in uSet if sample not in selected]
+            addtl_samples = self.random_state.choice(remaining_unlabeled, bad_clusters,
+                                                     replace=False)
+            selected.extend(addtl_samples.tolist())
+            print(f'Had {bad_clusters} clusters with no samples, adding random samples..')
 
         selected = np.array(selected)
         assert len(selected) == budgetSize, 'added a different number of samples'
@@ -124,7 +134,11 @@ class Typiclust(BaseTypiclust):
 
 def get_nn_sklearn(features, num_neighbors):
     # calculates nearest neighbors with sklearn
-    nn = NearestNeighbors(n_neighbors=num_neighbors + 1, n_jobs=-1)
+    if features.shape[0] == 1:
+        num_neighbors = 1
+    else:
+        num_neighbors = num_neighbors + 1
+    nn = NearestNeighbors(n_neighbors=num_neighbors, n_jobs=-1)
     nn.fit(features)
     distances, indices = nn.kneighbors(features)
     return distances[:, 1:], indices[:, 1:]
