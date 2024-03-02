@@ -1,7 +1,7 @@
 model:
   model_type: "strong"
   ann_type: "label"
-  ensemble_size: 5
+  ensemble_size: 3
   gpus: "cuda:0"
   in_chns: 3
   dataset: "DAVIS"
