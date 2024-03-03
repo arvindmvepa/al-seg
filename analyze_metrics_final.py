@@ -10,7 +10,8 @@ def get_round_num(round_dir):
 
 results_csv_file = "results.csv"
 root_dir = "."
-#exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*exp*v10*"))))
+exp_length = 3
+exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*CHAOS*exp*v10*"))))
 #exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*exp*v11*"))))
 #exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*CHAOS*exp*v12*"))))
 #exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*LVSC*exp*v12*"))))
@@ -26,7 +27,7 @@ for exp_dir in exp_dirs:
             val_max = None
             test_for_val_max = None
             num_models = 0
-            for model_dir in model_dirs:
+            for model_dir in sorted(model_dirs)[:exp_length]:
                 print(model_dir)
                 val_metric_dict = None
                 test_metric_dict = None
