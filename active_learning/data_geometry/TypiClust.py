@@ -38,6 +38,9 @@ class Typiclust(BaseTypiclust):
         num_clusters = min(len(already_selected_indices) + num_samples, self.max_num_clusters)
         print(f'Clustering into {num_clusters} clusters..')
         clusters = kmeans(self.features, num_clusters=num_clusters, random_state=self.seed)
+        while len(np.unique(clusters)) < num_clusters:
+            num_clusters -= 1
+            clusters = kmeans(self.features, num_clusters=num_clusters, random_state=self.seed)
         print(f'Finished clustering into {num_clusters} clusters.')
         
         print("Start selecting representative samples..")
@@ -72,7 +75,7 @@ class Typiclust(BaseTypiclust):
         # counting cluster sizes and number of labeled samples per cluster
         cluster_ids, cluster_sizes = np.unique(labels, return_counts=True)
         cluster_labeled_counts = np.bincount(labels[existing_indices], minlength=len(cluster_ids))
-        clusters_df = pd.DataFrame({'cluster_id': cluster_ids, 
+        clusters_df = pd.DataFrame({'cluster_id': cluster_ids,
                                     'cluster_size': cluster_sizes, 
                                     'existing_count': cluster_labeled_counts,
                                     'neg_cluster_size': -1 * cluster_sizes})
