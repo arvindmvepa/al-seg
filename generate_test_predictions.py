@@ -9,7 +9,6 @@ if __name__ == '__main__':
     exp_dirs = []
     exp_dirs = exp_dirs + sorted(list(glob(os.path.join(root_dir, "DMPLS_*_coreset_v10"))))
     exp_dirs = exp_dirs + sorted(list(glob(os.path.join(root_dir, "DMPLS_*_coregcn_model_fts_ss10_rstart_v10"))))
-    exp_dirs = exp_dirs + sorted(list(glob(os.path.join(root_dir, ""))))
     results = []
     for exp_dir in exp_dirs:
             if not os.path.exists(exp_dir):
