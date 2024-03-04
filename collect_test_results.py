@@ -29,6 +29,9 @@ if __name__ == '__main__':
         model_no = int(os.path.basename(model_dir))
         round_num = int(os.path.basename(os.path.dirname(model_dir)).split("_")[1])
         exp_dir = os.path.dirname(os.path.dirname(model_dir))
-        exp_file = os.path.join(exp_dir, "exp.yml")
+        cur_exp_dir = os.path.join(".", os.path.basename(exp_dir))
+        exp_file = os.path.join(cur_exp_dir, "exp.yml")
+        if not os.path.exists(exp_file):
+            continue
         policy = PolicyBuilder.build_policy(exp_file)
         policy.generate(model_no=model_no, round_num=round_num, prediction_ims=prediction_ims)
