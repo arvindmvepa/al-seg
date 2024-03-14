@@ -29,10 +29,6 @@ as specified in `active_learning/dataset/data_params.py`. For example, the ACDC 
 be in `wsl4mis_data/ACDC`. Please see the text files in `wsl4mis/data/dataset_name` for the 
 subdirectory names corresponding to the train, val, and test sets.
 
-NOTE: The CHAOS dataset expects an additional subdirectory for the image data as well as text 
-files. In the paper we used the CT_LIVER dataset so please add the CT_LIVER subdirectory when
-storing the CHAOS dataset.
-
 ## Experiment Parameters
 
 There are four parameter groups in `exp.yml`: `model`, `data_geometry`, `model_uncertainty`, and 
