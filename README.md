@@ -29,11 +29,13 @@ python run_al_exp.py
 
 ## Data
 
-In our work we used the ACDC, CHAOS, MSC-MR, and DAVIS datasets. For all four datasets, we used 
+In our work we used the ACDC (https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html), 
+CHAOS (https://chaos.grand-challenge.org/), MSC-MR (https://zmiclab.github.io/zxh/0/mscmrseg19/), 
+and DAVIS (https://davischallenge.org/) datasets. For all four datasets, we used essentially
 the same pre-processing methods found here: https://github.com/HiLab-git/WSL4MIS. The 
-pre-processing code can also be found in the `wsl4mis` directory. Scribbles for the ACDC dataset 
-can be found at the previous link. Scribbles for the MSC-MR dataset can be found here: 
-https://github.com/BWGZK/CycleMix.
+pre-processing code can also be found in the `wsl4mis` directory. Scribbles and pre-processed data 
+for the ACDC dataset can be found here: https://github.com/HiLab-git/WSL4MIS. Scribbles for the 
+MSC-MR dataset can be found here: https://github.com/BWGZK/CycleMix.
 
 Please store the pre-processed data in a directory with the dataset name in `wsl4mis_data` 
 as specified in `active_learning/dataset/data_params.py`. For example, the ACDC dataset should 
