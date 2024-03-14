@@ -1,5 +1,16 @@
 # CoreCLR: Active Learning in 3D Segmentation through Contrastive Learning
 
+This is the official implementation for the paper "CoreCLR: Active Learning in 3D 
+Segmentation through Contrastive Learning". CoreCLR trains a contrastive learning-based 
+encoder with a unique Group-based Contrastive Learning (GCL) method which utilizes 
+inherent data groupings specific to 3D medical segmentation to generate embeddings for 
+all the slices in the dataset. MultiFeature Coreset (MFC) combines the slices' embeddings, 
+raw pixel values, uncertainty values, along with previously labeled slices and scores the 
+unlabeled slices. It then selects the optimal set of unlabeled slices which are used to 
+train the segmentation model. A flow chart illustrating our pipeline can be seen below.
+
+<img src="./pipeline_v3_2.pdf" height="220">
+
 ## Usage
 
 Our code has been tested with Python 3.8 on Ubuntu 16.04 with a Tesla V100 GPU with CUDA 11.2.
