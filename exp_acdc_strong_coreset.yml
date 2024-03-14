@@ -1,9 +1,8 @@
 model:
   model_type: "strong"
   ann_type: "label"
-  dataset: "CHAOS_CT"
-  ensemble_size: 1
-  max_iterations: 30000
+  dataset: "ACDC"
+  ensemble_size: 5
   gpus: "cuda:0"
 policy:
   policy_type: ranked
@@ -14,8 +13,8 @@ policy:
   uncertainty_kwargs:
     skip: False
     delete_preds: True
-  rounds: [[.1, 0], [.05, 0], [.05, 0], [.05, 0], [.05, 0]]
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  dataset_type: "CHAOS_CT"
-exp_dir: "strong_chaos_coreset_test_run"
+  dataset_type: "ACDC"
+exp_dir: "exp_acdc_strong_coreset"

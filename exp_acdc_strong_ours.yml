@@ -1,48 +1,42 @@
 model:
   model_type: "strong"
   ann_type: "label"
-  dataset: "LVSC"
-  ensemble_size: 1
-  max_iterations: 30000
+  ensemble_size: 5
   gpus: "cuda:0"
 policy:
   policy_type: ranked
-  seed: 0
+  seed: 1
   ensemble_kwargs:
     skip: False
-    inf_test: False
-  rounds: [[.1, 0], [.05, 0], [.05, 0], [.05, 0], [.05, 0]]
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  alg_string: gpu_kcenter_greedy
-  dataset_type: "LVSC"
-  uncertainty_wt: 1.0
-  use_uncertainty: True
+  seed: 1
   contrastive: True
   feature_model: True
+  use_labels: True
+  label_wt: 2.0
+  uncertainty_wt: 1.0
+  use_uncertainty: True
   feature_model_params:
     encoder: resnet18
     batch_size: 8
-    patience: 1
-    num_epochs: 5
-    debug: True
     fuse_image_data: True
-    use_patient: True
+    seed: 1
     use_slice_pos: True
     use_phase: True
-    neg_loss: True
-    neg_loss_wt: 0.8
+    use_patient: True
     pos_loss1: True
     pos_loss1_wt: .2
     pos_loss1_mask:
       - 2
       - 3
     pos_loss2: True
-    pos_loss2_wt: .2
+    pos_loss2_wt: .1
     pos_loss2_mask:
       - 3
     pos_loss3: True
-    pos_loss3_wt: .2
-    loss_wt: 0.2
+    pos_loss3_wt: .05
     reset_sampler_every_epoch: True
-exp_dir: "strong_lvsc_coreset_cl_test_run"
+exp_dir: "exp_acdc_strong_ours"

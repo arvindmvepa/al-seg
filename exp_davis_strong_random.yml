@@ -2,8 +2,7 @@ model:
   model_type: "strong"
   ann_type: "label"
   dataset: "DAVIS"
-  ensemble_size: 1
-  max_iterations: 30000
+  ensemble_size: 3
   in_chns: 3
   gpus: "cuda:0"
 policy:
@@ -15,5 +14,5 @@ policy:
   uncertainty_kwargs:
     skip: False
     delete_preds: True
-  rounds: [[.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0], [.1, 0]]
-exp_dir: "DMPLS_strong_DAVIS_test_run"
+  rounds: [[.1, 0], [.1, 0], [.1, 0], [.1, 0]]
+exp_dir: "exp_davis_strong_random"
