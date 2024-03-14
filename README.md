@@ -7,7 +7,7 @@ the libraries in `wsl4mis_requirements.txt`
 ```
 pip install -r wsl4mis_requirements.txt
 ```
-2. Set up the data (as described in the `Data` section below)
+2. Set up the data (see `Data` section below)
 3. Update the relevant parameters in `exp.yml` (see `Experiment Parameters` section below)
 4. Run the Active Learning Experiment
 ```
