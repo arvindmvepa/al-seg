@@ -16,9 +16,11 @@ class PolicyBuilder:
         self._exp_dir = exp_dir
         if not os.path.exists(self._exp_dir):
             os.makedirs(self._exp_dir)
-        # copy exp_params_file to experiment directory
-        shutil.copyfile(exp_params_file, 
-                        os.path.join(self._exp_dir, "exp.yml"))
+        # copy exp_params_file to experiment directory (ignore if same file)
+        try:
+            shutil.copyfile(exp_params_file, os.path.join(self._exp_dir, "exp.yml"))
+        except shutil.SameFileError:
+            pass
         return self
 
     def load_params(self, params):

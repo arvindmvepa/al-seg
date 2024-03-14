@@ -11,17 +11,19 @@ from wsl4mis.code.val_2D import test_single_volume_cct
 from torchvision import transforms
 from torch.utils.data import DataLoader
 import torch
+import h5py
 
 
 class WSL4MISModel(SoftmaxMixin, BaseModel):
     """WSL4MIS Model class"""
 
-    def __init__(self, dataset="ACDC", ann_type="scribble", ensemble_size=1,
+    def __init__(self, dataset="ACDC", ann_type="scribble", ensemble_size=1, in_chns=1,
                  seg_model='unet_cct', batch_size=6, base_lr=0.01, max_iterations=60000,
                  deterministic=1, patch_size=(256, 256), inf_train_type="preds", feature_decoder_index=0, seed=0,
                  gpus="cuda:0", tag=""):
         super().__init__(ann_type=ann_type, dataset=dataset, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
+        self.in_chns = in_chns
         self.seg_model = seg_model
         self.batch_size = batch_size
         self.max_iterations = max_iterations
@@ -33,6 +35,10 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         self.gpus = gpus
 
     def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
+        if os.path.exists(train_preds_path):
+            print(f"Train preds already exist in {train_preds_path}")
+            return
         model = self.load_best_model(snapshot_dir).to(self.gpus)
         if self.inf_train_type == "features":
             model = model.encoder
@@ -51,7 +57,6 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
             outputs = model(volume_batch)
             outputs_ = self.extract_train_features(outputs)
             train_preds[slice_basename] = np.float16(outputs_.cpu().detach().numpy())
-        train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
         np.savez_compressed(train_preds_path, **train_preds)
 
     def inf_eval_model(self, eval_file, model_no, snapshot_dir, round_dir, metrics_file, cur_total_oracle_split=0,
@@ -61,19 +66,24 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
         db_eval = BaseDataSets(split="val", val_file=eval_file, data_root=self.data_root)
         evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
         metric_list = 0.0
+        results_map = {}
         for i_batch, sampled_batch in enumerate(evalloader):
-            metric_i = test_single_volume_cct(
-                sampled_batch["image"], sampled_batch["label"],
-                model, classes=self.num_classes, gpus=self.gpus)
-            metric_list += np.array(metric_i)
+            metric_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model,
+                                              classes=self.num_classes, gpus=self.gpus)
+            metric_i = np.array(metric_i)
+            results_map[sampled_batch["case"][0]] = np.mean(metric_i[:, 0])
+            metric_list += metric_i
         metric_list = metric_list / len(db_eval)
-
         performance = np.mean(metric_list, axis=0)[0]
         mean_hd95 = np.mean(metric_list, axis=0)[1]
         metrics = {"performance": performance, "mean_hd95": mean_hd95}
         metrics_file = os.path.join(snapshot_dir, metrics_file)
         with open(metrics_file, "w") as outfile:
             json_object = json.dumps(metrics, indent=4)
+            outfile.write(json_object)
+        results_map_file = os.path.join(snapshot_dir, os.path.basename(metrics_file)+"_map.json")
+        with open(results_map_file, "w") as outfile:
+            json_object = json.dumps(results_map, indent=4)
             outfile.write(json_object)
 
     def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
@@ -88,8 +98,25 @@ class WSL4MISModel(SoftmaxMixin, BaseModel):
                             cur_total_oracle_split=cur_total_oracle_split,
                             cur_total_pseudo_split=cur_total_pseudo_split)
 
+    def generate_model_results(self, snapshot_dir, prediction_ims=None):
+        model = self.load_best_model(snapshot_dir).to(self.gpus)
+        model.eval()
+        db_eval = BaseDataSets(split="val", val_file=self.orig_test_im_list_file, data_root=self.data_root)
+        evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
+        for i_batch, sampled_batch in enumerate(evalloader):
+            case = sampled_batch["case"][0]
+            case_wo_ext = os.path.basename(case).split(".")[0]
+            if not any(prediction_im in sampled_batch["case"][0] for prediction_im in prediction_ims):
+                continue
+            prediction_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model,
+                                                  classes=self.num_classes, gpus=self.gpus, generate=True)
+            prediction_i = np.stack(prediction_i, axis=0)
+            pred_h5 = os.path.join(snapshot_dir, case_wo_ext + "_pred.h5")
+            with h5py.File(pred_h5, "w") as h5f:
+                h5f.create_dataset("data", data=prediction_i, dtype=np.float32)
+
     def load_best_model(self, snapshot_dir):
-        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
+        model = net_factory(net_type=self.seg_model, in_chns=self.in_chns, class_num=self.num_classes)
         best_model_path = os.path.join(snapshot_dir, '{}_best_model.pth'.format(self.seg_model))
         model.load_state_dict(torch.load(best_model_path))
         return model

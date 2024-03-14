@@ -16,7 +16,7 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, dataset_type="ACDC",
-                 dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
+                 in_chns=1, dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
                  uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0, max_dist=None,
                  wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0,
                  weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0,
@@ -36,6 +36,7 @@ class BaseCoreset(BaseDataGeometry):
             self.dataset_kwargs = {}
         else:
             self.dataset_kwargs = dataset_kwargs
+        self.in_chns = in_chns
         self.use_uncertainty = use_uncertainty
         self.model_uncertainty = model_uncertainty
         self.uncertainty_score_file = uncertainty_score_file
@@ -207,7 +208,8 @@ class BaseCoreset(BaseDataGeometry):
             # only update points that are part of the image features
             assert processed_data.shape[1] >= labels.shape[1]
             im_features = processed_data[:, :labels.shape[1]]
-            label_mask = np.where(labels != 4, self.label_wt, 1)
+            # hard-coded number of classes to be (background + 3)
+            label_mask = np.where(labels < 4, self.label_wt, 1)
             im_features = im_features * label_mask
             processed_data[:, :labels.shape[1]] = im_features
         features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
@@ -216,6 +218,11 @@ class BaseCoreset(BaseDataGeometry):
                 uncertainty_kwargs = dict()
             uncertainty_round_score_file = os.path.join(prev_round_dir, self.uncertainty_score_file)
             if not os.path.exists(uncertainty_round_score_file):
+                self.model_uncertainty.model.train_ensemble(round_dir=prev_round_dir,
+                                                            cur_total_oracle_split=None,
+                                                            cur_total_pseudo_split=None,
+                                                            train=False, inf_train=True,
+                                                            inf_val=False, inf_test=False)
                 self.model_uncertainty.calculate_uncertainty(im_score_file=uncertainty_round_score_file,
                                                              round_dir=prev_round_dir, **uncertainty_kwargs)
             uncertainty_features = self._extract_uncertainty_features(uncertainty_round_score_file)

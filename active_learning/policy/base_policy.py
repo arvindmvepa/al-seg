@@ -101,6 +101,17 @@ class BaseActiveLearningPolicy:
             self._setup_round()
             self._run_round()
 
+    def evaluate(self):
+        for _ in range(self.num_rounds):
+            self._setup_round()
+            self._evaluate_round()
+
+    def generate(self, model_no, round_num, prediction_ims):
+        for i in range(self.num_rounds):
+            self._setup_round()
+            if i == round_num:
+                self._generate_round(model_no=model_no, prediction_ims=prediction_ims)
+
     def data_split(self):
         return self.random_split()
 
@@ -125,6 +136,12 @@ class BaseActiveLearningPolicy:
                                calculate_data_geometry=calculate_data_geometry,
                                calculate_model_uncertainty=calculate_model_uncertainty,
                                uncertainty_kwargs=model_uncertainty_kwargs)
+
+    def _evaluate_round(self):
+        self._evaluate_round_models()
+
+    def _generate_round(self, model_no, prediction_ims):
+        self._generate_round_models(model_no=model_no, prediction_ims=prediction_ims)
 
     def _run_round_models(self, im_score_file=None, calculate_model_uncertainty=False, calculate_data_geometry=False,
                           ensemble_kwargs=None, uncertainty_kwargs=None, geometry_kwargs=None):
@@ -185,6 +202,12 @@ class BaseActiveLearningPolicy:
             if calculate_model_uncertainty and (self._round_num < (self.num_rounds - 1)):
                 # calculate scores if resume option is off or, if it is on, if the score file doesn't exist
                 if (not self.resume) or (not os.path.exists(im_score_file)):
+                    # do inference, if necessary, here. sort of a hacky way to do this (won't overwrite if it's already created)
+                    inf_train = ensemble_kwargs.pop("inf_train", inf_train)
+                    self.model.train_ensemble(round_dir=self.round_dir,
+                                              cur_total_oracle_split=self.cur_total_oracle_split,
+                                              cur_total_pseudo_split=self.cur_total_pseudo_split, train=False,
+                                              inf_train=inf_train, inf_val=False, inf_test=False)
                     self.model_uncertainty.calculate_uncertainty(im_score_file=im_score_file, **uncertainty_kwargs)
                     torch.cuda.empty_cache()
                 else:
@@ -194,6 +217,17 @@ class BaseActiveLearningPolicy:
             self.prev_round_skipped = True
         else:
             self.prev_round_skipped = False
+
+    def _evaluate_round_models(self):
+        self.model.train_ensemble(round_dir=self.round_dir,
+                                  cur_total_oracle_split=self.cur_total_oracle_split,
+                                  cur_total_pseudo_split=self.cur_total_pseudo_split, train=False, inf_train=False,
+                                  inf_val=False, inf_test=True)
+        torch.cuda.empty_cache()
+
+    def _generate_round_models(self, model_no, prediction_ims):
+        self.model.generate_results(round_dir=self.round_dir, model_no = model_no, prediction_ims=prediction_ims)
+        torch.cuda.empty_cache()
 
     def _data_split(self, splt_func):
         new_train_file_paths = self.model.get_round_train_file_paths(self.round_dir, self.cur_total_oracle_split)
