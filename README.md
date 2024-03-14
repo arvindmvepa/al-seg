@@ -44,4 +44,6 @@ data_geomtry, model_uncertainty, and policy).
 
 We have provided the yaml files for our method for the weakly-supervised and fully-supervised ACDC 
 dataset. Additionally, we have provided yaml files for several baseline methods for all four 
-datasets.
+datasets. To apply our method to the other datasets, simply update the `dataset` parameter in the 
+`model` section and `dataset_type` in the `data_geometry` section. Please look at the other yaml 
+files as a guide.
