@@ -9,7 +9,7 @@ raw pixel values, uncertainty values, along with previously labeled slices and s
 unlabeled slices. It then selects the optimal set of unlabeled slices which are used to 
 train the segmentation model. A flow chart illustrating our pipeline can be seen below.
 
-<img src="./pipeline_v3_2.pdf" height="220">
+<img src="./pipeline_v3_2.jpg">
 
 ## Usage
 
@@ -49,8 +49,17 @@ passed directly to its respective factory. Thus, one can inspect the meaning of 
 parameters by looking at the constructors for each parameter group type (i.e. model, 
 data_geomtry, model_uncertainty, and policy). 
 
+Some of the important parameters in the `policy` section are:
+- `policy_type`: In most cases this will be `ranked`, indicating to use a ranked selection method.
+However, for random sampling, please use `random`.
+- `rounds`: The proportion of the dataset to label in each round. This is a list of lists: the ith 
+sublist indicates what proportion of the dataset to label each round. Currently, only the first 
+element of the sublist is used - the second should be set to zero. For example, if `rounds` is 
+`[[0.1, 0], [0.1, 0], [0.1, 0], [0.1, 0]]`, then 10% of the dataset will be labeled for four rounds.
+
+There are many other useful parameters, and we have provided several example yaml files. 
 We have provided the yaml files for our method for the weakly-supervised and fully-supervised ACDC 
-dataset. Additionally, we have provided yaml files for several baseline methods for all four 
-datasets. To apply our method to the other datasets, simply update the `dataset` parameter in the 
+datasets. Additionally, we have provided yaml files for several baseline methods for all four 
+datasets. To apply our method to the other datasets, simply update the `dataset` parameter in the
 `model` section and `dataset_type` in the `data_geometry` section. Please look at the other yaml 
 files as a guide.
