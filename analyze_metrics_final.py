@@ -10,11 +10,8 @@ def get_round_num(round_dir):
 
 results_csv_file = "results.csv"
 root_dir = "."
-exp_length = 3
-exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*CHAOS*exp*v10*"))))
-#exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*exp*v11*"))))
-#exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*CHAOS*exp*v12*"))))
-#exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*LVSC*exp*v12*"))))
+exp_length = 5
+exp_dirs = sorted(list(glob(os.path.join(root_dir, "*", "DMPLS*"))))
 
 results = []
 for exp_dir in exp_dirs:

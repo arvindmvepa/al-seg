@@ -74,7 +74,7 @@ class BaseCoreset(BaseDataGeometry):
                                    group_wt=group_wt, height_wt=height_wt, weight_wt=weight_wt,
                                    slice_rel_pos_wt=slice_rel_pos_wt, slice_mid_wt=slice_mid_wt, slice_pos_wt=slice_pos_wt,
                                    uncertainty_wt=uncertainty_wt, wt_max_dist_mult=wt_max_dist_mult)
-    
+
     def setup(self, exp_dir, data_root, all_train_im_files):
         print("Setting up Coreset Class...")
         self.setup_feature_model(exp_dir)
@@ -190,7 +190,7 @@ class BaseCoreset(BaseDataGeometry):
                 with open(val_file, "r") as json_file:
                     val_metrics = json.load(json_file)
                 val_result = val_metrics["performance"]
-                if val_result> best_perf:
+                if val_result > best_perf:
                     best_perf = val_result
                     best_index = index
             train_result = train_results[best_index]

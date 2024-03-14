@@ -1,30 +1,74 @@
-# Active Learning for Semantic Segmentation
+# Integrating Deep Metric Learning with Coreset for Active Learning in 3D Segmentation
+
+This is the official implementation for the paper "Integrating Deep Metric Learning 
+with Coreset for Active Learning in 3D Segmentation". This paper introduces a novel 
+metric learning method for Coreset to perform slice-based active learning in 3D medical 
+segmentation. By merging contrastive learning with inherent data groupings in medical 
+imaging, we learn a metric that emphasizes the relevant differences in samples for training 
+3D medical segmentation models. We perform comprehensive evaluations using both weak and 
+full annotations across four datasets (medical and non-medical). Our findings demonstrate 
+that our approach surpasses existing active learning techniques on both weak and full 
+annotations and obtains superior performance with low-annotation budgets which is crucial 
+in medical imaging.
+
+<img src="./pipeline2.jpg">
 
 ## Usage
 
-1. Clone this project.
-```
-git clone https://github.com/arvindmvepa/al-seg.git
-cd al-seg
-```
-2. Clone the submodules
-```
-git submodule update --init --recursive --remote
-```
-3. Download the data located at ![](https://drive.google.com/drive/folders/1MdxIdD9auRzfH6_Np9hiEyxkAuHAUgZA?usp=sharing) and unzip in the current directory: `smpl_data.zip` and `spml_pretrained.zip` for `SPMLModel` and `wsl4mis.zip` for `DMPLSModel`
+Our code has been tested with Python 3.8 on Ubuntu 16.04 with a Tesla V100 GPU with CUDA 11.2.
 
-4. Make sure `virtualenv` is installed and create a virtual environment for each model you will run and install the libraries in that model's requirement_file (`DMPLSModel` uses `wsl4mis_requirements.txt`)
+1. Make sure `conda` or `virtualenv` is installed and create a virtual environment and install 
+the libraries in `wsl4mis_requirements.txt`
 ```
-python -m venv /path/to/new/virtual/environment
-pip install -r model_requirements.txt
+pip install -r wsl4mis_requirements.txt
 ```
-
-5. Update the relevant parameters in `exp.yml` (see Experiment Parameters section below for details)
-
-6. Run the Active Learning Experiment
+2. Set up the data (see `Data` section below)
+3. Update the relevant parameters in `exp.yml` (see `Experiment Parameters` section below)
+4. Run the Active Learning Experiment
 ```
 python run_al_exp.py
 ```
 
+## Data
+
+In our work we used the [ACDC](https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html), 
+[CHAOS](https://chaos.grand-challenge.org/), [MSC-MR](https://zmiclab.github.io/zxh/0/mscmrseg19/), 
+and [DAVIS](https://davischallenge.org/) datasets. For all four datasets, we used essentially
+the same pre-processing methods found [here](https://github.com/HiLab-git/WSL4MIS). The 
+pre-processing code can also be found in the `wsl4mis` directory. Scribbles and pre-processed data 
+for the ACDC dataset can be found [here](https://github.com/HiLab-git/WSL4MIS). Scribbles for the 
+MSC-MR dataset can be found [here](https://github.com/BWGZK/CycleMix).
+
+Please store the pre-processed data in a directory with the dataset name in `wsl4mis_data` 
+as specified in `active_learning/dataset/data_params.py`. For example, the ACDC dataset should 
+be in `wsl4mis_data/ACDC`. Please see the text files in `wsl4mis/data/dataset_name` for the 
+subdirectory names corresponding to the train, val, and test sets.
+
 ## Experiment Parameters
-There are three parameter groups in `exp.yml`: `model`, `model_uncertainty`, and `policy`. Additionally, at the same indent-evel, you can specify a `exp_dir` which creates an experiment directory in the specified directory. Each of the parameter group parameters are passed directly to its respective factory. Thus, one can inspect the meaning of different parameters by looking at the constructors for each parameter group type (i.e. model, model_uncertainty, and policy type). Just to note, in the `policy` group, `ensemble_kwargs` are parameters passed to the `train_model` method and `uncertainty_kwargs` are the parameters passed to the `calculate_uncertainty` method. We can optionally pass `skip` to these `kwarg` arguments to skip these steps for debugging purposes.
+
+There are four parameter groups in `exp.yml`: `model`, `data_geometry`, `model_uncertainty`, and 
+`policy`. Additionally, at the same indent-level, you can specify a `exp_dir` which creates an 
+experiment directory in the specified directory. Each of the parameter group parameters are 
+passed directly to its respective factory. Thus, one can inspect the meaning of different 
+parameters by looking at the constructors for each parameter group type (i.e. model, 
+data_geomtry, model_uncertainty, and policy). 
+
+Some of the important parameters in the `policy` section are:
+- `policy_type`: In most cases this will be `ranked`, indicating to use a ranked selection method.
+However, for random sampling, please use `random`.
+- `rounds`: The proportion of the dataset to label in each round. This is a list of lists: the ith 
+sublist indicates what proportion of the dataset to label in the ith round. Currently, only the first 
+element of the sublist is used - the second should be set to zero. For example, if `rounds` is 
+`[[0.1, 0], [0.1, 0], [0.1, 0], [0.1, 0]]`, then 10% of the dataset will be labeled for four rounds.
+
+There are many other useful parameters, and we have provided several example yaml files. 
+We have provided the yaml files for our method for the weakly-supervised and fully-supervised ACDC 
+datasets. Additionally, we have provided yaml files for several baseline methods for all four 
+datasets. To apply our method to the other datasets, simply update the `dataset` parameter in the
+`model` section and `dataset_type` in the `data_geometry` section. Please look at the other yaml 
+files as a guide.
+
+## License
+
+This work is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
+To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/4.0/.

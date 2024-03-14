@@ -1,9 +1,8 @@
 model:
   model_type: "strong"
   ann_type: "label"
-  dataset: "LVSC"
-  ensemble_size: 1
-  max_iterations: 30000
+  dataset: "CHAOS_CT"
+  ensemble_size: 3
   gpus: "cuda:0"
 policy:
   policy_type: ranked
@@ -14,8 +13,8 @@ policy:
   uncertainty_kwargs:
     skip: False
     delete_preds: True
-  rounds: [[.1, 0], [.05, 0], [.05, 0], [.05, 0], [.05, 0]]
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: entropy_w_label_probs
-exp_dir: "strong_lvsc_test_run"
+exp_dir: "exp_chaos_strong_ensemble_entropy"

@@ -1,6 +1,7 @@
 model:
   model_type: "dmpls"
   ann_type: "scribble"
+  dataset: "ACDC"
   ensemble_size: 5
   gpus: "cuda:0"
 policy:
@@ -9,8 +10,7 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: True
-  rounds: [[.01, 0], [.04, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+  rounds: [[.01, 0, random, True], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
 data_geometry:
-  data_geometry_type: kcenter_greedy
-  seed: 1
-exp_dir: "DMPLS_exp1_coreset_v6"
+  data_geometry_type: vaal
+exp_dir: "exp_acdc_weak_vaal"

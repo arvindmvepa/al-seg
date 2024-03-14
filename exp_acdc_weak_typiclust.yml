@@ -1,0 +1,25 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  dataset: "ACDC"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 1
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+data_geometry:
+  data_geometry_type: typiclust
+  knn_model: "sklearn"
+  feature_model: True
+  contrastive: True
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 8
+    num_epochs: 50
+    seed: 1
+    reset_sampler_every_epoch: True
+exp_dir: "exp_acdc_weak_typiclust"
