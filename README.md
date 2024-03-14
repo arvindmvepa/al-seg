@@ -40,8 +40,8 @@ There are four parameter groups in `exp.yml`: `model`, `data_geometry`, `model_u
 experiment directory in the specified directory. Each of the parameter group parameters are 
 passed directly to its respective factory. Thus, one can inspect the meaning of different 
 parameters by looking at the constructors for each parameter group type (i.e. model, 
-data_geomtry, model_uncertainty, and policy type). 
+data_geomtry, model_uncertainty, and policy). 
 
-We have provided the yaml files for the weakly-supervised ACDC dataset for our method as well as
-several baseline methods. We also provided example yaml files for the strongly-supervised ACDC 
-dataset and the other datasets.
+We have provided the yaml files for our method for the weakly-supervised and fully-supervised ACDC 
+dataset. Additionally, we have provided yaml files for several baseline methods for all four 
+datasets.

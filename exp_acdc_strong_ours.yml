@@ -15,8 +15,6 @@ data_geometry:
   seed: 1
   contrastive: True
   feature_model: True
-  use_labels: True
-  label_wt: 2.0
   uncertainty_wt: 1.0
   use_uncertainty: True
   feature_model_params:
