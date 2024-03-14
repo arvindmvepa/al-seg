@@ -53,7 +53,7 @@ Some of the important parameters in the `policy` section are:
 - `policy_type`: In most cases this will be `ranked`, indicating to use a ranked selection method.
 However, for random sampling, please use `random`.
 - `rounds`: The proportion of the dataset to label in each round. This is a list of lists: the ith 
-sublist indicates what proportion of the dataset to label each round. Currently, only the first 
+sublist indicates what proportion of the dataset to label in the ith round. Currently, only the first 
 element of the sublist is used - the second should be set to zero. For example, if `rounds` is 
 `[[0.1, 0], [0.1, 0], [0.1, 0], [0.1, 0]]`, then 10% of the dataset will be labeled for four rounds.
 
