@@ -2,12 +2,11 @@
 
 ## Usage
 
-1. Make sure `conda` or `virtualenv` is installed and create a virtual environment and install 
-the libraries in `wsl4mis_requirements.txt`
+1. Our code has been tested with Python 3.8 on Ubuntu 16.04. Make sure `conda` or `virtualenv` is 
+installed and create a virtual environment and install  the libraries in `wsl4mis_requirements.txt`
 ```
 pip install -r wsl4mis_requirements.txt
 ```
-Our code has been tested with Python 3.8 on Ubuntu 16.04.
 2. Set up the data (see `Data` section below)
 3. Update the relevant parameters in `exp.yml` (see `Experiment Parameters` section below)
 4. Run the Active Learning Experiment
