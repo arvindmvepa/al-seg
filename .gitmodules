@@ -1,8 +1,0 @@
-[submodule "spml"]
-	path = spml
-	url = https://github.com/QuantuMope/cs269-project-code.git
-	branch = spml_al_branch
-[submodule "wsl4mis"]
-	path = wsl4mis
-	url = https://github.com/arvindmvepa/WSL4MIS.git
-	branch = al-seg
