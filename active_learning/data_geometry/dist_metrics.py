@@ -3,7 +3,7 @@ from sklearn.metrics import DistanceMetric
 from scipy.spatial.distance import cosine
 
 
-def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_mult, num_im_features,
+def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_mult, num_im_features, num_label_features,
                     patient_starting_index=None, patient_ending_index=None, phase_starting_index=None,
                     phase_ending_index=None, group_starting_index=None, group_ending_index=None,
                     height_starting_index=None, height_ending_index=None, weight_starting_index=None,
@@ -22,10 +22,21 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     else:
         raise ValueError("image_metric must be one of 'cosine', 'dot', or 'euclidean'")
     print(image_vec1.shape, image_vec2.shape, num_im_features)
-    im1_features, im2_features = image_vec1[:num_im_features], image_vec2[:num_im_features]
-    labels = image_vec2[num_im_features:2*num_im_features]
-    non_image_vec1, non_image_vec2 = image_vec1[2*num_im_features:], image_vec2[2*num_im_features:]
-    metric_val = np.sum(image_metric(im1_features, im2_features, labels))
+    num_pos_features = num_label_features
+    im1_position_features, im2_position_features = image_vec1[:num_pos_features], image_vec2[:num_pos_features]
+    mdl_features_starting_index = num_pos_features
+    im1_mdl_features, im2_mdl_features = image_vec1[mdl_features_starting_index:num_im_features], \
+                                         image_vec2[mdl_features_starting_index:num_im_features]
+    labels_starting_index = num_im_features
+    labels = image_vec2[labels_starting_index:labels_starting_index + num_label_features]
+    non_image_features_starting_index = labels_starting_index + num_label_features
+    non_image_vec1, non_image_vec2 = image_vec1[non_image_features_starting_index:], \
+                                     image_vec2[non_image_features_starting_index:]
+
+    position_metric_val = np.sum(image_metric(im1_position_features, im2_position_features, labels))
+    mdl_metric_val = np.sum(image_metric(im1_mdl_features, im2_mdl_features, np.ones(im1_mdl_features.shape)))
+    metric_val = position_metric_val + mdl_metric_val
+
     if (patient_starting_index is not None) and (patient_ending_index is not None):
         patient_score = 1 - np.sum(non_image_vec1[patient_starting_index:patient_ending_index] == non_image_vec2[patient_starting_index:patient_ending_index])
     else:

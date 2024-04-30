@@ -202,6 +202,7 @@ class BaseCoreset(BaseDataGeometry):
     def get_coreset_metric_and_features(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
         num_im_features = processed_data.shape[1]
         labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
+        num_label_features = labels.shape[1]
         # check that number of pixels in image is greater than number of labels
         # only update points that are part of the image features
         assert processed_data.shape[1] >= labels.shape[1]
@@ -234,7 +235,8 @@ class BaseCoreset(BaseDataGeometry):
             non_image_kwargs.update(self.non_image_indices)
         if self.non_image_wts is not None:
             non_image_kwargs.update(self.non_image_wts)
-        coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist, num_im_features=num_im_features,
+        coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist,
+                                 num_im_features=num_im_features, num_label_features=num_label_features,
                                  **non_image_kwargs)
         return coreset_metric, features
 
