@@ -88,6 +88,7 @@ class kCenterGreedy(SamplingMethod):
                 print(f"Using labels with weight {self.label_wt}")
                 labels = self.labels_arr.reshape(x.shape[0], -1)
                 # check that number of pixels in image is greater than number of labels
+                print(x.shape, labels.shape)
                 assert x.shape[1] >= labels.shape[1]
                 # hard-coded number of classes to be (background + 3)
                 label_mask = np.where(labels < 4, self.label_wt, 1)
