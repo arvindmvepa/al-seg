@@ -18,9 +18,10 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     elif image_metric == "dot":
         image_metric = lambda x,y,z: -np.dot(x,y*z)
     elif image_metric == "euclidean":
-        image_metric = lambda x,y,z: np.sqrt(np.sum(z*(x-y)**2))
+        image_metric = lambda x,y,z: np.sqrt(np.sum(z*((x-y)**2)))
     else:
         raise ValueError("image_metric must be one of 'cosine', 'dot', or 'euclidean'")
+    print(image_vec1.shape, image_vec2.shape, num_im_features)
     im1_features, im2_features = image_vec1[:num_im_features], image_vec2[:num_im_features]
     labels = image_vec2[num_im_features:2*num_im_features]
     non_image_vec1, non_image_vec2 = image_vec1[2*num_im_features:], image_vec2[2*num_im_features:]
