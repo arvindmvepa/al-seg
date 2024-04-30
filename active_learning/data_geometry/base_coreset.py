@@ -103,7 +103,7 @@ class BaseCoreset(BaseDataGeometry):
     def setup_image_features(self):
         print("Setting up image features...")
         print("Getting data")
-        image_data, self.image_meta_data, self.image_labels_arr,  =  self.dataset.get_data(self.use_labels)
+        image_data, self.image_meta_data, self.image_labels_arr  =  self.dataset.get_data(self.use_labels)
         print("Processing meta_data...")
         self.image_meta_data_arr = self.dataset.process_meta_data(self.image_meta_data)
         self.non_image_indices = self.dataset.get_non_image_indices()
@@ -136,7 +136,8 @@ class BaseCoreset(BaseDataGeometry):
                                         uncertainty_starting_index=self.non_image_indices["uncertainty_starting_index"] if self.use_uncertainty else None,
                                         uncertainty_ending_index=self.non_image_indices["uncertainty_ending_index"] if self.use_uncertainty else None,
                                         uncertainty_wt=self.non_image_wts["uncertainty_wt"] if self.use_uncertainty else None,
-                                        gpus=self.gpus, **self.coreset_kwargs)
+                                        label_wt=self.label_wt, label_arr=self.image_labels_arr, gpus=self.gpus,
+                                        **self.coreset_kwargs)
         print(f"Created {coreset_inst.name} inst!")
         return coreset_inst
 
@@ -201,6 +202,7 @@ class BaseCoreset(BaseDataGeometry):
 
     def get_coreset_metric_and_features(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
         num_im_features = processed_data.shape[1]
+        """
         if self.use_labels:
             print(f"Using labels with weight {self.label_wt}")
             labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
@@ -212,6 +214,7 @@ class BaseCoreset(BaseDataGeometry):
             label_mask = np.where(labels < 4, self.label_wt, 1)
             im_features = im_features * label_mask
             processed_data[:, :labels.shape[1]] = im_features
+        """
         features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
         if self.use_uncertainty and (prev_round_dir is not None):
             if uncertainty_kwargs is None:
