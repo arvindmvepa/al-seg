@@ -136,7 +136,7 @@ class BaseCoreset(BaseDataGeometry):
                                         uncertainty_starting_index=self.non_image_indices["uncertainty_starting_index"] if self.use_uncertainty else None,
                                         uncertainty_ending_index=self.non_image_indices["uncertainty_ending_index"] if self.use_uncertainty else None,
                                         uncertainty_wt=self.non_image_wts["uncertainty_wt"] if self.use_uncertainty else None,
-                                        label_wt=self.label_wt, label_arr=self.image_labels_arr, gpus=self.gpus,
+                                        label_wt=self.label_wt, labels_arr=self.image_labels_arr, gpus=self.gpus,
                                         **self.coreset_kwargs)
         print(f"Created {coreset_inst.name} inst!")
         return coreset_inst
