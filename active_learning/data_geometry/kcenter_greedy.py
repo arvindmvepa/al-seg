@@ -50,9 +50,8 @@ class kCenterGreedy(SamplingMethod):
        Can be extended to a robust k centers algorithm that ignores a certain number of
        outlier datapoints.  Resulting centers are solution to multiple integer program.
         """
-    def __init__(self, X, file_names, metric, num_im_features, labels_arr=None, label_wt=None,
-                 uncertainty_starting_index=None, uncertainty_ending_index=None, uncertainty_wt=None, seed=None,
-                 gpus="cuda:0"):
+    def __init__(self, X, file_names, metric, num_im_features, uncertainty_starting_index=None,
+                 uncertainty_ending_index=None, uncertainty_wt=None, seed=None, gpus="cuda:0"):
         self.X = X
         self.flat_X = self.flatten_X()
         self.file_names = file_names
@@ -60,8 +59,6 @@ class kCenterGreedy(SamplingMethod):
         self.name = "kcenter"
         self.features = self.flat_X
         self.metric = metric
-        self.labels_arr = labels_arr
-        self.label_wt = label_wt
         self.min_distances = None
         self.max_distances = None
         self.n_obs = self.X.shape[0]
@@ -84,14 +81,6 @@ class kCenterGreedy(SamplingMethod):
             ]
         if cluster_centers:
             x = self.features[cluster_centers]
-            if self.label_wt:
-                print(f"Using labels with weight {self.label_wt}")
-                labels = self.labels_arr[cluster_centers].reshape(x.shape[0], -1)
-                # check that number of pixels in image is greater than number of labels
-                assert x.shape[1] >= labels.shape[1]
-                # hard-coded number of classes to be (background + 3)
-                label_mask = np.where(labels < 4, self.label_wt, 1)
-                x = np.concatenate((x, label_mask), axis=1)
             # Update min_distances for all examples given new cluster center.
             dist = pairwise_distances(
                 self.features, x, metric=self.metric

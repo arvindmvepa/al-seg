@@ -136,8 +136,7 @@ class BaseCoreset(BaseDataGeometry):
                                         uncertainty_starting_index=self.non_image_indices["uncertainty_starting_index"] if self.use_uncertainty else None,
                                         uncertainty_ending_index=self.non_image_indices["uncertainty_ending_index"] if self.use_uncertainty else None,
                                         uncertainty_wt=self.non_image_wts["uncertainty_wt"] if self.use_uncertainty else None,
-                                        label_wt=self.label_wt, labels_arr=self.image_labels_arr, gpus=self.gpus,
-                                        **self.coreset_kwargs)
+                                        gpus=self.gpus, **self.coreset_kwargs)
         print(f"Created {coreset_inst.name} inst!")
         return coreset_inst
 
@@ -202,20 +201,17 @@ class BaseCoreset(BaseDataGeometry):
 
     def get_coreset_metric_and_features(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
         num_im_features = processed_data.shape[1]
-        """
+        labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
+        # check that number of pixels in image is greater than number of labels
+        # only update points that are part of the image features
+        assert processed_data.shape[1] >= labels.shape[1]
         if self.use_labels:
             print(f"Using labels with weight {self.label_wt}")
-            labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
-            # check that number of pixels in image is greater than number of labels
-            # only update points that are part of the image features
-            assert processed_data.shape[1] >= labels.shape[1]
-            im_features = processed_data[:, :labels.shape[1]]
             # hard-coded number of classes to be (background + 3)
             label_mask = np.where(labels < 4, self.label_wt, 1)
-            im_features = im_features * label_mask
-            processed_data[:, :labels.shape[1]] = im_features
-        """
-        features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
+        else:
+            label_mask = np.ones(labels.shape)
+        features = np.concatenate([processed_data, label_mask, self.image_meta_data_arr], axis=1)
         if self.use_uncertainty and (prev_round_dir is not None):
             if uncertainty_kwargs is None:
                 uncertainty_kwargs = dict()

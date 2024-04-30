@@ -14,14 +14,17 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
                     uncertainty_wt=0.0):
     assert image_vec1.shape == image_vec2.shape
     if image_metric == "cosine":
-        image_metric = lambda x,y: (1 - cosine(x,y))
+        image_metric = lambda x,y,z: (1 - cosine(x,y))
     elif image_metric == "dot":
-        image_metric = lambda x,y: -np.dot(x,y)
+        image_metric = lambda x,y,z: -np.dot(x,y*z)
+    elif image_metric == "euclidean":
+        image_metric = lambda x,y,z: np.sqrt(np.sum(z*(x-y)**2))
     else:
-        metric_inst = DistanceMetric.get_metric(image_metric)
-        image_metric = lambda x,y: metric_inst.pairwise([x], [y])[0]
-    metric_val = np.sum(image_metric(image_vec1[:num_im_features], image_vec2[:num_im_features]))
-    non_image_vec1, non_image_vec2 = image_vec1[num_im_features:], image_vec2[num_im_features:]
+        raise ValueError("image_metric must be one of 'cosine', 'dot', or 'euclidean'")
+    im1_features, im2_features = image_vec1[:num_im_features], image_vec2[:num_im_features]
+    labels = image_vec2[num_im_features:2*num_im_features]
+    non_image_vec1, non_image_vec2 = image_vec1[2*num_im_features:], image_vec2[2*num_im_features:]
+    metric_val = np.sum(image_metric(im1_features, im2_features, labels))
     if (patient_starting_index is not None) and (patient_ending_index is not None):
         patient_score = 1 - np.sum(non_image_vec1[patient_starting_index:patient_ending_index] == non_image_vec2[patient_starting_index:patient_ending_index])
     else:
