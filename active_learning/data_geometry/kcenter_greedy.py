@@ -86,7 +86,7 @@ class kCenterGreedy(SamplingMethod):
             x = self.features[cluster_centers]
             if self.label_wt:
                 print(f"Using labels with weight {self.label_wt}")
-                labels = self.image_labels_arr.reshape(x.shape[0], -1)
+                labels = self.labels_arr.reshape(x.shape[0], -1)
                 # check that number of pixels in image is greater than number of labels
                 assert x.shape[1] >= labels.shape[1]
                 # hard-coded number of classes to be (background + 3)
