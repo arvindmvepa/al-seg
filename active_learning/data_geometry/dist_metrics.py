@@ -21,7 +21,6 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
         image_metric = lambda x,y,z: np.sqrt(np.sum(z*((x-y)**2)))
     else:
         raise ValueError("image_metric must be one of 'cosine', 'dot', or 'euclidean'")
-    print(image_vec1.shape, image_vec2.shape, num_im_features, num_label_features)
     num_position_features = num_label_features
     im1_position_features, im2_position_features = image_vec1[:num_position_features], image_vec2[:num_position_features]
     mdl_features_starting_index = num_position_features
