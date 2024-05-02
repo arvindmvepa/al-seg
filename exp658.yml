@@ -6,14 +6,14 @@ model:
   gpus: "cuda:0"
 policy:
   policy_type: ranked
-  seed: 0
+  seed: 1
   ensemble_kwargs:
     skip: False
     inf_test: True
   rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  seed: 0
+  seed: 1
   contrastive: True
   feature_model: True
   use_labels: True
@@ -24,7 +24,7 @@ data_geometry:
     encoder: resnet18
     batch_size: 8
     fuse_image_data: True
-    seed: 0
+    seed: 1
     use_slice_pos: True
     use_phase: True
     use_patient: True
@@ -40,4 +40,4 @@ data_geometry:
     pos_loss3: True
     pos_loss3_wt: .05
     reset_sampler_every_epoch: True
-exp_dir: "DMPLS_exp0_coreset_fuse01_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_label2_uncertainty1_v15"
+exp_dir: "DMPLS_exp1_coreset_fuse01_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_label2_uncertainty1_v15"
