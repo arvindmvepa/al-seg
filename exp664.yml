@@ -40,4 +40,7 @@ data_geometry:
     pos_loss3: True
     pos_loss3_wt: .05
     reset_sampler_every_epoch: True
+model_uncertainty:
+  model_uncertainty_type: ensemble
+  score_func: entropy_w_label_probs
 exp_dir: "DMPLS_exp2_coreset_fuse01_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_label4_uncertainty1_v15"
