@@ -6,6 +6,7 @@ model:
   gpus: "cuda:0"
 policy:
   policy_type: ranked
+  resume: True
   seed: 0
   ensemble_kwargs:
     skip: False
