@@ -103,7 +103,7 @@ class BaseCoreset(BaseDataGeometry):
     def setup_image_features(self):
         print("Setting up image features...")
         print("Getting data")
-        image_data, self.image_meta_data, self.image_labels_arr  =  self.dataset.get_data(self.use_labels)
+        image_data, self.image_meta_data, self.image_labels_arr  =  self.dataset.get_data()
         print("Processing meta_data...")
         self.image_meta_data_arr = self.dataset.process_meta_data(self.image_meta_data)
         self.non_image_indices = self.dataset.get_non_image_indices()
