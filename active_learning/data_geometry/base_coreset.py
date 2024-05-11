@@ -36,6 +36,10 @@ class BaseCoreset(BaseDataGeometry):
             self.dataset_kwargs = {}
         else:
             self.dataset_kwargs = dataset_kwargs
+        if not isinstance(feature_model_params, dict):
+            self.feature_model_params = {}
+        else:
+            self.feature_model_params = feature_model_params
         self.in_chns = in_chns
         self.use_uncertainty = use_uncertainty
         self.model_uncertainty = model_uncertainty
@@ -45,11 +49,10 @@ class BaseCoreset(BaseDataGeometry):
         self.label_wt = label_wt
         self.max_dist = max_dist
         self.wt_max_dist_mult = wt_max_dist_mult
-
         self.contrastive = contrastive
         self.gpus = gpus
         self.feature_model = feature_model
-        self.feature_model_params = feature_model_params
+        self.fuse_image_data = self.feature_model_params.get("fuse_image_data", False)
         self.use_model_features = use_model_features
         self.seed = seed
         self.random_state = RandomState(seed=self.seed)
@@ -201,18 +204,26 @@ class BaseCoreset(BaseDataGeometry):
 
     def get_coreset_metric_and_features(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
         num_im_features = processed_data.shape[1]
-        labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
-        num_label_features = labels.shape[1]
         # check that number of pixels in image is greater than number of labels
         # only update points that are part of the image features
-        assert processed_data.shape[1] >= labels.shape[1]
         if self.use_labels:
             print(f"Using labels with weight {self.label_wt}")
+            labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
+            assert processed_data.shape[1] >= labels.shape[1]
+            num_label_features = labels.shape[1]
             # hard-coded number of classes to be (background + 3)
             label_mask = np.where(labels < 4, self.label_wt, 1)
-        else:
+            features = np.concatenate([processed_data, label_mask, self.image_meta_data_arr], axis=1)
+        # hard code 1 labels for hacky fix to the metric to keep track of position
+        elif self.fuse_image_data:
+            labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
+            assert processed_data.shape[1] >= labels.shape[1]
+            num_label_features = labels.shape[1]
             label_mask = np.ones(labels.shape)
-        features = np.concatenate([processed_data, label_mask, self.image_meta_data_arr], axis=1)
+            features = np.concatenate([processed_data, label_mask, self.image_meta_data_arr], axis=1)
+        else:
+            num_label_features = 0
+            features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
         if self.use_uncertainty and (prev_round_dir is not None):
             if uncertainty_kwargs is None:
                 uncertainty_kwargs = dict()

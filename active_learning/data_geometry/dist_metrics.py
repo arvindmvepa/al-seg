@@ -31,8 +31,10 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     non_image_features_starting_index = labels_starting_index + num_label_features
     non_image_vec1, non_image_vec2 = image_vec1[non_image_features_starting_index:], \
                                      image_vec2[non_image_features_starting_index:]
-
-    position_metric_val = np.sum(image_metric(im1_position_features, im2_position_features, labels))
+    if num_position_features > 0:
+        position_metric_val = np.sum(image_metric(im1_position_features, im2_position_features, labels))
+    else:
+        position_metric_val = 0
     mdl_metric_val = np.sum(image_metric(im1_mdl_features, im2_mdl_features, np.ones(im1_mdl_features.shape)))
     metric_val = position_metric_val + mdl_metric_val
 
