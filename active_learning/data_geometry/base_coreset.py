@@ -326,6 +326,9 @@ class BaseCoreset(BaseDataGeometry):
                     print(self.image_meta_data_arr[112])
                     print(self.image_meta_data_arr[113])
                     print(self.image_meta_data_arr[114])
+                    print(np.sum(np.abs(self.flat_image_data[112]-self.flat_image_data[113])))
+                    print(self.find_duplicate_subarrays(self.image_meta_data_arr))
+                    print(self.find_duplicate_subarrays(self.flat_image_data))
                     if len(slice_index) == 0:
                         continue
                     slice_index = slice_index[0]
@@ -342,3 +345,17 @@ class BaseCoreset(BaseDataGeometry):
                     slice_mads.append(np.mean(np.abs(flat_image_data[slice_index] - slice_mean_image_data)))
         slice_mad = np.mean(slice_mads)
         print(f"MAD (slice-adjacency): {slice_mad}")
+
+    # Function to find duplicates
+    def find_duplicate_subarrays(self, array):
+        count_dict = {}
+        for subarr in map(tuple, array):  # Convert each subarray to a tuple
+            if subarr in count_dict:
+                count_dict[subarr] += 1
+            else:
+                count_dict[subarr] = 1
+
+        # Count the number of entries with more than one occurrence
+        duplicates_count = sum(1 for count in count_dict.values() if count > 1)
+        return duplicates_count
+
