@@ -157,8 +157,13 @@ class ACDC_Dataset(BaseDataset):
     def _extract_slice_no(self, im_path):
         slice_str = "slice_"
         slice_str_len = len(slice_str)
-        slice_num_len = 1
+        slice_num_len = 2
         slice_start_index = im_path.index(slice_str) + slice_str_len
         slice_end_index = slice_start_index + slice_num_len
-        slice_num = int(im_path[slice_start_index:slice_end_index])
+        slice_str = im_path[slice_start_index:slice_end_index]
+        if slice_str.isdigit():
+            slice_num = int(slice_str)
+        else:
+            slice_str = slice_str[0]
+            slice_num = int(slice_str)
         return slice_num

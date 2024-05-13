@@ -319,16 +319,6 @@ class BaseCoreset(BaseDataGeometry):
                     slice_next_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
                                                 (self.image_meta_data_arr[:, 1] == volume_id) &
                                                 (self.image_meta_data_arr[:, -1] == (slice_pos + 1)))
-                    print("slice prev index ", slice_prev_index)
-                    print("slice index ", slice_index)
-                    print("slice next index ", slice_next_index)
-                    print("slice next index info ", self.image_meta_data_arr[slice_next_index])
-                    print(self.image_meta_data_arr[112])
-                    print(self.image_meta_data_arr[113])
-                    print(self.image_meta_data_arr[114])
-                    print(np.sum(np.abs(flat_image_data[112]-flat_image_data[113])))
-                    #print(self.find_duplicate_subarrays(self.image_meta_data_arr))
-                    #print(self.find_duplicate_subarrays(flat_image_data))
                     if len(slice_index) == 0:
                         continue
                     slice_index = slice_index[0]
