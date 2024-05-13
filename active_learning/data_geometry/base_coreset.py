@@ -319,9 +319,6 @@ class BaseCoreset(BaseDataGeometry):
                     slice_next_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
                                                 (self.image_meta_data_arr[:, 1] == volume_id) &
                                                 (self.image_meta_data_arr[:, -1] == (slice_pos + 1)))
-                    print("slice prev index ", slice_prev_index)
-                    print("slice index ", slice_index)
-                    print("slice next index ", slice_next_index)
                     slice_index = slice_index[0]
                     slice_prev_index = slice_prev_index[0]
                     slice_next_index = slice_next_index[0]
