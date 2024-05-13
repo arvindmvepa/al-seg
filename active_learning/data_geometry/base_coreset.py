@@ -286,7 +286,10 @@ class BaseCoreset(BaseDataGeometry):
         # calculate mean absolute deviation (patient)
         patient_ids = np.unique(self.image_meta_data_arr[:, 0])
         volume_ids = np.unique(self.image_meta_data_arr[:, 1])
-        slice_pos_ids = np.unique(self.image_meta_data_arr[:, -1])
+        print(self.image_meta_data_arr)
+        print(self.image_meta_data_arr[:, -1])
+        slice_pos_lst = np.unique(self.image_meta_data_arr[:, -1])
+        print(slice_pos_lst)
         patient_mads = []
         for patient_id in patient_ids:
             patient_indices = np.where(self.image_meta_data_arr[:, 0] == patient_id)
@@ -308,19 +311,19 @@ class BaseCoreset(BaseDataGeometry):
         slice_mads = []
         for patient_id in patient_ids:
             for volume_id in volume_ids:
-                for slice_pos_id in slice_pos_ids:
+                for slice_pos in slice_pos_lst:
                     slice_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
                                            ( self.image_meta_data_arr[:, 1] == volume_id) &
-                                           (self.image_meta_data_arr[:, -1] == slice_pos_id))
+                                           (self.image_meta_data_arr[:, -1] == slice_pos))
                     slice_prev_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
                                                 ( self.image_meta_data_arr[:, 1] == volume_id) &
-                                                (self.image_meta_data_arr[:, -1] == (slice_pos_id - 1)))
+                                                (self.image_meta_data_arr[:, -1] == (slice_pos - 1)))
                     slice_next_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
                                                 (self.image_meta_data_arr[:, 1] == volume_id) &
-                                                (self.image_meta_data_arr[:, -1] == (slice_pos_id + 1)))
-                    print(slice_index)
-                    print(slice_prev_index)
-                    print(slice_next_index)
+                                                (self.image_meta_data_arr[:, -1] == (slice_pos + 1)))
+                    #print(slice_index)
+                    #print(slice_prev_index)
+                    #print(slice_next_index)
                     if len(slice_index) == 0:
                         continue
                     slice_index = slice_index[0]
