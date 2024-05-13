@@ -16,12 +16,12 @@ class BaseCoreset(BaseDataGeometry):
     """Base class for Coreset sampling"""
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, dataset_type="ACDC",
-                 dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
+                 in_chns=1, dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
                  uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0, max_dist=None,
                  wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0,
                  weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0,
-                 feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False, seed=0,
-                 gpus="cuda:0", **kwargs):
+                 feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False,
+                 analyze_data=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -36,6 +36,11 @@ class BaseCoreset(BaseDataGeometry):
             self.dataset_kwargs = {}
         else:
             self.dataset_kwargs = dataset_kwargs
+        if not isinstance(feature_model_params, dict):
+            self.feature_model_params = {}
+        else:
+            self.feature_model_params = feature_model_params
+        self.in_chns = in_chns
         self.use_uncertainty = use_uncertainty
         self.model_uncertainty = model_uncertainty
         self.uncertainty_score_file = uncertainty_score_file
@@ -44,12 +49,12 @@ class BaseCoreset(BaseDataGeometry):
         self.label_wt = label_wt
         self.max_dist = max_dist
         self.wt_max_dist_mult = wt_max_dist_mult
-
         self.contrastive = contrastive
         self.gpus = gpus
         self.feature_model = feature_model
-        self.feature_model_params = feature_model_params
+        self.fuse_image_data = self.feature_model_params.get("fuse_image_data", False)
         self.use_model_features = use_model_features
+        self.analyze_data = analyze_data
         self.seed = seed
         self.random_state = RandomState(seed=self.seed)
         self.basic_coreset_alg = None
@@ -65,15 +70,18 @@ class BaseCoreset(BaseDataGeometry):
         self.non_image_indices = None
         self._update_non_image_wts(extra_feature_wt=extra_feature_wt, patient_wt=patient_wt, phase_wt=phase_wt,
                                    group_wt=group_wt, height_wt=height_wt, weight_wt=weight_wt,
-                                   slice_rel_pos_wt=slice_rel_pos_wt, slice_mid_wt=slice_mid_wt, slice_pos_wt=slice_pos_wt,
+                                   slice_rel_pos_wt=slice_rel_pos_wt, slice_mid_wt=slice_mid_wt,
+                                   slice_pos_wt=slice_pos_wt,
                                    uncertainty_wt=uncertainty_wt, wt_max_dist_mult=wt_max_dist_mult)
-    
+
     def setup(self, exp_dir, data_root, all_train_im_files):
         print("Setting up Coreset Class...")
         self.setup_feature_model(exp_dir)
         self.setup_data(data_root, all_train_im_files)
         self.setup_alg()
         print("Done setting up Coreset Class.")
+        if self.analyze_data:
+            self.analyze_dataset()
 
     def setup_feature_model(self, exp_dir):
         print("Setting up feature model...")
@@ -102,7 +110,7 @@ class BaseCoreset(BaseDataGeometry):
     def setup_image_features(self):
         print("Setting up image features...")
         print("Getting data")
-        image_data, self.image_meta_data, self.image_labels_arr,  =  self.dataset.get_data(self.use_labels)
+        image_data, self.image_meta_data, self.image_labels_arr = self.dataset.get_data()
         print("Processing meta_data...")
         self.image_meta_data_arr = self.dataset.process_meta_data(self.image_meta_data)
         self.non_image_indices = self.dataset.get_non_image_indices()
@@ -132,13 +140,15 @@ class BaseCoreset(BaseDataGeometry):
                                                                         uncertainty_kwargs=uncertainty_kwargs)
         coreset_inst = self.coreset_cls(X=features, file_names=self.all_train_im_files, metric=coreset_metric,
                                         num_im_features=processed_data.shape[1],
-                                        uncertainty_starting_index=self.non_image_indices["uncertainty_starting_index"] if self.use_uncertainty else None,
-                                        uncertainty_ending_index=self.non_image_indices["uncertainty_ending_index"] if self.use_uncertainty else None,
-                                        uncertainty_wt=self.non_image_wts["uncertainty_wt"] if self.use_uncertainty else None,
+                                        uncertainty_starting_index=self.non_image_indices[
+                                            "uncertainty_starting_index"] if self.use_uncertainty else None,
+                                        uncertainty_ending_index=self.non_image_indices[
+                                            "uncertainty_ending_index"] if self.use_uncertainty else None,
+                                        uncertainty_wt=self.non_image_wts[
+                                            "uncertainty_wt"] if self.use_uncertainty else None,
                                         gpus=self.gpus, **self.coreset_kwargs)
         print(f"Created {coreset_inst.name} inst!")
         return coreset_inst
-
 
     def get_coreset_inst_and_features_for_round(self, prev_round_dir, train_logits_path, uncertainty_kwargs=None,
                                                 delete_preds=True):
@@ -174,7 +184,7 @@ class BaseCoreset(BaseDataGeometry):
                 with open(val_file, "r") as json_file:
                     val_metrics = json.load(json_file)
                 val_result = val_metrics["performance"]
-                if val_result> best_perf:
+                if val_result > best_perf:
                     best_perf = val_result
                     best_index = index
             train_result = train_results[best_index]
@@ -200,22 +210,36 @@ class BaseCoreset(BaseDataGeometry):
 
     def get_coreset_metric_and_features(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
         num_im_features = processed_data.shape[1]
+        # check that number of pixels in image is greater than number of labels
+        # only update points that are part of the image features
         if self.use_labels:
             print(f"Using labels with weight {self.label_wt}")
             labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
-            # check that number of pixels in image is greater than number of labels
-            # only update points that are part of the image features
             assert processed_data.shape[1] >= labels.shape[1]
-            im_features = processed_data[:, :labels.shape[1]]
-            label_mask = np.where(labels != 4, self.label_wt, 1)
-            im_features = im_features * label_mask
-            processed_data[:, :labels.shape[1]] = im_features
-        features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
+            num_label_features = labels.shape[1]
+            # hard-coded number of classes to be (background + 3)
+            label_mask = np.where(labels < 4, self.label_wt, 1)
+            features = np.concatenate([processed_data, label_mask, self.image_meta_data_arr], axis=1)
+        # hard code 1 labels for hacky fix to the metric to keep track of position
+        elif self.fuse_image_data:
+            labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
+            assert processed_data.shape[1] >= labels.shape[1]
+            num_label_features = labels.shape[1]
+            label_mask = np.ones(labels.shape)
+            features = np.concatenate([processed_data, label_mask, self.image_meta_data_arr], axis=1)
+        else:
+            num_label_features = 0
+            features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
         if self.use_uncertainty and (prev_round_dir is not None):
             if uncertainty_kwargs is None:
                 uncertainty_kwargs = dict()
             uncertainty_round_score_file = os.path.join(prev_round_dir, self.uncertainty_score_file)
             if not os.path.exists(uncertainty_round_score_file):
+                self.model_uncertainty.model.train_ensemble(round_dir=prev_round_dir,
+                                                            cur_total_oracle_split=None,
+                                                            cur_total_pseudo_split=None,
+                                                            train=False, inf_train=True,
+                                                            inf_val=False, inf_test=False)
                 self.model_uncertainty.calculate_uncertainty(im_score_file=uncertainty_round_score_file,
                                                              round_dir=prev_round_dir, **uncertainty_kwargs)
             uncertainty_features = self._extract_uncertainty_features(uncertainty_round_score_file)
@@ -228,18 +252,21 @@ class BaseCoreset(BaseDataGeometry):
             non_image_kwargs.update(self.non_image_indices)
         if self.non_image_wts is not None:
             non_image_kwargs.update(self.non_image_wts)
-        coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist, num_im_features=num_im_features,
+        coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist,
+                                 num_im_features=num_im_features, num_label_features=num_label_features,
                                  **non_image_kwargs)
         return coreset_metric, features
 
-    def _update_non_image_wts(self, extra_feature_wt=None, patient_wt=None, phase_wt=None, group_wt=None, height_wt=None,
-                              weight_wt=None, slice_rel_pos_wt=None, slice_mid_wt=None, slice_pos_wt=None, uncertainty_wt=None,
+    def _update_non_image_wts(self, extra_feature_wt=None, patient_wt=None, phase_wt=None, group_wt=None,
+                              height_wt=None,
+                              weight_wt=None, slice_rel_pos_wt=None, slice_mid_wt=None, slice_pos_wt=None,
+                              uncertainty_wt=None,
                               wt_max_dist_mult=None):
         self.non_image_wts = {'extra_feature_wt': extra_feature_wt, 'patient_wt': patient_wt, 'phase_wt': phase_wt,
-                               'group_wt': group_wt, 'height_wt': height_wt, 'weight_wt': weight_wt,
-                               'slice_rel_pos_wt': slice_rel_pos_wt, 'slice_mid_wt': slice_mid_wt,
-                               'slice_pos_wt': slice_pos_wt, "uncertainty_wt": uncertainty_wt,
-                               "wt_max_dist_mult": wt_max_dist_mult}
+                              'group_wt': group_wt, 'height_wt': height_wt, 'weight_wt': weight_wt,
+                              'slice_rel_pos_wt': slice_rel_pos_wt, 'slice_mid_wt': slice_mid_wt,
+                              'slice_pos_wt': slice_pos_wt, "uncertainty_wt": uncertainty_wt,
+                              "wt_max_dist_mult": wt_max_dist_mult}
 
     def _extract_uncertainty_features(self, score_file):
         # get the scores per image from the score file in this format: img_name, score
@@ -250,3 +277,60 @@ class BaseCoreset(BaseDataGeometry):
         sorted_score_list = [im_score[1] for im_score in sorted_im_scores_list]
 
         return np.array(sorted_score_list).reshape(-1, 1)
+
+    def analyze_dataset(self):
+        flat_image_data = self.feature_model.flat_image_data
+        mean_image_data = np.mean(flat_image_data, axis=0)
+        # calculate mean absolute deviation (overall)
+        mad = np.mean(np.abs(flat_image_data - mean_image_data))
+        print(f"MAD (overall): {mad}")
+        # calculate mean absolute deviation (patient)
+        patient_ids = np.unique(self.image_meta_data_arr[:, 0])
+        volume_ids = np.unique(self.image_meta_data_arr[:, 1])
+        slice_pos_ids = np.unique(self.image_meta_data_arr[:, -1])
+        patient_mads = []
+        for patient_id in patient_ids:
+            patient_indices = np.where(self.image_meta_data_arr[:, 0] == patient_id)
+            patient_mean_image_data = np.mean(flat_image_data[patient_indices], axis=0)
+            patient_mads.append(np.mean(np.abs(flat_image_data[patient_indices] - patient_mean_image_data)))
+        patient_mad = np.mean(patient_mads)
+        print(f"MAD (patient): {patient_mad}")
+        # calculate mean absolute deviation (volume)
+        volume_mads = []
+        for patient_id in patient_ids:
+            for volume_id in volume_ids:
+                for slice_pos_id in slice_pos_ids:
+                    volume_indices = np.where(
+                        (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] == volume_id))
+                    volume_mean_image_data = np.mean(flat_image_data[volume_indices], axis=0)
+                    volume_mads.append(np.mean(np.abs(flat_image_data[volume_indices] - volume_mean_image_data)))
+        volume_mad = np.mean(volume_mads)
+        print(f"MAD (volume): {volume_mad}")
+        # calculate mean absolute deviation (slice-adjacency)
+        slice_mads = []
+        for patient_id in patient_ids:
+            for volume_id in volume_ids:
+                for slice_pos_id in slice_pos_ids:
+                    slice_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) & (
+                                self.image_meta_data_arr[:, 1] == volume_id) & (
+                                                       self.image_meta_data_arr[:, -1] == slice_pos_id))
+                    slice_prev_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) & (
+                                self.image_meta_data_arr[:, 1] == volume_id) & (
+                                                            self.image_meta_data_arr[:, -1] == (slice_pos_id - 1)))
+                    slice_next_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) & (
+                                self.image_meta_data_arr[:, 1] == volume_id) & (
+                                                            self.image_meta_data_arr[:, -1] == (slice_pos_id + 1)))
+                    if len(slice_index) == 0:
+                        continue
+                    slice_index = slice_index.item()
+                    assert (len(slice_prev_index) != 0) or (
+                                len(slice_next_index) != 0), "both previous and next slice are missing"
+                    if len(slice_prev_index) == 0:
+                        slice_prev_index = slice_next_index
+                    if len(slice_next_index) == 0:
+                        slice_next_index = slice_prev_index
+                    slice_mean_image_data = (flat_image_data[slice_index] + flat_image_data[slice_prev_index] +
+                                             flat_image_data[slice_next_index]) / 3
+                    slice_mads.append(np.mean(np.abs(flat_image_data[slice_index] - slice_mean_image_data)))
+        slice_mad = np.mean(slice_mads)
+        print(f"MAD (slice-adjacency): {slice_mad}")
