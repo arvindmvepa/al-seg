@@ -326,9 +326,9 @@ class BaseCoreset(BaseDataGeometry):
                     print(self.image_meta_data_arr[112])
                     print(self.image_meta_data_arr[113])
                     print(self.image_meta_data_arr[114])
-                    print(np.sum(np.abs(self.flat_image_data[112]-self.flat_image_data[113])))
+                    print(np.sum(np.abs(flat_image_data[112]-flat_image_data[113])))
                     print(self.find_duplicate_subarrays(self.image_meta_data_arr))
-                    print(self.find_duplicate_subarrays(self.flat_image_data))
+                    print(self.find_duplicate_subarrays(flat_image_data))
                     if len(slice_index) == 0:
                         continue
                     slice_index = slice_index[0]
