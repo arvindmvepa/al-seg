@@ -322,6 +322,7 @@ class BaseCoreset(BaseDataGeometry):
                     print("slice prev index ", slice_prev_index)
                     print("slice index ", slice_index)
                     print("slice next index ", slice_next_index)
+                    print("slice next index info ", self.image_meta_data_arr[slice_next_index])
                     if len(slice_index) == 0:
                         continue
                     slice_index = slice_index[0]
