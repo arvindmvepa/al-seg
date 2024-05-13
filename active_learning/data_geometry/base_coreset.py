@@ -21,7 +21,7 @@ class BaseCoreset(BaseDataGeometry):
                  wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0,
                  weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0,
                  feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False,
-                 analyze_data=False, seed=0, gpus="cuda:0", **kwargs):
+                 analyze_dataset=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -54,7 +54,7 @@ class BaseCoreset(BaseDataGeometry):
         self.feature_model = feature_model
         self.fuse_image_data = self.feature_model_params.get("fuse_image_data", False)
         self.use_model_features = use_model_features
-        self.analyze_data = analyze_data
+        self.analyze_dataset = analyze_dataset
         self.seed = seed
         self.random_state = RandomState(seed=self.seed)
         self.basic_coreset_alg = None
@@ -80,7 +80,7 @@ class BaseCoreset(BaseDataGeometry):
         self.setup_data(data_root, all_train_im_files)
         self.setup_alg()
         print("Done setting up Coreset Class.")
-        if self.analyze_data:
+        if self.analyze_dataset:
             self.analyze_dataset()
 
     def setup_feature_model(self, exp_dir):
@@ -322,6 +322,7 @@ class BaseCoreset(BaseDataGeometry):
                                                             self.image_meta_data_arr[:, -1] == (slice_pos_id + 1)))
                     if len(slice_index) == 0:
                         continue
+                    print(slice_index)
                     slice_index = slice_index.item()
                     assert (len(slice_prev_index) != 0) or (
                                 len(slice_next_index) != 0), "both previous and next slice are missing"
