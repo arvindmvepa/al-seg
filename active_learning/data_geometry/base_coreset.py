@@ -253,8 +253,7 @@ class BaseCoreset(BaseDataGeometry):
         if self.non_image_wts is not None:
             non_image_kwargs.update(self.non_image_wts)
         coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist,
-                                 num_im_features=num_im_features, num_label_features=num_label_features,
-                                 **non_image_kwargs)
+                                 num_im_features=num_im_features,**non_image_kwargs)
         return coreset_metric, features
 
     def _update_non_image_wts(self, extra_feature_wt=None, patient_wt=None, phase_wt=None, group_wt=None,
