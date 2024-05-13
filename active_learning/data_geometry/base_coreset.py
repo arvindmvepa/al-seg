@@ -277,6 +277,7 @@ class BaseCoreset(BaseDataGeometry):
 
         return np.array(sorted_score_list).reshape(-1, 1)
 
+    # TODO: Generalize for other datasets; hard-coded for ACDC (just need to use config parameters)
     def print_dataset_analysis(self):
         flat_image_data = self.feature_model.flat_image_data
         mean_image_data = np.mean(flat_image_data, axis=0)
@@ -286,10 +287,7 @@ class BaseCoreset(BaseDataGeometry):
         # calculate mean absolute deviation (patient)
         patient_ids = np.unique(self.image_meta_data_arr[:, 0])
         volume_ids = np.unique(self.image_meta_data_arr[:, 1])
-        print(self.image_meta_data_arr)
-        print(self.image_meta_data_arr[:, -1])
         slice_pos_lst = np.unique(self.image_meta_data_arr[:, -1])
-        print(slice_pos_lst)
         patient_mads = []
         for patient_id in patient_ids:
             patient_indices = np.where(self.image_meta_data_arr[:, 0] == patient_id)
@@ -321,9 +319,9 @@ class BaseCoreset(BaseDataGeometry):
                     slice_next_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
                                                 (self.image_meta_data_arr[:, 1] == volume_id) &
                                                 (self.image_meta_data_arr[:, -1] == (slice_pos + 1)))
-                    #print(slice_index)
-                    #print(slice_prev_index)
-                    #print(slice_next_index)
+                    print("slice index ", slice_index)
+                    print("slice prev index ", slice_prev_index)
+                    print("slice next index ", slice_next_index)
                     if len(slice_index) == 0:
                         continue
                     slice_index = slice_index[0]
