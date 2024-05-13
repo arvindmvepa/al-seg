@@ -322,17 +322,17 @@ class BaseCoreset(BaseDataGeometry):
                     print("slice prev index ", slice_prev_index)
                     print("slice index ", slice_index)
                     print("slice next index ", slice_next_index)
+                    slice_index = slice_index[0]
+                    slice_prev_index = slice_prev_index[0]
+                    slice_next_index = slice_next_index[0]
                     if len(slice_index) == 0:
                         continue
-                    slice_index = slice_index[0]
                     assert (len(slice_prev_index) != 0) or (
                                 len(slice_next_index) != 0), "both previous and next slice are missing"
                     if len(slice_prev_index) == 0:
                         slice_prev_index = slice_next_index
                     if len(slice_next_index) == 0:
                         slice_next_index = slice_prev_index
-                    slice_prev_index = slice_prev_index[0]
-                    slice_next_index = slice_next_index[0]
                     slice_mean_image_data = (flat_image_data[slice_index] + flat_image_data[slice_prev_index] +
                                              flat_image_data[slice_next_index]) / 3
                     slice_mads.append(np.mean(np.abs(flat_image_data[slice_index] - slice_mean_image_data)))
