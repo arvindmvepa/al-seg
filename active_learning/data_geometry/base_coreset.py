@@ -81,7 +81,7 @@ class BaseCoreset(BaseDataGeometry):
         self.setup_alg()
         print("Done setting up Coreset Class.")
         if self.analyze_dataset:
-            self.analyze_dataset()
+            self.print_dataset_analysis()
 
     def setup_feature_model(self, exp_dir):
         print("Setting up feature model...")
@@ -277,7 +277,7 @@ class BaseCoreset(BaseDataGeometry):
 
         return np.array(sorted_score_list).reshape(-1, 1)
 
-    def analyze_dataset(self):
+    def print_dataset_analysis(self):
         flat_image_data = self.feature_model.flat_image_data
         mean_image_data = np.mean(flat_image_data, axis=0)
         # calculate mean absolute deviation (overall)
