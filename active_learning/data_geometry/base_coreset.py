@@ -298,11 +298,10 @@ class BaseCoreset(BaseDataGeometry):
         volume_mads = []
         for patient_id in patient_ids:
             for volume_id in volume_ids:
-                for slice_pos_id in slice_pos_ids:
-                    volume_indices = np.where(
-                        (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] == volume_id))
-                    volume_mean_image_data = np.mean(flat_image_data[volume_indices], axis=0)
-                    volume_mads.append(np.mean(np.abs(flat_image_data[volume_indices] - volume_mean_image_data)))
+                volume_indices = np.where(
+                    (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] == volume_id))
+                volume_mean_image_data = np.mean(flat_image_data[volume_indices], axis=0)
+                volume_mads.append(np.mean(np.abs(flat_image_data[volume_indices] - volume_mean_image_data)))
         volume_mad = np.mean(volume_mads)
         print(f"MAD (volume): {volume_mad}")
         # calculate mean absolute deviation (slice-adjacency)
@@ -310,25 +309,26 @@ class BaseCoreset(BaseDataGeometry):
         for patient_id in patient_ids:
             for volume_id in volume_ids:
                 for slice_pos_id in slice_pos_ids:
-                    slice_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) & (
-                                self.image_meta_data_arr[:, 1] == volume_id) & (
-                                                       self.image_meta_data_arr[:, -1] == slice_pos_id))
-                    slice_prev_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) & (
-                                self.image_meta_data_arr[:, 1] == volume_id) & (
-                                                            self.image_meta_data_arr[:, -1] == (slice_pos_id - 1)))
-                    slice_next_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) & (
-                                self.image_meta_data_arr[:, 1] == volume_id) & (
-                                                            self.image_meta_data_arr[:, -1] == (slice_pos_id + 1)))
+                    slice_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
+                                           ( self.image_meta_data_arr[:, 1] == volume_id) &
+                                           (self.image_meta_data_arr[:, -1] == slice_pos_id))
+                    slice_prev_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
+                                                ( self.image_meta_data_arr[:, 1] == volume_id) &
+                                                (self.image_meta_data_arr[:, -1] == (slice_pos_id - 1)))
+                    slice_next_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
+                                                (self.image_meta_data_arr[:, 1] == volume_id) &
+                                                (self.image_meta_data_arr[:, -1] == (slice_pos_id + 1)))
                     if len(slice_index) == 0:
                         continue
-                    print(slice_index)
-                    slice_index = slice_index.item()
+                    slice_index = slice_index[0]
                     assert (len(slice_prev_index) != 0) or (
                                 len(slice_next_index) != 0), "both previous and next slice are missing"
                     if len(slice_prev_index) == 0:
                         slice_prev_index = slice_next_index
                     if len(slice_next_index) == 0:
                         slice_next_index = slice_prev_index
+                    slice_prev_index = slice_prev_index[0]
+                    slice_next_index = slice_next_index[0]
                     slice_mean_image_data = (flat_image_data[slice_index] + flat_image_data[slice_prev_index] +
                                              flat_image_data[slice_next_index]) / 3
                     slice_mads.append(np.mean(np.abs(flat_image_data[slice_index] - slice_mean_image_data)))
