@@ -281,10 +281,10 @@ class BaseCoreset(BaseDataGeometry):
     def print_dataset_analysis(self):
         flat_image_data = self.feature_model.flat_image_data
         mean_image_data = np.mean(flat_image_data, axis=0)
-        print(f"min: {np.max(flat_image_data)}, max: {np.max(flat_image_data)}, mean: {np.mean(flat_image_data)}, std: {np.std(flat_image_data)}")
+        print(f"min: {np.min(flat_image_data)}, max: {np.max(flat_image_data)}, mean: {np.mean(flat_image_data)}, std: {np.std(flat_image_data)}")
         # calculate mean absolute deviation (overall)
         mad = np.mean(np.abs(flat_image_data - mean_image_data))
-        stad = np.mean(np.abs(flat_image_data - mean_image_data))
+        stad = np.std(np.abs(flat_image_data - mean_image_data))
         print(f"MAD (overall): {mad}, STAD (overall): {stad}")
         # calculate mean absolute deviation (patient)
         patient_ids = np.unique(self.image_meta_data_arr[:, 0])
@@ -294,7 +294,7 @@ class BaseCoreset(BaseDataGeometry):
         for patient_id in patient_ids:
             patient_indices = np.where(self.image_meta_data_arr[:, 0] == patient_id)
             patient_mean_image_data = np.mean(flat_image_data[patient_indices], axis=0)
-            patient_ads.append(np.abs(flat_image_data[patient_indices] - patient_mean_image_data))
+            patient_ads.extend(np.abs(flat_image_data[patient_indices] - patient_mean_image_data))
         patient_mad = np.mean(patient_ads)
         patient_stads = np.std(patient_ads)
         print(f"MAD (patient): {patient_mad}, STAD (patient): {patient_stads}")
@@ -305,7 +305,7 @@ class BaseCoreset(BaseDataGeometry):
                 volume_indices = np.where(
                     (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] == volume_id))
                 volume_mean_image_data = np.mean(flat_image_data[volume_indices], axis=0)
-                volume_ads.append(np.abs(flat_image_data[volume_indices] - volume_mean_image_data))
+                volume_ads.extend(np.abs(flat_image_data[volume_indices] - volume_mean_image_data))
         volume_mad = np.mean(volume_ads)
         volume_stads = np.std(volume_ads)
         print(f"MAD (volume): {volume_mad}, STAD (volume): {volume_stads}")
@@ -336,7 +336,7 @@ class BaseCoreset(BaseDataGeometry):
                         slice_next_index = slice_prev_index
                     slice_mean_image_data = (flat_image_data[slice_index] + flat_image_data[slice_prev_index] +
                                              flat_image_data[slice_next_index]) / 3
-                    slice_ads.append(np.abs(flat_image_data[slice_index] - slice_mean_image_data))
+                    slice_ads.extend(np.abs(flat_image_data[slice_index] - slice_mean_image_data))
         slice_mad = np.mean(slice_ads)
         slice_stad = np.std(slice_ads)
         print(f"MAD (slice-adjacency): {slice_mad}, STAD (slice-adjacency): {slice_stad}")
