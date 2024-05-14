@@ -309,6 +309,19 @@ class BaseCoreset(BaseDataGeometry):
         volume_mad = np.mean(volume_ads)
         volume_stads = np.std(volume_ads)
         print(f"MAD (volume): {volume_mad}, STAD (volume): {volume_stads}")
+        # calculate mean absolute deviation (patientnon-volume)
+        nonvolume_ads = []
+        for patient_id in patient_ids:
+            for volume_id in volume_ids:
+                volume_indices = np.where(
+                    (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] == volume_id))
+                nonvolume_indices = np.where(
+                    (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] != volume_id))
+                nonvolume_mean_image_data = np.mean(flat_image_data[nonvolume_indices], axis=0)
+                nonvolume_ads.extend(np.abs(flat_image_data[volume_indices] - nonvolume_mean_image_data))
+        nonvolume_mad = np.mean(nonvolume_ads)
+        nonvolume_stads = np.std(nonvolume_ads)
+        print(f"MAD (non-volume): {nonvolume_mad}, STAD (non-volume): {nonvolume_stads}")
         # calculate mean absolute deviation (slice-adjacency)
         slice_ads = []
         for patient_id in patient_ids:
