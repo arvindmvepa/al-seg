@@ -371,10 +371,9 @@ class BaseCoreset(BaseDataGeometry):
         for i in range(num_slices):
             if i % 100 == 0:
                 print(f"Calculating for slice {i}")
-            for j in range(i + 1, num_slices):  # Only calculate for unique pairs
-                # Calculate absolute differences for this pair
-                ad = np.abs(flat_image_data[i] - flat_image_data[j])
-                ads.append(ad)
+            comp_slice_indices = list(range(i + 1, num_slices))
+            ad = np.abs(flat_image_data[i] - flat_image_data[comp_slice_indices])
+            ads.extend(ad)
         mpad = np.mean(ads)
         stpad = np.std(ads)
         print(f"MPAD: {mpad}, STPAD: {stpad}")
