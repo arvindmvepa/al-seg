@@ -429,7 +429,7 @@ class BaseCoreset(BaseDataGeometry):
         num_slices = flat_image_data.shape[0]
         mpad = 0.0
         for i in range(num_slices):
-            if i % 100 == 0:
+            if i % 100 == 0 and i != 0:
                 print(f"Calculating for slice {i}")
             comp_slice_indices = list(range(i + 1, num_slices))
             mpad += np.sum(np.abs(flat_image_data[i] - flat_image_data[comp_slice_indices]))/num_comps
