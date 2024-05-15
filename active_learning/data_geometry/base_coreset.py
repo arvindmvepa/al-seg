@@ -369,6 +369,8 @@ class BaseCoreset(BaseDataGeometry):
         num_slices = flat_image_data.shape[0]
         ads = []
         for i in range(num_slices):
+            if i % 100 == 0:
+                print(f"Calculating for slice {i}")
             for j in range(i + 1, num_slices):  # Only calculate for unique pairs
                 # Calculate absolute differences for this pair
                 ad = np.abs(flat_image_data[i] - flat_image_data[j])
