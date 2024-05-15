@@ -366,13 +366,15 @@ class BaseCoreset(BaseDataGeometry):
         print(f"MAD (slice-adjacency): {slice_mad}, STAD (slice-adjacency): {slice_stad}")
         """
         # instead calculate pairwise differences
-        expanded_flat_image_data_a = np.expand_dims(flat_image_data, axis=1)
-        expanded_flat_image_data_b = np.expand_dims(flat_image_data, axis=0)
-        differences = expanded_flat_image_data_a - expanded_flat_image_data_b
-        absolute_differences = np.abs(differences)
-        non_zero_differences = absolute_differences[np.nonzero(absolute_differences)]
-        mpad = np.mean(non_zero_differences)
-        stpad = np.std(non_zero_differences)
+        num_slices = flat_image_data.shape[0]
+        ads = []
+        for i in range(num_slices):
+            for j in range(i + 1, num_slices):  # Only calculate for unique pairs
+                # Calculate absolute differences for this pair
+                ad = np.abs(flat_image_data[i] - flat_image_data[j])
+                ads.append(ad)
+        mpad = np.mean(ads)
+        stpad = np.std(ads)
         print(f"MPAD: {mpad}, STPAD: {stpad}")
 
 
