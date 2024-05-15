@@ -309,6 +309,19 @@ class BaseCoreset(BaseDataGeometry):
         volume_mad = np.mean(volume_ads)
         volume_stads = np.std(volume_ads)
         print(f"MAD (volume): {volume_mad}, STAD (volume): {volume_stads}")
+        # calculate mean absolute deviation (volume)
+        other_volume_ads = []
+        for patient_id in patient_ids:
+            for volume_id in volume_ids:
+                volume_indices = np.where(
+                    (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] == volume_id))
+                for volume_index in volume_indices:
+                    other_volume_indices = [i for i in volume_indices if i != volume_index]
+                    other_volume_mean_image_data = np.mean(flat_image_data[other_volume_indices], axis=0)
+                    other_volume_ads.extend(np.abs(flat_image_data[volume_index] - other_volume_mean_image_data))
+        other_volume_mad = np.mean(other_volume_ads)
+        other_volume_stads = np.std(other_volume_ads)
+        print(f"MAD (other-volume): {volume_mad}, STAD (other-volume): {volume_stads}")
         # calculate mean absolute deviation (patientnon-volume)
         nonvolume_ads = []
         for patient_id in patient_ids:
