@@ -316,6 +316,7 @@ class BaseCoreset(BaseDataGeometry):
                 volume_indices = np.where(
                     (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] == volume_id))
                 for volume_index in volume_indices:
+                    print(volume_index)
                     other_volume_indices = [i for i in volume_indices if i != volume_index]
                     other_volume_mean_image_data = np.mean(flat_image_data[other_volume_indices], axis=0)
                     other_volume_ads.extend(np.abs(flat_image_data[volume_index] - other_volume_mean_image_data))
