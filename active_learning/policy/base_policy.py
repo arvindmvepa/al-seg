@@ -97,9 +97,7 @@ class BaseActiveLearningPolicy:
         self.setup_data_geometry()
 
     def run(self):
-        for _ in range(self.num_rounds):
-            self._setup_round()
-            self._run_round()
+        return
 
     def data_split(self):
         return self.random_split()

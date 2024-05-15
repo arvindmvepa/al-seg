@@ -370,70 +370,73 @@ class BaseCoreset(BaseDataGeometry):
 
         # calculate pairwise differences (overall)
         total_num_slices = flat_image_data.shape[0]
-        mpad = self.calculate_abs_pairwise_diff(flat_image_data)
-        print(f"MPAD: {mpad}")
+        total_pairs = int((total_num_slices * (total_num_slices - 1)) / 2)
+        total_pad = self.calculate_abs_pairwise_diff(flat_image_data)
+        print(f"MPAD: {total_pad/total_pairs}")
 
         # calculate pairwise differences (patient)
-        patient_mpad = 0.0
+        total_patient_pairs = 0
+        total_patient_pad = 0.0
         for patient_id in patient_ids:
             patient_indices = np.where(self.image_meta_data_arr[:, 0] == patient_id)[0]
             patient_flat_image_data = flat_image_data[patient_indices]
             num_patient_slices = patient_flat_image_data.shape[0]
-            cur_patient_mpad = self.calculate_abs_pairwise_diff(patient_flat_image_data)
-            patient_mpad += cur_patient_mpad * (num_patient_slices / total_num_slices)
-        print(f"Patient MPAD: {patient_mpad}")
+            num_patient_pairs = int((num_patient_slices * (num_patient_slices - 1)) / 2)
+            total_patient_pairs += num_patient_pairs
+            cur_patient_pad = self.calculate_abs_pairwise_diff(patient_flat_image_data)
+            total_patient_pad += cur_patient_pad
+        print(f"Patient MPAD: {total_patient_pad/total_patient_pairs}")
 
         # calculate pairwise differences (volume)
-        volume_mpad = 0.0
+        total_volume_pairs = 0
+        total_volume_pad = 0.0
         for patient_id in patient_ids:
             for volume_id in volume_ids:
                 volume_indices = np.where(
                     (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] == volume_id))[0]
                 volume_flat_image_data = flat_image_data[volume_indices]
                 num_volume_slices = volume_flat_image_data.shape[0]
-                cur_volume_mpad = self.calculate_abs_pairwise_diff(volume_flat_image_data)
-                volume_mpad += cur_volume_mpad * (num_volume_slices / total_num_slices)
-        print(f"Volume MPAD: {volume_mpad}")
+                num_volume_pairs = int((num_volume_slices * (num_volume_slices - 1)) / 2)
+                total_volume_pairs += num_volume_pairs
+                cur_volume_pad = self.calculate_abs_pairwise_diff(volume_flat_image_data)
+                total_volume_pad += cur_volume_pad
+        print(f"Volume MPAD: {total_volume_pad/total_volume_pairs}")
 
         # calculate pairwise differences (slice-adjacency)
-        """
+        total_slice_adj = 0
+        total_slice_pad = 0.0
         for patient_id in patient_ids:
             for volume_id in volume_ids:
-                for slice_pos in slice_pos_lst:
-                    slice_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
-                                           ( self.image_meta_data_arr[:, 1] == volume_id) &
-                                           (self.image_meta_data_arr[:, -1] == slice_pos))[0]
-                    slice_prev_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
-                                                ( self.image_meta_data_arr[:, 1] == volume_id) &
-                                                (self.image_meta_data_arr[:, -1] == (slice_pos - 1)))[0]
-                    slice_next_index = np.where((self.image_meta_data_arr[:, 0] == patient_id) &
-                                                (self.image_meta_data_arr[:, 1] == volume_id) &
-                                                (self.image_meta_data_arr[:, -1] == (slice_pos + 1)))[0]
-                    if len(slice_index) == 0:
-                        continue
-                    assert (len(slice_prev_index) != 0) or (
-                                len(slice_next_index) != 0), "both previous and next slice are missing"
-                    if len(slice_prev_index) == 0:
-                        slice_prev_index = slice_next_index
-                    if len(slice_next_index) == 0:
-                        slice_next_index = slice_prev_index
-                    slice_mean_image_data = (flat_image_data[slice_index] + flat_image_data[slice_prev_index] +
-                                             flat_image_data[slice_next_index]) / 3
-                    slice_ads.extend(np.abs(flat_image_data[slice_index] - slice_mean_image_data))
-        """
+                volume_indices = np.where(
+                    (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] == volume_id))[0]
+                volume_flat_image_data = flat_image_data[volume_indices]
+                num_volume_slices = volume_flat_image_data.shape[0]
+                num_slice_adj = num_volume_slices - 1
+                total_slice_adj += num_slice_adj
+                cur_slice_pad = self.calculate_abs_slice_diff(volume_flat_image_data, num_slice_adj)
+                total_slice_pad += cur_slice_pad
+        print(f"Slice Adj MPAD: {total_slice_pad / total_slice_adj}")
+
+    def calculate_abs_slice_diff(self, flat_image_data):
+        num_slices = flat_image_data.shape[0]
+        num_pixels = flat_image_data.shape[1]
+        pad = 0.0
+        for i in range(num_slices-1):
+            pad += np.sum(np.abs(flat_image_data[i] - flat_image_data[i+1]))/num_pixels
+        return pad
 
     def calculate_abs_pairwise_diff(self, flat_image_data):
-        num_pairs = int((flat_image_data.shape[0] * (flat_image_data.shape[0] - 1)) / 2)
-        num_pixels = flat_image_data.shape[1]
-        num_comps = num_pairs * num_pixels
         num_slices = flat_image_data.shape[0]
-        mpad = 0.0
+        num_pixels = flat_image_data.shape[1]
+        pad = 0.0
         for i in range(num_slices):
             if i % 100 == 0 and i != 0:
                 print(f"Calculating for slice {i}")
             comp_slice_indices = list(range(i + 1, num_slices))
-            mpad += np.sum(np.abs(flat_image_data[i] - flat_image_data[comp_slice_indices]))/num_comps
-        return mpad
+            if len(comp_slice_indices) == 0:
+                continue
+            pad += np.sum(np.abs(flat_image_data[i] - flat_image_data[comp_slice_indices]))/num_pixels
+        return pad
 
     # Function to find duplicates
     def find_duplicate_subarrays(self, array):
