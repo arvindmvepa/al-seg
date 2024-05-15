@@ -315,6 +315,7 @@ class BaseCoreset(BaseDataGeometry):
             for volume_id in volume_ids:
                 volume_indices = np.where(
                     (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] == volume_id))
+                print(volume_indices)
                 for volume_index in volume_indices:
                     print(volume_index)
                     other_volume_indices = [i for i in volume_indices if i != volume_index]
