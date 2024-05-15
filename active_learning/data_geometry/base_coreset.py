@@ -282,6 +282,7 @@ class BaseCoreset(BaseDataGeometry):
         flat_image_data = self.feature_model.flat_image_data
         mean_image_data = np.mean(flat_image_data, axis=0)
         print(f"min: {np.min(flat_image_data)}, max: {np.max(flat_image_data)}, mean: {np.mean(flat_image_data)}, std: {np.std(flat_image_data)}")
+        """
         # calculate mean absolute deviation (overall)
         mad = np.mean(np.abs(flat_image_data - mean_image_data))
         stad = np.std(np.abs(flat_image_data - mean_image_data))
@@ -363,6 +364,19 @@ class BaseCoreset(BaseDataGeometry):
         slice_mad = np.mean(slice_ads)
         slice_stad = np.std(slice_ads)
         print(f"MAD (slice-adjacency): {slice_mad}, STAD (slice-adjacency): {slice_stad}")
+        """
+        expanded_flat_image_data_a = np.expand_dims(flat_image_data, axis=1)
+        expanded_flat_image_data_b = np.expand_dims(flat_image_data, axis=0)
+        # instead calculate pairwise differences
+        expanded_flat_image_data_a = np.expand_dims(flat_image_data, axis=1)
+        expanded_flat_image_data_b = np.expand_dims(flat_image_data, axis=0)
+        differences = expanded_flat_image_data_a - expanded_flat_image_data_b
+        absolute_differences = np.abs(differences)
+        non_zero_differences = absolute_differences[np.nonzero(absolute_differences)]
+        mpad = np.mean(non_zero_differences)
+        stpad = np.std(non_zero_differences)
+        print(f"MPAD: {mpad}, STPAD: {stpad}")
+
 
     # Function to find duplicates
     def find_duplicate_subarrays(self, array):
