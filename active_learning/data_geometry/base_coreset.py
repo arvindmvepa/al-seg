@@ -429,7 +429,7 @@ class BaseCoreset(BaseDataGeometry):
                     slice_ads.extend(np.abs(flat_image_data[slice_index] - slice_mean_image_data))
         """
 
-    def calculate_abs_pairwise_diff(self, flat_image_data, block_size=20):
+    def calculate_abs_pairwise_diff(self, flat_image_data, block_size=100):
         num_slices = flat_image_data.shape[0]
         ads = []
         for i in range(num_slices):
