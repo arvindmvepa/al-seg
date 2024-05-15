@@ -429,16 +429,22 @@ class BaseCoreset(BaseDataGeometry):
                     slice_ads.extend(np.abs(flat_image_data[slice_index] - slice_mean_image_data))
         """
 
-
-
-
-    def calculate_abs_pairwise_diff(self, flat_image_data):
+    def calculate_abs_pairwise_diff(self, flat_image_data, block_size=100):
         num_slices = flat_image_data.shape[0]
         ads = []
         for i in range(num_slices):
             if i % 100 == 0:
                 print(f"Calculating for slice {i}")
             comp_slice_indices = list(range(i + 1, num_slices))
+            num_blocks = len(comp_slice_indices) // block_size
+            for j in range(0, len(comp_slice_indices), block_size):
+                comp_slice_indices_block = comp_slice_indices[j:j + block_size]
+                ad = torch.abs(flat_image_data[i] - flat_image_data[comp_slice_indices_block])
+                ads.extend(ad)
+            if num_blocks * block_size < len(comp_slice_indices):
+                comp_slice_indices_block = comp_slice_indices[num_blocks * block_size:]
+                ad = torch.abs(flat_image_data[i] - flat_image_data[comp_slice_indices_block])
+                ads.extend(ad)
             ad = torch.abs(flat_image_data[i] - flat_image_data[comp_slice_indices])
             ads.extend(ad)
         return ads
