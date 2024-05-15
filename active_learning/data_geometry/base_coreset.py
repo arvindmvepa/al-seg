@@ -365,8 +365,6 @@ class BaseCoreset(BaseDataGeometry):
         slice_stad = np.std(slice_ads)
         print(f"MAD (slice-adjacency): {slice_mad}, STAD (slice-adjacency): {slice_stad}")
         """
-        expanded_flat_image_data_a = np.expand_dims(flat_image_data, axis=1)
-        expanded_flat_image_data_b = np.expand_dims(flat_image_data, axis=0)
         # instead calculate pairwise differences
         expanded_flat_image_data_a = np.expand_dims(flat_image_data, axis=1)
         expanded_flat_image_data_b = np.expand_dims(flat_image_data, axis=0)
