@@ -1,5 +1,4 @@
 from glob import glob
-import torch
 import numpy as np
 from tqdm import tqdm
 from numpy.random import RandomState
@@ -281,7 +280,6 @@ class BaseCoreset(BaseDataGeometry):
     # TODO: Generalize for other datasets; hard-coded for ACDC (just need to use config parameters)
     def print_dataset_analysis(self):
         flat_image_data = self.feature_model.flat_image_data
-        mean_image_data = np.mean(flat_image_data, axis=0)
         print(f"min: {np.min(flat_image_data)}, max: {np.max(flat_image_data)}, mean: {np.mean(flat_image_data)}, std: {np.std(flat_image_data)}")
         """
         # calculate mean absolute deviation (overall)
@@ -370,37 +368,32 @@ class BaseCoreset(BaseDataGeometry):
         volume_ids = np.unique(self.image_meta_data_arr[:, 1])
         slice_pos_lst = np.unique(self.image_meta_data_arr[:, -1])
 
-        flat_image_data_tensor = torch.tensor(flat_image_data, dtype=torch.float32).cuda()
-
         # calculate pairwise differences (overall)
-        ads = self.calculate_abs_pairwise_diff(flat_image_data_tensor)
-        mpad = torch.mean(ads)
-        stpad = torch.std(ads)
-        print(f"MPAD: {mpad}, STPAD: {stpad}")
+        total_num_slices = flat_image_data.shape[0]
+        mpad = self.calculate_abs_pairwise_diff(flat_image_data)
+        print(f"MPAD: {mpad}")
 
         # calculate pairwise differences (patient)
-        patient_ads = []
+        patient_mpad = 0.0
         for patient_id in patient_ids:
-            patient_indices = torch.where(self.image_meta_data_arr[:, 0] == patient_id)[0]
+            patient_indices = np.where(self.image_meta_data_arr[:, 0] == patient_id)[0]
             patient_flat_image_data = flat_image_data[patient_indices]
-            ads = self.calculate_abs_pairwise_diff(patient_flat_image_data)
-            patient_ads.extend(ads)
-        patient_mpad = torch.mean(patient_ads)
-        patient_stpad = torch.std(patient_ads)
-        print(f"Patient MPAD: {patient_mpad}, Patient STPAD: {patient_stpad}")
+            num_patient_slices = patient_flat_image_data.shape[0]
+            cur_patient_mpad = self.calculate_abs_pairwise_diff(patient_flat_image_data)
+            patient_mpad += cur_patient_mpad * (num_patient_slices / total_num_slices)
+        print(f"Patient MPAD: {patient_mpad}")
 
         # calculate pairwise differences (volume)
-        volume_ads = []
+        volume_mpad = 0.0
         for patient_id in patient_ids:
             for volume_id in volume_ids:
-                volume_indices = torch.where(
+                volume_indices = np.where(
                     (self.image_meta_data_arr[:, 0] == patient_id) & (self.image_meta_data_arr[:, 1] == volume_id))[0]
                 volume_flat_image_data = flat_image_data[volume_indices]
-                ads = self.calculate_abs_pairwise_diff(volume_flat_image_data)
-                volume_ads.extend(ads)
-        volume_mpad = torch.mean(patient_ads)
-        volume_stpad = torch.std(patient_ads)
-        print(f"Volume MPAD: {volume_mpad}, Volume STPAD: {volume_stpad}")
+                num_volume_slices = volume_flat_image_data.shape[0]
+                cur_volume_mpad = self.calculate_abs_pairwise_diff(volume_flat_image_data)
+                volume_mpad += cur_volume_mpad * (num_volume_slices / total_num_slices)
+        print(f"Volume MPAD: {volume_mpad}")
 
         # calculate pairwise differences (slice-adjacency)
         """
@@ -429,25 +422,18 @@ class BaseCoreset(BaseDataGeometry):
                     slice_ads.extend(np.abs(flat_image_data[slice_index] - slice_mean_image_data))
         """
 
-    def calculate_abs_pairwise_diff(self, flat_image_data, block_size=100):
+    def calculate_abs_pairwise_diff(self, flat_image_data):
+        num_pairs = int((flat_image_data.shape[0] * (flat_image_data.shape[0] - 1)) / 2)
+        num_pixels = flat_image_data.shape[1]
+        num_comps = num_pairs * num_pixels
         num_slices = flat_image_data.shape[0]
-        ads = []
+        mpad = 0.0
         for i in range(num_slices):
             if i % 100 == 0:
                 print(f"Calculating for slice {i}")
             comp_slice_indices = list(range(i + 1, num_slices))
-            num_blocks = len(comp_slice_indices) // block_size
-            for j in range(0, len(comp_slice_indices), block_size):
-                comp_slice_indices_block = comp_slice_indices[j:j + block_size]
-                ad = torch.abs(flat_image_data[i] - flat_image_data[comp_slice_indices_block])
-                ads.extend(ad)
-            if num_blocks * block_size < len(comp_slice_indices):
-                comp_slice_indices_block = comp_slice_indices[num_blocks * block_size:]
-                ad = torch.abs(flat_image_data[i] - flat_image_data[comp_slice_indices_block])
-                ads.extend(ad)
-            ad = torch.abs(flat_image_data[i] - flat_image_data[comp_slice_indices])
-            ads.extend(ad)
-        return ads
+            mpad += np.sum(np.abs(flat_image_data[i] - flat_image_data[comp_slice_indices]))/num_comps
+        return mpad
 
     # Function to find duplicates
     def find_duplicate_subarrays(self, array):
