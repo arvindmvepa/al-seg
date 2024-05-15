@@ -366,7 +366,6 @@ class BaseCoreset(BaseDataGeometry):
         """
         patient_ids = np.unique(self.image_meta_data_arr[:, 0])
         volume_ids = np.unique(self.image_meta_data_arr[:, 1])
-        slice_pos_lst = np.unique(self.image_meta_data_arr[:, -1])
 
         # calculate pairwise differences (overall)
         total_num_slices = flat_image_data.shape[0]
@@ -413,7 +412,7 @@ class BaseCoreset(BaseDataGeometry):
                 num_volume_slices = volume_flat_image_data.shape[0]
                 num_slice_adj = num_volume_slices - 1
                 total_slice_adj += num_slice_adj
-                cur_slice_pad = self.calculate_abs_slice_diff(volume_flat_image_data, num_slice_adj)
+                cur_slice_pad = self.calculate_abs_slice_diff(volume_flat_image_data)
                 total_slice_pad += cur_slice_pad
         print(f"Slice Adj MPAD: {total_slice_pad / total_slice_adj}")
 
