@@ -247,6 +247,7 @@ class BaseCoreset(BaseDataGeometry):
             non_image_kwargs.update(self.non_image_indices)
         if self.non_image_wts is not None:
             non_image_kwargs.update(self.non_image_wts)
+        print("Using pos_wt: ", self.pos_wt)
         coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist,
                                  num_im_features=num_im_features, num_label_features=num_label_features,
                                  pos_wt=self.pos_wt, **non_image_kwargs)
