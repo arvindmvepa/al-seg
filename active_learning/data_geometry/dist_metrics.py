@@ -9,9 +9,9 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
                     height_starting_index=None, height_ending_index=None, weight_starting_index=None,
                     weight_ending_index=None, slice_rel_pos_starting_index=None, slice_rel_pos_ending_index=None,
                     slice_pos_starting_index=None, slice_pos_ending_index=None, uncertainty_starting_index=None,
-                    uncertainty_ending_index=None,  extra_feature_wt=-0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0,
-                    height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0,
-                    uncertainty_wt=0.0):
+                    uncertainty_ending_index=None,  pos_wt=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0,
+                    group_wt=0.0, height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0,
+                    slice_pos_wt=0.0, uncertainty_wt=0.0):
     assert image_vec1.shape == image_vec2.shape
     if image_metric == "cosine":
         image_metric = lambda x,y,z: (1 - cosine(x,y))
@@ -32,7 +32,7 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     non_image_vec1, non_image_vec2 = image_vec1[non_image_features_starting_index:], \
                                      image_vec2[non_image_features_starting_index:]
     if num_position_features > 0:
-        position_metric_val = np.sum(image_metric(im1_position_features, im2_position_features, labels))
+        position_metric_val = np.sum(image_metric(im1_position_features, im2_position_features, labels))*pos_wt
     else:
         position_metric_val = 0
     mdl_metric_val = np.sum(image_metric(im1_mdl_features, im2_mdl_features, np.ones(im1_mdl_features.shape)))

@@ -18,10 +18,10 @@ class BaseCoreset(BaseDataGeometry):
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, dataset_type="ACDC",
                  in_chns=1, dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
                  uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0, max_dist=None,
-                 wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0,
-                 weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0,
-                 feature_model=False, feature_model_params=None, contrastive=False, use_model_features=False, seed=0,
-                 gpus="cuda:0", **kwargs):
+                 pos_wt=1.0, wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0,
+                 height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0,
+                 uncertainty_wt=0.0, feature_model=False, feature_model_params=None, contrastive=False,
+                 use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -48,6 +48,7 @@ class BaseCoreset(BaseDataGeometry):
         self.use_labels = use_labels
         self.label_wt = label_wt
         self.max_dist = max_dist
+        self.pos_wt = pos_wt
         self.wt_max_dist_mult = wt_max_dist_mult
         self.contrastive = contrastive
         self.gpus = gpus
@@ -248,7 +249,7 @@ class BaseCoreset(BaseDataGeometry):
             non_image_kwargs.update(self.non_image_wts)
         coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist,
                                  num_im_features=num_im_features, num_label_features=num_label_features,
-                                 **non_image_kwargs)
+                                 pos_wt=self.pos_wt, **non_image_kwargs)
         return coreset_metric, features
 
     def _update_non_image_wts(self, extra_feature_wt=None, patient_wt=None, phase_wt=None, group_wt=None, height_wt=None,
