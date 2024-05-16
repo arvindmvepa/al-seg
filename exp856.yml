@@ -36,4 +36,4 @@ data_geometry:
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: entropy_w_label_probs
-exp_dir: "DMPLS_exp3_coreset_fuse10_pos_wt02_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_v15"
+exp_dir: "DMPLS_exp4_coreset_fuse10_pos_wt02_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_v15"
