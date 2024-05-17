@@ -17,7 +17,7 @@ data_geometry:
   seed: 0
   contrastive: True
   feature_model: True
-  pos_wt: 100
+  pos_wt: 500
   default_pos_val: 0
   use_labels: True
   label_wt: 1.0
@@ -40,4 +40,4 @@ data_geometry:
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: entropy_w_label_probs
-exp_dir: "DMPLS_exp0_coreset_pos_wt100_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_label1_v15"
+exp_dir: "DMPLS_exp0_coreset_pos_wt500_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_label1_v15"
