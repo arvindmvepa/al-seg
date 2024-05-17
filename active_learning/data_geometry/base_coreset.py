@@ -17,11 +17,11 @@ class BaseCoreset(BaseDataGeometry):
 
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, dataset_type="ACDC",
                  in_chns=1, dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
-                 uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0, max_dist=None,
-                 pos_wt=1.0, wt_max_dist_mult=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0,
-                 height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0,
-                 uncertainty_wt=0.0, feature_model=False, feature_model_params=None, contrastive=False,
-                 use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
+                 uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0,
+                 default_pos_val=1, max_dist=None, pos_wt=1.0, normalize_pos_by_label_ct=False, wt_max_dist_mult=1.0,
+                 extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
+                 slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0, feature_model=False,
+                 feature_model_params=None, contrastive=False, use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -47,8 +47,10 @@ class BaseCoreset(BaseDataGeometry):
         self.ann_type = ann_type
         self.use_labels = use_labels
         self.label_wt = label_wt
+        self.default_pos_val = default_pos_val
         self.max_dist = max_dist
         self.pos_wt = pos_wt
+        self.normalize_pos_by_label_ct = normalize_pos_by_label_ct
         self.wt_max_dist_mult = wt_max_dist_mult
         self.contrastive = contrastive
         self.gpus = gpus
@@ -213,7 +215,8 @@ class BaseCoreset(BaseDataGeometry):
             assert processed_data.shape[1] >= labels.shape[1]
             num_label_features = labels.shape[1]
             # hard-coded number of classes to be (background + 3)
-            label_mask = np.where(labels < 4, self.label_wt, 1)
+            print(f"Using default pos val {self.default_pos_val}")
+            label_mask = np.where(labels < 4, self.label_wt, self.default_pos_val)
             features = np.concatenate([processed_data, label_mask, self.image_meta_data_arr], axis=1)
         # hard code 1 labels for hacky fix to the metric to keep track of position
         elif self.fuse_image_data:
@@ -248,9 +251,11 @@ class BaseCoreset(BaseDataGeometry):
         if self.non_image_wts is not None:
             non_image_kwargs.update(self.non_image_wts)
         print("Using pos_wt: ", self.pos_wt)
+        print("Using normalize_pos_by_label_ct: ", self.normalize_pos_by_label_ct)
         coreset_metric = partial(metric_w_config, image_metric=self.metric, max_dist=self.max_dist,
                                  num_im_features=num_im_features, num_label_features=num_label_features,
-                                 pos_wt=self.pos_wt, **non_image_kwargs)
+                                 pos_wt=self.pos_wt, normalize_pos_by_label_ct=self.normalize_pos_by_label_ct,
+                                 **non_image_kwargs)
         return coreset_metric, features
 
     def _update_non_image_wts(self, extra_feature_wt=None, patient_wt=None, phase_wt=None, group_wt=None, height_wt=None,

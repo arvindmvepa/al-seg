@@ -9,9 +9,9 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
                     height_starting_index=None, height_ending_index=None, weight_starting_index=None,
                     weight_ending_index=None, slice_rel_pos_starting_index=None, slice_rel_pos_ending_index=None,
                     slice_pos_starting_index=None, slice_pos_ending_index=None, uncertainty_starting_index=None,
-                    uncertainty_ending_index=None,  pos_wt=1.0, extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0,
-                    group_wt=0.0, height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0, slice_mid_wt=0.0,
-                    slice_pos_wt=0.0, uncertainty_wt=0.0):
+                    uncertainty_ending_index=None, normalize_pos_by_label_ct=False, pos_wt=1.0, extra_feature_wt=0.0,
+                    patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0,
+                    slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0):
     assert image_vec1.shape == image_vec2.shape
     if image_metric == "cosine":
         image_metric = lambda x,y,z: (1 - cosine(x,y))
@@ -32,11 +32,19 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     non_image_vec1, non_image_vec2 = image_vec1[non_image_features_starting_index:], \
                                      image_vec2[non_image_features_starting_index:]
     if num_position_features > 0:
-        position_metric_val = np.sum(image_metric(im1_position_features, im2_position_features, labels))*pos_wt
+        print("labels.shape: ", labels.shape)
+        print("nonzero labels: ", len(np.flatnonzero(labels)))
+        position_metric_val = np.sum(image_metric(im1_position_features, im2_position_features, labels))
+        # normalize the position metric by the number of non-zero labels (getting average weighted distance)
+        if normalize_pos_by_label_ct:
+            position_metric_val /= np.sum(np.flatnonzero(labels))
+        position_metric_val *= pos_wt
     else:
         position_metric_val = 0
     mdl_metric_val = np.sum(image_metric(im1_mdl_features, im2_mdl_features, np.ones(im1_mdl_features.shape)))
     metric_val = position_metric_val + mdl_metric_val
+    print("position_metric_val: ", position_metric_val)
+    print("mdl_metric_val: ", mdl_metric_val)
 
     if (patient_starting_index is not None) and (patient_ending_index is not None):
         patient_score = 1 - np.sum(non_image_vec1[patient_starting_index:patient_ending_index] == non_image_vec2[patient_starting_index:patient_ending_index])
