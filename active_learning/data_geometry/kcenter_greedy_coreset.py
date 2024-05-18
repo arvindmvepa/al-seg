@@ -16,8 +16,7 @@ class KCenterGreedyCoreset(BaseCoreset):
 
         print("Calculating KCenterGreedyCoreset..")
         already_selected_indices = [self.all_train_im_files.index(i) for i in already_selected]
-        coreset_inst, _ = self.get_coreset_inst_and_features_for_round(prev_round_dir, train_logits_path,
-                                                                       delete_preds=delete_preds)
+        coreset_inst, _ = self.get_coreset_inst_and_features_for_round(prev_round_dir, train_logits_path)
         core_set_indices, self.max_dist = coreset_inst.select_batch_(already_selected=already_selected_indices,
                                                                      N=num_samples)
 
