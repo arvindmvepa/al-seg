@@ -8,7 +8,7 @@ model:
 policy:
   policy_type: ranked
   resume: True
-  seed: 0
+  seed: 4
   ensemble_kwargs:
     skip: False
     inf_test: True
@@ -16,10 +16,10 @@ policy:
   rounds: [[.001, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  seed: 0
+  seed: 4
   contrastive: True
   feature_model: True
-  pos_wt: 5000
+  pos_wt: 10000
   default_label_val: 0
   use_labels: True
   use_model_fts_as_pos_fts: True
@@ -28,7 +28,7 @@ data_geometry:
   feature_model_params:
     encoder: resnet18
     batch_size: 9
-    seed: 0
+    seed: 4
     use_phase: True
     use_patient: True
     pos_loss1: True
@@ -41,4 +41,4 @@ data_geometry:
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: entropy_w_label_probs
-exp_dir: "DMPLS_exp0_coreset_pos_wt5000_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_label1_model_fts_v15"
+exp_dir: "DMPLS_exp4_coreset_pos_wt10000_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_label1_model_fts_v15"

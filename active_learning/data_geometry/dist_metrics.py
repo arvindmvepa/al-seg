@@ -33,17 +33,13 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
                                      image_vec2[non_image_features_starting_index:]
     if num_position_features > 0:
         position_metric_val = np.sum(image_metric(im1_position_features, im2_position_features, labels))
-        print("position_metric_val: ", position_metric_val)
-        print("num non-zero labels: ", len(np.flatnonzero(labels)))
         # normalize the position metric by the number of non-zero labels (getting average weighted distance)
         if normalize_pos_by_label_ct:
             position_metric_val /= len(np.flatnonzero(labels))
         position_metric_val *= pos_wt
-        print("(weighted) position_metric_val: ", position_metric_val)
     else:
         position_metric_val = 0
     mdl_metric_val = np.sum(image_metric(im1_mdl_features, im2_mdl_features, np.ones(im1_mdl_features.shape)))
-    print(mdl_metric_val)
     metric_val = position_metric_val + mdl_metric_val
 
     if (patient_starting_index is not None) and (patient_ending_index is not None):
