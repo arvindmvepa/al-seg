@@ -20,7 +20,7 @@ data_geometry:
   delete_preds: False
   contrastive: True
   feature_model: True
-  pos_wt: 10
+  pos_wt: 1000
   default_label_val: 0
   use_labels: True
   use_model_fts_as_pos_fts: True
