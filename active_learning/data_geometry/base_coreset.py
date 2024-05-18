@@ -229,7 +229,7 @@ class BaseCoreset(BaseDataGeometry):
             print(f"Using labels with weight {self.label_wt}")
             if self.use_model_fts_as_pos_fts:
                 print("Old labels shape: ", self.image_labels_arr.shape)
-                labels = np.repeat(self.image_labels_arr[..., None], axis=-1)
+                labels = np.repeat(self.image_labels_arr[..., None], repeats=4, axis=-1)
                 print("Reshape labels shape: ", labels.shape)
                 labels = labels.reshape(im_features.shape[0], -1)
                 print("New labels shape: ", self.image_labels_arr.shape)
