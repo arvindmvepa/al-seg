@@ -233,7 +233,6 @@ class BaseCoreset(BaseDataGeometry):
                 print("Reshape labels shape: ", labels.shape)
                 labels = labels.reshape(im_features.shape[0], -1)
                 print("New labels shape: ", labels.shape)
-                print("len(np.flatnonzero(labels))", len(np.flatnonzero(labels)))
                 num_label_features = labels.shape[1]
             else:
                 labels = self.image_labels_arr.reshape(im_features.shape[0], -1)
@@ -242,6 +241,7 @@ class BaseCoreset(BaseDataGeometry):
             # hard-coded number of classes to be (background + 3)
             print(f"Using default label val {self.default_label_val}")
             label_mask = np.where(labels < 4, self.label_wt, self.default_label_val)
+            print("len(np.flatnonzero(labels))/1454", len(np.flatnonzero(labels))/1454)
             features = np.concatenate([im_features, label_mask, self.image_meta_data_arr], axis=1)
         # hard code 1 labels for hacky fix to the metric to keep track of position
         elif self.fuse_image_data:
