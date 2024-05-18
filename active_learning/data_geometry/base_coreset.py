@@ -209,7 +209,6 @@ class BaseCoreset(BaseDataGeometry):
             print("Using Model Features")
             model_features_exist = True
             im_features = self.get_model_features(prev_round_dir, train_logits_path, delete_preds=delete_preds)
-            print(f"Model features shape: {im_features.shape}")
             if im_features is None:
                 print("Model features not found. Using image features instead")
                 im_features = processed_data
@@ -218,6 +217,8 @@ class BaseCoreset(BaseDataGeometry):
                 print("Combining model (pos features) and image features")
                 im_features = np.concatenate([im_features, processed_data], axis=1)
                 print(f"Combined features shape: {im_features.shape}")
+            else:
+                print(f"Use model features alone. Model features shape: {im_features.shape}")
         else:
             im_features = processed_data
         num_im_features = processed_data.shape[1]
