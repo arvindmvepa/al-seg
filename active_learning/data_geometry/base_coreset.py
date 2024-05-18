@@ -18,10 +18,11 @@ class BaseCoreset(BaseDataGeometry):
     def __init__(self, alg_string="kcenter_greedy", metric='euclidean', coreset_kwargs=None, dataset_type="ACDC",
                  in_chns=1, dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
                  uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0,
-                 default_pos_val=1, max_dist=None, pos_wt=1.0, normalize_pos_by_label_ct=False, wt_max_dist_mult=1.0,
+                 default_label_val=1, max_dist=None, pos_wt=1.0, normalize_pos_by_label_ct=False, wt_max_dist_mult=1.0,
                  extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
                  slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0, feature_model=False,
-                 feature_model_params=None, contrastive=False, use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
+                 feature_model_params=None, contrastive=False, use_model_features=False,
+                 use_model_fts_as_pos_fts=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
         self.metric = metric
@@ -47,7 +48,7 @@ class BaseCoreset(BaseDataGeometry):
         self.ann_type = ann_type
         self.use_labels = use_labels
         self.label_wt = label_wt
-        self.default_pos_val = default_pos_val
+        self.default_label_val = default_label_val
         self.max_dist = max_dist
         self.pos_wt = pos_wt
         self.normalize_pos_by_label_ct = normalize_pos_by_label_ct
@@ -57,6 +58,7 @@ class BaseCoreset(BaseDataGeometry):
         self.feature_model = feature_model
         self.fuse_image_data = self.feature_model_params.get("fuse_image_data", False)
         self.use_model_features = use_model_features
+        self.use_model_fts_as_pos_fts = use_model_fts_as_pos_fts
         self.seed = seed
         self.random_state = RandomState(seed=self.seed)
         self.basic_coreset_alg = None
@@ -132,10 +134,13 @@ class BaseCoreset(BaseDataGeometry):
         print("Done getting features")
         return features
 
-    def create_coreset_inst(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
+    def create_coreset_inst(self, processed_data, prev_round_dir=None, train_logits_path=None, delete_preds=True,
+                            uncertainty_kwargs=None):
         print("Creating coreset instance...")
         print("Getting coreset metric and features...")
         coreset_metric, features = self.get_coreset_metric_and_features(processed_data, prev_round_dir=prev_round_dir,
+                                                                        train_logits_path=train_logits_path,
+                                                                        delete_preds=delete_preds,
                                                                         uncertainty_kwargs=uncertainty_kwargs)
         coreset_inst = self.coreset_cls(X=features, file_names=self.all_train_im_files, metric=coreset_metric,
                                         num_im_features=processed_data.shape[1],
@@ -144,22 +149,15 @@ class BaseCoreset(BaseDataGeometry):
                                         uncertainty_wt=self.non_image_wts["uncertainty_wt"] if self.use_uncertainty else None,
                                         gpus=self.gpus, **self.coreset_kwargs)
         print(f"Created {coreset_inst.name} inst!")
-        return coreset_inst
+        return coreset_inst, features
 
 
-    def get_coreset_inst_and_features_for_round(self, prev_round_dir, train_logits_path, uncertainty_kwargs=None,
-                                                delete_preds=True):
-        if self.use_model_features:
-            print("Using Model Features")
-            feat = self.get_model_features(prev_round_dir, train_logits_path, delete_preds=delete_preds)
-            # assert len(feat.shape) == 2
-            if feat is None:
-                print("Model features not found. Using image features instead")
-                feat = self.get_features()
-        else:
-            feat = self.get_features()
-        coreset_inst = self.create_coreset_inst(feat, prev_round_dir=prev_round_dir,
-                                                uncertainty_kwargs=uncertainty_kwargs)
+    def get_coreset_inst_and_features_for_round(self, prev_round_dir, train_logits_path=None, delete_preds=True,
+                                                uncertainty_kwargs=None):
+        feat = self.get_features()
+        coreset_inst, feat = self.create_coreset_inst(feat, prev_round_dir=prev_round_dir,
+                                                      train_logits_path=train_logits_path, delete_preds=delete_preds,
+                                                      uncertainty_kwargs=uncertainty_kwargs)
         return coreset_inst, feat
 
     def get_model_features(self, prev_round_dir, train_logits_path, delete_preds=True):
@@ -205,26 +203,43 @@ class BaseCoreset(BaseDataGeometry):
 
         return preds_arrs
 
-    def get_coreset_metric_and_features(self, processed_data, prev_round_dir=None, uncertainty_kwargs=None):
+    def get_coreset_metric_and_features(self, processed_data, prev_round_dir=None, train_logits_path=None,
+                                        delete_preds=True, uncertainty_kwargs=None):
+        if self.use_model_features or self.use_model_fts_as_pos_fts:
+            print("Using Model Features")
+            model_features_exist = True
+            im_features = self.get_model_features(prev_round_dir, train_logits_path, delete_preds=delete_preds)
+            print(f"Model features shape: {im_features.shape}")
+            if im_features is None:
+                print("Model features not found. Using image features instead")
+                im_features = processed_data
+                model_features_exist = False
+            elif self.use_model_fts_as_pos_fts:
+                print("Combining model (pos features) and image features")
+                im_features = np.concatenate([im_features, processed_data], axis=1)
+                print(f"Combined features shape: {im_features.shape}")
+        else:
+            im_features = processed_data
         num_im_features = processed_data.shape[1]
+
         # check that number of pixels in image is greater than number of labels
         # only update points that are part of the image features
-        if self.use_labels:
+        if (self.use_model_fts_as_pos_fts and model_features_exist and self.use_labels) or (not self.use_model_fts_as_pos_fts and self.use_labels):
             print(f"Using labels with weight {self.label_wt}")
-            labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
-            assert processed_data.shape[1] >= labels.shape[1]
+            labels = self.image_labels_arr.reshape(im_features.shape[0], -1)
             num_label_features = labels.shape[1]
+            assert num_im_features >= num_label_features
             # hard-coded number of classes to be (background + 3)
-            print(f"Using default pos val {self.default_pos_val}")
-            label_mask = np.where(labels < 4, self.label_wt, self.default_pos_val)
-            features = np.concatenate([processed_data, label_mask, self.image_meta_data_arr], axis=1)
+            print(f"Using default label val {self.default_label_val}")
+            label_mask = np.where(labels < 4, self.label_wt, self.default_label_val)
+            features = np.concatenate([im_features, label_mask, self.image_meta_data_arr], axis=1)
         # hard code 1 labels for hacky fix to the metric to keep track of position
         elif self.fuse_image_data:
-            labels = self.image_labels_arr.reshape(processed_data.shape[0], -1)
-            assert processed_data.shape[1] >= labels.shape[1]
+            labels = self.image_labels_arr.reshape(im_features.shape[0], -1)
             num_label_features = labels.shape[1]
+            assert num_im_features >= num_label_features
             label_mask = np.ones(labels.shape)
-            features = np.concatenate([processed_data, label_mask, self.image_meta_data_arr], axis=1)
+            features = np.concatenate([im_features, label_mask, self.image_meta_data_arr], axis=1)
         else:
             num_label_features = 0
             features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
