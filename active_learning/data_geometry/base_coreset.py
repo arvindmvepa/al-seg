@@ -229,6 +229,7 @@ class BaseCoreset(BaseDataGeometry):
             num_label_features = 0
             features = np.concatenate([processed_data, self.image_meta_data_arr], axis=1)
         if self.use_uncertainty and (prev_round_dir is not None):
+            print("Using Uncertainty Features, Uncertainty Weight: ", self.uncertainty_wt)
             if uncertainty_kwargs is None:
                 uncertainty_kwargs = dict()
             uncertainty_round_score_file = os.path.join(prev_round_dir, self.uncertainty_score_file)

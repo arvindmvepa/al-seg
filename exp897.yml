@@ -21,7 +21,7 @@ data_geometry:
   default_pos_val: 0
   use_labels: True
   label_wt: 1.0
-  uncertainty_wt: 10
+  uncertainty_wt: 30
   use_uncertainty: True
   normalize_pos_by_label_ct: True
   feature_model_params:
@@ -42,4 +42,4 @@ data_geometry:
 model_uncertainty:
   model_uncertainty_type: ensemble
   score_func: entropy_w_label_probs
-exp_dir: "DMPLS_exp0_coreset_pos_wt1500_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_label1_uncertainty10_v15"
+exp_dir: "DMPLS_exp0_coreset_pos_wt1500_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_label1_uncertainty30_v15"
