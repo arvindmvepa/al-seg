@@ -9,7 +9,7 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
                     height_starting_index=None, height_ending_index=None, weight_starting_index=None,
                     weight_ending_index=None, slice_rel_pos_starting_index=None, slice_rel_pos_ending_index=None,
                     slice_pos_starting_index=None, slice_pos_ending_index=None, uncertainty_starting_index=None,
-                    uncertainty_ending_index=None, normalize_pos_by_label_ct=False, pos_wt=1.0, extra_feature_wt=0.0,
+                    uncertainty_ending_index=None, normalize_pos_by_label_ct=False, pos_wt=1.0, extra_feature_wt=1.0,
                     patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0, slice_rel_pos_wt=0.0,
                     slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0):
     assert image_vec1.shape == image_vec2.shape
