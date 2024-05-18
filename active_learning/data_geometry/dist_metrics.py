@@ -81,8 +81,7 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     else:
         slice_pos_score = 0
     if (uncertainty_starting_index is not None) and (uncertainty_ending_index is not None):
-        uncertainty_score = np.sum(np.abs(non_image_vec1[uncertainty_starting_index:uncertainty_ending_index] - non_image_vec2[
-                                                                                                                  uncertainty_starting_index:uncertainty_ending_index]))
+        uncertainty_score = non_image_vec1[uncertainty_starting_index:uncertainty_ending_index] + non_image_vec2[uncertainty_starting_index:uncertainty_ending_index]
     else:
         uncertainty_score = 0
 

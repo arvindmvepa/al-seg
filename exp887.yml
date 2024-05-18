@@ -11,6 +11,9 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: True
+  uncertainty_kwargs:
+    skip: False
+    delete_preds: False
   rounds: [[.001, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
