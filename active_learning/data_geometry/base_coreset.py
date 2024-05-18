@@ -227,22 +227,20 @@ class BaseCoreset(BaseDataGeometry):
         # only update points that are part of the image features
         if (self.use_model_fts_as_pos_fts and model_features_exist and self.use_labels) or (not self.use_model_fts_as_pos_fts and self.use_labels):
             print(f"Using labels with weight {self.label_wt}")
+            print("Old labels shape: ", self.image_labels_arr.shape)
             if self.use_model_fts_as_pos_fts:
-                print("Old labels shape: ", self.image_labels_arr.shape)
                 labels = np.repeat(self.image_labels_arr[..., None], repeats=4, axis=-1)
-                print("Reshape labels shape: ", labels.shape)
                 labels = labels.reshape(im_features.shape[0], -1)
-                print("New labels shape: ", labels.shape)
                 num_label_features = labels.shape[1]
             else:
                 labels = self.image_labels_arr.reshape(im_features.shape[0], -1)
                 num_label_features = labels.shape[1]
             assert num_im_features >= num_label_features
+            print("New labels shape: ", labels.shape)
             # hard-coded number of classes to be (background + 3)
             print(f"Using default label val {self.default_label_val}")
             label_mask = np.where(labels < 4, self.label_wt, self.default_label_val)
-            print("len(np.flatnonzero(label_mask))/1454", len(np.flatnonzero(label_mask))/1454)
-            return
+            print("Average non-zero mask count: ", len(np.flatnonzero(label_mask))/im_features.shape[0])
             features = np.concatenate([im_features, label_mask, self.image_meta_data_arr], axis=1)
         # hard code 1 labels for hacky fix to the metric to keep track of position
         elif self.fuse_image_data:
