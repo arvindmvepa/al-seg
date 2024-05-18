@@ -19,7 +19,7 @@ class BaseCoreset(BaseDataGeometry):
                  in_chns=1, dataset_kwargs=None, use_uncertainty=False, model_uncertainty=None,
                  uncertainty_score_file="entropy.txt", use_labels=False, ann_type=None, label_wt=1.0,
                  default_pos_val=1, max_dist=None, pos_wt=1.0, normalize_pos_by_label_ct=False, wt_max_dist_mult=1.0,
-                 extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
+                 extra_feature_wt=1.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
                  slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0, feature_model=False,
                  feature_model_params=None, contrastive=False, use_model_features=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
