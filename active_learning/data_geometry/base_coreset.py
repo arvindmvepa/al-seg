@@ -21,7 +21,7 @@ class BaseCoreset(BaseDataGeometry):
                  default_label_val=1, max_dist=None, pos_wt=1.0, normalize_pos_by_label_ct=False, wt_max_dist_mult=1.0,
                  extra_feature_wt=0.0, patient_wt=0.0, phase_wt=0.0, group_wt=0.0, height_wt=0.0, weight_wt=0.0,
                  slice_rel_pos_wt=0.0, slice_mid_wt=0.0, slice_pos_wt=0.0, uncertainty_wt=0.0, feature_model=False,
-                 feature_model_params=None, contrastive=False, use_model_features=False,
+                 feature_model_params=None, contrastive=False, use_model_features=False, delete_preds=True,
                  use_model_fts_as_pos_fts=False, seed=0, gpus="cuda:0", **kwargs):
         super().__init__()
         self.alg_string = alg_string
@@ -58,6 +58,7 @@ class BaseCoreset(BaseDataGeometry):
         self.feature_model = feature_model
         self.fuse_image_data = self.feature_model_params.get("fuse_image_data", False)
         self.use_model_features = use_model_features
+        self.delete_preds = delete_preds
         self.use_model_fts_as_pos_fts = use_model_fts_as_pos_fts
         self.seed = seed
         self.random_state = RandomState(seed=self.seed)
@@ -134,13 +135,11 @@ class BaseCoreset(BaseDataGeometry):
         print("Done getting features")
         return features
 
-    def create_coreset_inst(self, processed_data, prev_round_dir=None, train_logits_path=None, delete_preds=True,
-                            uncertainty_kwargs=None):
+    def create_coreset_inst(self, processed_data, prev_round_dir=None, train_logits_path=None, uncertainty_kwargs=None):
         print("Creating coreset instance...")
         print("Getting coreset metric and features...")
         coreset_metric, features = self.get_coreset_metric_and_features(processed_data, prev_round_dir=prev_round_dir,
                                                                         train_logits_path=train_logits_path,
-                                                                        delete_preds=delete_preds,
                                                                         uncertainty_kwargs=uncertainty_kwargs)
         coreset_inst = self.coreset_cls(X=features, file_names=self.all_train_im_files, metric=coreset_metric,
                                         num_im_features=processed_data.shape[1],
@@ -152,15 +151,14 @@ class BaseCoreset(BaseDataGeometry):
         return coreset_inst, features
 
 
-    def get_coreset_inst_and_features_for_round(self, prev_round_dir, train_logits_path=None, delete_preds=True,
-                                                uncertainty_kwargs=None):
+    def get_coreset_inst_and_features_for_round(self, prev_round_dir, train_logits_path=None, uncertainty_kwargs=None):
         feat = self.get_features()
         coreset_inst, feat = self.create_coreset_inst(feat, prev_round_dir=prev_round_dir,
-                                                      train_logits_path=train_logits_path, delete_preds=delete_preds,
+                                                      train_logits_path=train_logits_path,
                                                       uncertainty_kwargs=uncertainty_kwargs)
         return coreset_inst, feat
 
-    def get_model_features(self, prev_round_dir, train_logits_path, delete_preds=True):
+    def get_model_features(self, prev_round_dir, train_logits_path):
         if prev_round_dir is None:
             print("No model features for first round!")
             return None
@@ -194,21 +192,20 @@ class BaseCoreset(BaseDataGeometry):
             preds_arrs.append(preds_arr)
         preds_arrs = np.stack(preds_arrs, axis=0)
         # flatten array except for first dim
-        #preds_arrs = preds_arrs.reshape(preds_arrs.shape[0], -1)
+        preds_arrs = preds_arrs.reshape(preds_arrs.shape[0], -1)
 
         # after obtaining features, delete the *.npz files for the round
-        if delete_preds:
+        if self.delete_preds:
             for train_result_ in train_results:
                 os.remove(train_result_)
 
         return preds_arrs
 
-    def get_coreset_metric_and_features(self, processed_data, prev_round_dir=None, train_logits_path=None,
-                                        delete_preds=True, uncertainty_kwargs=None):
+    def get_coreset_metric_and_features(self, processed_data, prev_round_dir=None, train_logits_path=None, uncertainty_kwargs=None):
         if self.use_model_features or self.use_model_fts_as_pos_fts:
             print("Using Model Features")
             model_features_exist = True
-            model_features = self.get_model_features(prev_round_dir, train_logits_path, delete_preds=delete_preds)
+            model_features = self.get_model_features(prev_round_dir, train_logits_path)
             if model_features is None:
                 print("Model features not found. Using image features instead")
                 im_features = processed_data
@@ -230,8 +227,16 @@ class BaseCoreset(BaseDataGeometry):
         # only update points that are part of the image features
         if (self.use_model_fts_as_pos_fts and model_features_exist and self.use_labels) or (not self.use_model_fts_as_pos_fts and self.use_labels):
             print(f"Using labels with weight {self.label_wt}")
-            labels = self.image_labels_arr.reshape(im_features.shape[0], -1)
-            num_label_features = labels.shape[1]
+            if self.use_model_fts_as_pos_fts:
+                print("Old labels shape: ", self.image_labels_arr.shape)
+                labels = np.repeat(self.image_labels_arr[..., None], axis=-1)
+                print("Reshape labels shape: ", labels.shape)
+                labels = labels.reshape(im_features.shape[0], -1)
+                print("New labels shape: ", self.image_labels_arr.shape)
+                num_label_features = labels.shape[1]
+            else:
+                labels = self.image_labels_arr.reshape(im_features.shape[0], -1)
+                num_label_features = labels.shape[1]
             assert num_im_features >= num_label_features
             # hard-coded number of classes to be (background + 3)
             print(f"Using default label val {self.default_label_val}")
