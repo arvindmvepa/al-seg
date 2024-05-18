@@ -194,7 +194,7 @@ class BaseCoreset(BaseDataGeometry):
             preds_arrs.append(preds_arr)
         preds_arrs = np.stack(preds_arrs, axis=0)
         # flatten array except for first dim
-        preds_arrs = preds_arrs.reshape(preds_arrs.shape[0], -1)
+        #preds_arrs = preds_arrs.reshape(preds_arrs.shape[0], -1)
 
         # after obtaining features, delete the *.npz files for the round
         if delete_preds:
@@ -224,7 +224,7 @@ class BaseCoreset(BaseDataGeometry):
                 im_features = model_features
         else:
             im_features = processed_data
-        num_im_features = processed_data.shape[1]
+        num_im_features = im_features.shape[1]
 
         # check that number of pixels in image is greater than number of labels
         # only update points that are part of the image features
