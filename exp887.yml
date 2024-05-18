@@ -21,7 +21,7 @@ data_geometry:
   contrastive: True
   feature_model: True
   pos_wt: 10
-  default_pos_val: 0
+  default_label_val: 0
   use_labels: True
   use_model_fts_as_pos_fts: True
   label_wt: 1.0
