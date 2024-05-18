@@ -232,7 +232,8 @@ class BaseCoreset(BaseDataGeometry):
                 labels = np.repeat(self.image_labels_arr[..., None], repeats=4, axis=-1)
                 print("Reshape labels shape: ", labels.shape)
                 labels = labels.reshape(im_features.shape[0], -1)
-                print("New labels shape: ", self.image_labels_arr.shape)
+                print("New labels shape: ", labels.shape)
+                print("len(np.flatnonzero(labels))", len(np.flatnonzero(labels)))
                 num_label_features = labels.shape[1]
             else:
                 labels = self.image_labels_arr.reshape(im_features.shape[0], -1)
