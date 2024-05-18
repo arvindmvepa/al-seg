@@ -43,6 +43,7 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     else:
         position_metric_val = 0
     mdl_metric_val = np.sum(image_metric(im1_mdl_features, im2_mdl_features, np.ones(im1_mdl_features.shape)))
+    print(mdl_metric_val)
     metric_val = position_metric_val + mdl_metric_val
 
     if (patient_starting_index is not None) and (patient_ending_index is not None):
