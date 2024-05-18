@@ -242,6 +242,7 @@ class BaseCoreset(BaseDataGeometry):
             print(f"Using default label val {self.default_label_val}")
             label_mask = np.where(labels < 4, self.label_wt, self.default_label_val)
             print("len(np.flatnonzero(labels))/1454", len(np.flatnonzero(labels))/1454)
+            return
             features = np.concatenate([im_features, label_mask, self.image_meta_data_arr], axis=1)
         # hard code 1 labels for hacky fix to the metric to keep track of position
         elif self.fuse_image_data:
