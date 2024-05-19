@@ -12,7 +12,7 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: True
-  rounds: [[.001, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+  rounds: [[.02, 0], [.02, 0], [.01, 0], [.01, 0], [.01, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
   seed: 0
