@@ -28,7 +28,7 @@ def get_base_exp_name(exp_name):
 def collect_exp_groups(exp_dirs):
     exp_groups = dict()
     for exp_name in exp_dirs:
-        base_exp_name = get_base_exp_name(exp_name)
+        base_exp_name = os.path.basename(get_base_exp_name(exp_name))
         if base_exp_name in exp_groups:
             exp_groups[base_exp_name] += [exp_name]
         else:
@@ -57,7 +57,7 @@ def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
                     round_num = get_round_num(round_dir_)
                     round_dict[round_num] = im_scores_list
             if len(round_dict) > 0:
-                exp_dict[exp_dir_] = round_dict
+                exp_dict[os.path.basename(exp_dir_)] = round_dict
         if len(exp_dict) > 0:
             results_dict[base_exp_name] = exp_dict
             print("accepted ", base_exp_name)
