@@ -167,8 +167,17 @@ class BaseCoreset(BaseDataGeometry):
             print("No model features for first round!")
             return None
         train_logits_path = os.path.join(prev_round_dir, "*", train_logits_path)
-        print(f"Looking for model features in {train_logits_path}")
         train_results = sorted(list(glob(train_logits_path)))
+        print(f"Looking for model features in {train_logits_path}")
+        if len(train_results) == 0:
+            print("No model features found! Re-doing inference")
+            self.model_uncertainty.model.train_ensemble(round_dir=prev_round_dir,
+                                                        cur_total_oracle_split=None,
+                                                        cur_total_pseudo_split=None,
+                                                        train=False, inf_train=True,
+                                                        inf_val=False, inf_test=False)
+            train_logits_path = os.path.join(prev_round_dir, "*", train_logits_path)
+            train_results = sorted(list(glob(train_logits_path)))
         if len(train_results) == 1:
             train_result = train_results[0]
             print(f"Found {train_result}")
