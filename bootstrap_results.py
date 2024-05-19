@@ -23,8 +23,9 @@ def load_best_model(model_dir, seg_model='unet_cct', in_chns=1, num_classes=4):
 
 def generate_test_predictions(model_dir, seg_model='unet_cct', in_chns=1, num_classes=4, ann_type="scribble",
                               dataset="ACDC", gpus="cuda:0"):
-    data_root = data_params[dataset][ann_type]["data_root"]
-    test_file = data_params["test_file"]
+    data_params_ = data_params[dataset][ann_type]
+    data_root = data_params_["data_root"]
+    test_file = data_params_["test_file"]
     model = load_best_model(model_dir, seg_model=seg_model, in_chns=in_chns, num_classes=num_classes).to(gpus)
     model.eval()
     db_eval = BaseDataSets(split="val", val_file=test_file, data_root=data_root)
