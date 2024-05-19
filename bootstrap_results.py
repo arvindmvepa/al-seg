@@ -86,7 +86,7 @@ def get_mean_results(results_dict):
             mean_scores = np.array(mean_scores)
             print("mean_scores.shape: ", mean_scores.shape)
             print("np.mean(mean_scores, axis=1).shape: ", np.mean(mean_scores, axis=1).shape)
-            mean_exp_dict[round_] = np.mean(mean_scores, axis=1)
+            mean_exp_dict[round_] = np.mean(mean_scores, axis=0)
         mean_results_dict[base_exp_name] = mean_exp_dict
     print("Finished calculating mean results!")
     return mean_results_dict
