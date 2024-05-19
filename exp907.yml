@@ -16,6 +16,7 @@ policy:
 data_geometry:
   data_geometry_type: kcenter_greedy
   seed: 0
+  delete_preds: False
   contrastive: True
   feature_model: True
   pos_wt: 1500
