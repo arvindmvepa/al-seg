@@ -100,7 +100,7 @@ for exp_dir in exp_dirs:
                 num_models += 1
             test_results = generate_test_predictions(model_for_val_max)
             bs_test_results = generate_bootstrap_results(test_results)
-            save_results_to_file(bs_test_results, os.path.join(round_dir, "test_bs_results.json"))
+            save_results_to_file(bs_test_results, os.path.join(round_dir, "test_bs_results.txt"))
             confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
             print("result")
             print("95% Confidence Interval:", confidence_interval)
