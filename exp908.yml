@@ -2,7 +2,7 @@ model:
   model_type: "db_dmpls"
   ann_type: "scribble"
   dataset: "ACDC"
-  ensemble_size: 1
+  ensemble_size: 5
   gpus: "cuda:0"
   db_score_func: "bald_score"
 policy:
