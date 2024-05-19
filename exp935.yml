@@ -21,6 +21,4 @@ data_geometry:
   starting_sample: 10
 model_uncertainty:
   model_uncertainty_type: pass
-  score_func: mean_score
-  seed: 4
 exp_dir: "DMPLS_sup_CHAOS_exp4_coregcn_v16"
