@@ -85,7 +85,7 @@ def get_mean_results(results_dict):
             for exp_name in exp_names:
                 scores += [exp_dict[exp_name][round_]]
             scores = np.array(scores)
-            print("\tscores.shape: ", scores.shape)
+            print("\tarray scores shape: ", scores.shape)
             mean_exp_dict[round_] = np.mean(scores, axis=0)
         mean_results_dict[base_exp_name] = mean_exp_dict
     print("Finished calculating mean results!")
