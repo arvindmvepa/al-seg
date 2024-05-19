@@ -41,9 +41,14 @@ def generate_test_predictions(model_dir, seg_model='unet_cct', in_chns=1, num_cl
     return metric_list
 
 
-def generate_bootstrap_results(predictions, num_bootstraps=1000):
+def generate_bootstrap_results(predictions, num_bootstraps=1000, seed=0):
     n = len(predictions)
-    bootstrap_samples = np.random.choice(predictions, (n, num_bootstraps), replace=True)
+    bootstrap_samples = []
+    for i in range(num_bootstraps):
+        random_state = np.random.RandomState(seed+i)
+        sample = random_state.choice(predictions, (n, num_bootstraps), replace=True)
+        bootstrap_samples.append(sample)
+    bootstrap_samples = np.array(bootstrap_samples)
     means = np.mean(bootstrap_samples, axis=0)
     return means
 
