@@ -56,9 +56,9 @@ def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
                     im_scores_list = [float(im_score.strip()) for im_score in im_scores_list]
                     round_num = get_round_num(round_dir_)
                     round_dict[round_num] = im_scores_list
-            if round_dict is not None:
+            if len(round_dict) > 0:
                 exp_dict[exp_dir_] = round_dict
-        if exp_dict is not None:
+        if len(exp_dict) > 0:
             results_dict[base_exp_name] = exp_dict
             print("accepted ", base_exp_name)
         else:
