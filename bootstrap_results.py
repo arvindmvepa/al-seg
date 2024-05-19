@@ -31,13 +31,13 @@ def generate_test_predictions(model_dir, seg_model='unet_cct', in_chns=1, num_cl
     model.eval()
     db_eval = BaseDataSets(split="val", val_file=test_file, data_root=data_root)
     evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
-    metric_list = 0.0
+    metric_list = []
     for i_batch, sampled_batch in tqdm(enumerate(evalloader)):
         metric_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model, classes=num_classes,
                                           gpus=gpus)
         metric_i = np.array(metric_i)
         dice_i = np.mean(metric_i[:, 0])
-        metric_list += dice_i
+        metric_list += [dice_i]
     return metric_list
 
 
