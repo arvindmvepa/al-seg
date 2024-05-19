@@ -38,6 +38,7 @@ def collect_exp_groups(exp_dirs):
 
 def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
     exp_groups = collect_exp_groups(exp_dirs)
+    print(exp_groups)
     results_dict = {}
     for base_exp_name, exp_group in exp_groups.items():
         exp_dict = {}
