@@ -82,8 +82,7 @@ def get_mean_results(results_dict):
         for round_ in rounds:
             mean_scores = []
             for exp_name in exp_names:
-                mean_scores += exp_dict[exp_name][round_]
-            print("mean_scores: ", mean_scores)
+                mean_scores += [exp_dict[exp_name][round_]]
             mean_scores = np.array(mean_scores)
             mean_exp_dict[round_] = np.mean(mean_scores, axis=1)
         mean_results_dict[base_exp_name] = mean_exp_dict
