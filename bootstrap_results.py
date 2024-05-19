@@ -17,6 +17,76 @@ def get_round_num(round_dir):
     return int(round_dir.split("round_")[-1])
 
 
+def get_base_exp_name(exp_name):
+    exp_field = "exp"
+    exp_field_len_w_index = len(exp_field)+1
+    exp_field_index = exp_name.find(exp_field)
+    exp_name = exp_name[:exp_field_index]+exp_name[exp_field_index+exp_field_len_w_index:]
+    return exp_name
+
+
+def collect_exp_groups(exp_dirs):
+    exp_groups = dict()
+    for exp_name in exp_dirs:
+        base_exp_name = get_base_exp_name(exp_name)
+        if base_exp_name in exp_groups:
+            exp_groups[base_exp_name] += [exp_name]
+        else:
+            exp_groups[base_exp_name] = [exp_name]
+    return exp_groups
+
+
+def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
+    exp_groups = collect_exp_groups(exp_dirs)
+    results_dict = {}
+    for base_exp_name, exp_group in exp_groups.items():
+        exp_dict = {}
+        for i, exp_dir_ in enumerate(exp_group):
+            round_dirs_ = glob(os.path.join(exp_dir_, "round_*"))
+            round_dirs_ = sorted(round_dirs_, key=get_round_num)
+            for round_dir_ in round_dirs_:
+                if os.path.exists(results_file_name):
+                    with open(results_file_name, "r") as f:
+                        im_scores_list = f.readlines()
+                    im_scores_list = [float(im_score.strip()) for im_score in im_scores_list]
+                    round_num = get_round_num(round_dir_)
+                    exp_dict[round_num] = im_scores_list
+        if exp_dict is not None:
+            results_dict[base_exp_name] = exp_dict
+            print("accepted ", base_exp_name)
+        else:
+            print("rejected ", base_exp_name)
+    return results_dict
+
+
+def get_mean_results(results_dict):
+    mean_results_dict = {}
+    for base_exp_name, exp_dict in results_dict.items():
+        exp_names = list(exp_dict.keys())
+        rounds = list(exp_dict[exp_names[0]].keys())
+        mean_exp_dict = {}
+        for round_ in rounds:
+            mean_scores = []
+            for exp_name in exp_names:
+                mean_scores += exp_dict[exp_name][round_]
+            mean_exp_dict[round_] = np.mean(mean_scores, axis=0)
+        mean_results_dict[base_exp_name] = mean_exp_dict
+    return mean_results_dict
+
+
+def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
+    results_dict = collect_exp_results(exp_dirs, results_file_name=results_file_name)
+    mean_results_dict = get_mean_results(results_dict)
+    ci_results_dict = {}
+    for base_exp_name, exp_dict in mean_results_dict.items():
+        rounds = list(exp_dict[base_exp_name].keys())
+        ci_exp_dict = {}
+        for round_ in rounds:
+            ci_exp_dict[round_] = np.percentile(mean_results_dict[base_exp_name][round_], [2.5, 97.5])
+        ci_results_dict[base_exp_name] = ci_exp_dict
+    return ci_results_dict
+
+
 def load_best_model(model_dir, seg_model='unet_cct', in_chns=1, num_classes=4):
     model = net_factory(net_type=seg_model, in_chns=in_chns, class_num=num_classes)
     best_model_path = os.path.join(model_dir, '{}_best_model.pth'.format(seg_model))
@@ -104,4 +174,7 @@ for exp_dir in exp_dirs:
             confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
             print("result")
             print("95% Confidence Interval:", confidence_interval)
-        exit()
+
+# collect all the results
+results = get_ci_results(exp_dirs)
+print(results)
