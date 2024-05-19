@@ -57,8 +57,12 @@ def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
                     im_scores_list = [float(im_score.strip()) for im_score in im_scores_list]
                     round_num = get_round_num(round_dir_)
                     round_dict[round_num] = im_scores_list
+                else:
+                    print("\t\tNo results found for ", round_dir_)
             if len(round_dict) > 0:
                 exp_dict[os.path.basename(exp_dir_)] = round_dict
+            else:
+                print("\tNo results found for ", exp_dir_)
         if len(exp_dict) > 0:
             results_dict[base_exp_name] = exp_dict
             print("accepted ", base_exp_name)
@@ -79,6 +83,7 @@ def get_mean_results(results_dict):
             mean_scores = []
             for exp_name in exp_names:
                 mean_scores += exp_dict[exp_name][round_]
+            mean_scores = np.array(mean_scores)
             mean_exp_dict[round_] = np.mean(mean_scores, axis=1)
         mean_results_dict[base_exp_name] = mean_exp_dict
     print("Finished calculating mean results!")
