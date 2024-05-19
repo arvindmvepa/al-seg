@@ -37,18 +37,19 @@ def collect_exp_groups(exp_dirs):
 
 
 def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
+    print("Collecting results from experiments...")
     exp_groups = collect_exp_groups(exp_dirs)
-    print("exp_groups", exp_groups)
     results_dict = {}
     for base_exp_name, exp_group in exp_groups.items():
         exp_dict = {}
+        print("base_exp_name: ", base_exp_name)
         for i, exp_dir_ in enumerate(exp_group):
-            print("exp_dir_", exp_dir_)
+            print("\tspecific_exp_name: ", exp_dir_)
             round_dirs_ = glob(os.path.join(exp_dir_, "round_*"))
             round_dirs_ = sorted(round_dirs_, key=get_round_num)
-            print("round_dirs_", round_dirs_)
             round_dict = {}
             for round_dir_ in round_dirs_:
+                print("\t\tround_dir: ", round_dir_)
                 cur_results_file_name = os.path.join(round_dir_, results_file_name)
                 if os.path.exists(cur_results_file_name):
                     with open(cur_results_file_name, "r") as f:
@@ -63,10 +64,12 @@ def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
             print("accepted ", base_exp_name)
         else:
             print("rejected ", base_exp_name)
+    print("Finished collecting experiment results!")
     return results_dict
 
 
 def get_mean_results(results_dict):
+    print("Calculating mean results...")
     mean_results_dict = {}
     for base_exp_name, exp_dict in results_dict.items():
         exp_names = list(exp_dict.keys())
@@ -76,8 +79,9 @@ def get_mean_results(results_dict):
             mean_scores = []
             for exp_name in exp_names:
                 mean_scores += exp_dict[exp_name][round_]
-            mean_exp_dict[round_] = np.mean(mean_scores, axis=0)
+            mean_exp_dict[round_] = np.mean(mean_scores, axis=1)
         mean_results_dict[base_exp_name] = mean_exp_dict
+    print("Finished calculating mean results!")
     return mean_results_dict
 
 
@@ -85,11 +89,15 @@ def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
     results_dict = collect_exp_results(exp_dirs, results_file_name=results_file_name)
     mean_results_dict = get_mean_results(results_dict)
     ci_results_dict = {}
-    print("mean_results_dict", mean_results_dict)
+    print("Calculating confidence intervals...")
     for base_exp_name, exp_dict in mean_results_dict.items():
+        print("base_exp_name: ", base_exp_name)
         rounds = list(exp_dict.keys())
         ci_exp_dict = {}
         for round_ in rounds:
+            print("\tround: ", round_)
+            results = mean_results_dict[base_exp_name][round_]
+            print("\tlen(results): ", len(results))
             ci_exp_dict[round_] = np.percentile(mean_results_dict[base_exp_name][round_], [2.5, 97.5])
         ci_results_dict[base_exp_name] = ci_exp_dict
     return ci_results_dict
