@@ -32,10 +32,12 @@ def generate_test_predictions(model_dir, seg_model='unet_cct', in_chns=1, num_cl
     evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
     metric_list = 0.0
     results_map = {}
+    print(("len(evalloader): ", len(evalloader)))
     for i_batch, sampled_batch in enumerate(evalloader):
         metric_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model, classes=num_classes,
                                           gpus=gpus)
         metric_i = np.array(metric_i)
+        print("metric_i: ", metric_i)
         results_map[sampled_batch["case"][0]] = np.mean(metric_i[:, 0])
         metric_list += metric_i
     return metric_list
