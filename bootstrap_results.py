@@ -87,7 +87,7 @@ def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
     ci_results_dict = {}
     print("mean_results_dict", mean_results_dict)
     for base_exp_name, exp_dict in mean_results_dict.items():
-        rounds = list(exp_dict[base_exp_name].keys())
+        rounds = list(exp_dict.keys())
         ci_exp_dict = {}
         for round_ in rounds:
             ci_exp_dict[round_] = np.percentile(mean_results_dict[base_exp_name][round_], [2.5, 97.5])
