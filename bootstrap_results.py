@@ -104,7 +104,7 @@ def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
         for round_ in rounds:
             print("\tround: ", round_)
             results = mean_results_dict[base_exp_name][round_]
-            print("\tlen(results): ", len(results))
+            print("\tNumber of bootstraps: ", len(results))
             ci = np.percentile(mean_results_dict[base_exp_name][round_], [2.5, 97.5])
             print("\tci: ", ci)
             ci_exp_dict[round_] = ci
@@ -163,7 +163,7 @@ root_dir = "/home/amvepa91"
 exp_length = 5
 results_file = "test_bs_results.txt"
 exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*coreset_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_v15"))))
-overwrite = True
+overwrite = False
 for exp_dir in exp_dirs:
         if not os.path.exists(exp_dir):
             continue
@@ -204,7 +204,6 @@ for exp_dir in exp_dirs:
                 print("95% Confidence Interval:", confidence_interval)
             else:
                 print("results already exist")
-        break
 # collect all the results
 results = get_ci_results(exp_dirs)
 print(results)
