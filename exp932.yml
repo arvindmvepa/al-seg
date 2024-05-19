@@ -1,0 +1,19 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  dataset: "CHAOS_CT"
+  ensemble_size: 3
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 4
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+    inf_train: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+model_uncertainty:
+  model_uncertainty_type: stochastic
+  score_func: entropy_w_label_probs
+  seed: 4
+exp_dir: "DMPLS_sup_CHAOS_exp4_stochastic_v16"
