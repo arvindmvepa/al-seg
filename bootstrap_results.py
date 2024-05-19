@@ -76,17 +76,17 @@ def get_mean_results(results_dict):
     print("Calculating mean results...")
     mean_results_dict = {}
     for base_exp_name, exp_dict in results_dict.items():
+        print("base_exp_name: ", base_exp_name)
         exp_names = list(exp_dict.keys())
         rounds = list(exp_dict[exp_names[0]].keys())
         mean_exp_dict = {}
         for round_ in rounds:
-            mean_scores = []
+            scores = []
             for exp_name in exp_names:
-                mean_scores += [exp_dict[exp_name][round_]]
-            mean_scores = np.array(mean_scores)
-            print("mean_scores.shape: ", mean_scores.shape)
-            print("np.mean(mean_scores, axis=1).shape: ", np.mean(mean_scores, axis=1).shape)
-            mean_exp_dict[round_] = np.mean(mean_scores, axis=0)
+                scores += [exp_dict[exp_name][round_]]
+            scores = np.array(scores)
+            print("\tscores.shape: ", scores.shape)
+            mean_exp_dict[round_] = np.mean(scores, axis=0)
         mean_results_dict[base_exp_name] = mean_exp_dict
     print("Finished calculating mean results!")
     return mean_results_dict
@@ -105,7 +105,9 @@ def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
             print("\tround: ", round_)
             results = mean_results_dict[base_exp_name][round_]
             print("\tlen(results): ", len(results))
-            ci_exp_dict[round_] = np.percentile(mean_results_dict[base_exp_name][round_], [2.5, 97.5])
+            ci = np.percentile(mean_results_dict[base_exp_name][round_], [2.5, 97.5])
+            print("\tci: ", ci)
+            ci_exp_dict[round_] = ci
         ci_results_dict[base_exp_name] = ci_exp_dict
     return ci_results_dict
 
