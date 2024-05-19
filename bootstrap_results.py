@@ -16,11 +16,22 @@ from glob import glob
 def get_round_num(round_dir):
     return int(round_dir.split("round_")[-1])
 
+
 def load_best_model(model_dir, seg_model='unet_cct', in_chns=1, num_classes=4):
     model = net_factory(net_type=seg_model, in_chns=in_chns, class_num=num_classes)
     best_model_path = os.path.join(model_dir, '{}_best_model.pth'.format(seg_model))
     model.load_state_dict(torch.load(best_model_path))
     return model
+
+
+def save_results_to_file(results, save_file):
+    with open(save_file, "w") as f:
+        for result in results:
+            # convert to float32 to avoid rounding to inf
+            score = np.float32(result)
+            f.write(f"{np.round(score, 7)}\n")
+            f.flush()
+
 
 def generate_test_predictions(model_dir, seg_model='unet_cct', in_chns=1, num_classes=4, ann_type="scribble",
                               dataset="ACDC", gpus="cuda:0"):
@@ -55,7 +66,7 @@ def generate_bootstrap_results(predictions, num_bootstraps=1000, seed=0):
 
 root_dir = "/home/amvepa91"
 exp_length = 5
-exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg2", "DMPLS*coreset_pos_wt1500_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_label1_v15"))))
+exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*coreset_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_v15"))))
 
 for exp_dir in exp_dirs:
         if not os.path.exists(exp_dir):
@@ -88,8 +99,8 @@ for exp_dir in exp_dirs:
                     model_for_val_max = model_dir
                 num_models += 1
             test_results = generate_test_predictions(model_for_val_max)
-            print("test_results: ", test_results)
             bs_test_results = generate_bootstrap_results(test_results)
+            save_results_to_file(bs_test_results, os.path.join(round_dir, "test_bs_results.json"))
             confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
             print("result")
             print("95% Confidence Interval:", confidence_interval)
