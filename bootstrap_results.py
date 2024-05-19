@@ -45,8 +45,8 @@ def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
         for i, exp_dir_ in enumerate(exp_group):
             print("exp_dir_", exp_dir_)
             round_dirs_ = glob(os.path.join(exp_dir_, "round_*"))
-            print("round_dirs_", round_dirs_)
             round_dirs_ = sorted(round_dirs_, key=get_round_num)
+            print("round_dirs_", round_dirs_)
             for round_dir_ in round_dirs_:
                 if os.path.exists(results_file_name):
                     with open(results_file_name, "r") as f:
