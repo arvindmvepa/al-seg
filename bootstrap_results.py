@@ -88,6 +88,7 @@ for exp_dir in exp_dirs:
                     model_for_val_max = model_dir
                 num_models += 1
             test_results = generate_test_predictions(model_for_val_max)
+            print("test_results: ", test_results)
             bs_test_results = generate_bootstrap_results(test_results)
             confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
             print("result")
