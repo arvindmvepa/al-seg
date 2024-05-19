@@ -68,6 +68,8 @@ def get_mean_results(results_dict):
     mean_results_dict = {}
     for base_exp_name, exp_dict in results_dict.items():
         exp_names = list(exp_dict.keys())
+        print("exp_names", exp_names)
+        print("exp_dict", exp_dict)
         rounds = list(exp_dict[exp_names[0]].keys())
         mean_exp_dict = {}
         for round_ in rounds:
@@ -135,7 +137,7 @@ def generate_bootstrap_results(predictions, num_bootstraps=1000, seed=0):
         sample = random_state.choice(predictions, n, replace=True)
         bootstrap_samples.append(sample)
     bootstrap_samples = np.array(bootstrap_samples)
-    means = np.mean(bootstrap_samples, axis=0)
+    means = np.mean(bootstrap_samples, axis=1)
     return means
 
 
