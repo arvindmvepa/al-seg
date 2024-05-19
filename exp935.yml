@@ -15,6 +15,7 @@ policy:
   rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
 data_geometry:
   data_geometry_type: coregcn
+  dataset_type: "CHAOS_CT"
   seed: 4
   use_model_features: True
   starting_sample: 10
