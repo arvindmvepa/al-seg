@@ -1,0 +1,14 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  dataset: "CHAOS_CT"
+  ensemble_size: 3
+  gpus: "cuda:0"
+policy:
+  policy_type: random
+  seed: 3
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+exp_dir: "DMPLS_sup_CHAOS_exp3_random_v16"
