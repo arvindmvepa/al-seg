@@ -70,8 +70,6 @@ def get_mean_results(results_dict):
     mean_results_dict = {}
     for base_exp_name, exp_dict in results_dict.items():
         exp_names = list(exp_dict.keys())
-        print("exp_names", exp_names)
-        print("exp_dict", exp_dict)
         rounds = list(exp_dict[exp_names[0]].keys())
         mean_exp_dict = {}
         for round_ in rounds:
@@ -87,6 +85,7 @@ def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
     results_dict = collect_exp_results(exp_dirs, results_file_name=results_file_name)
     mean_results_dict = get_mean_results(results_dict)
     ci_results_dict = {}
+    print("mean_results_dict", mean_results_dict)
     for base_exp_name, exp_dict in mean_results_dict.items():
         rounds = list(exp_dict[base_exp_name].keys())
         ci_exp_dict = {}
