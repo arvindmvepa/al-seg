@@ -46,7 +46,7 @@ def generate_bootstrap_results(predictions, num_bootstraps=1000, seed=0):
     bootstrap_samples = []
     for i in range(num_bootstraps):
         random_state = np.random.RandomState(seed+i)
-        sample = random_state.choice(predictions, (n, num_bootstraps), replace=True)
+        sample = random_state.choice(predictions, n, replace=True)
         bootstrap_samples.append(sample)
     bootstrap_samples = np.array(bootstrap_samples)
     means = np.mean(bootstrap_samples, axis=0)
