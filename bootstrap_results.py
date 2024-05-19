@@ -38,8 +38,9 @@ def generate_test_predictions(model_dir, seg_model='unet_cct', in_chns=1, num_cl
                                           gpus=gpus)
         metric_i = np.array(metric_i)
         print("metric_i: ", metric_i)
-        results_map[sampled_batch["case"][0]] = np.mean(metric_i[:, 0])
-        metric_list += metric_i
+        dice_i = np.mean(metric_i[:, 0])
+        print("dice_i: ", dice_i)
+        metric_list += dice_i
     return metric_list
 
 
