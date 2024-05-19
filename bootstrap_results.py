@@ -4,6 +4,8 @@ from wsl4mis.code.dataloaders.dataset import BaseDataSets
 from wsl4mis.code.val_2D import test_single_volume_cct
 from torch.utils.data import DataLoader
 import numpy as np
+import sys
+sys.path.append("./wsl4mis/code")
 from active_learning.dataset.data_params import data_params
 import torch
 from wsl4mis.code.networks.net_factory import net_factory
