@@ -12,6 +12,8 @@ class BaseDataset(ABC):
         super().__init__()
         self.all_train_im_files = all_train_im_files
         self.all_train_full_im_paths = all_train_full_im_paths
+        print("training files: ", self.all_train_im_files)
+        print("training paths: ", len(self.all_train_full_im_paths))
         self.patch_size = patch_size
 
     def get_data(self):
