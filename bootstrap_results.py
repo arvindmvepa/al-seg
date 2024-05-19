@@ -48,8 +48,9 @@ def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
             round_dirs_ = sorted(round_dirs_, key=get_round_num)
             print("round_dirs_", round_dirs_)
             for round_dir_ in round_dirs_:
-                if os.path.exists(results_file_name):
-                    with open(results_file_name, "r") as f:
+                cur_results_file_name = os.path.join(round_dir_, results_file_name)
+                if os.path.exists(cur_results_file_name):
+                    with open(cur_results_file_name, "r") as f:
                         im_scores_list = f.readlines()
                     im_scores_list = [float(im_score.strip()) for im_score in im_scores_list]
                     round_num = get_round_num(round_dir_)
@@ -140,6 +141,7 @@ def generate_bootstrap_results(predictions, num_bootstraps=1000, seed=0):
 
 root_dir = "/home/amvepa91"
 exp_length = 5
+results_file = "test_bs_results.txt"
 exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*coreset_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_v15"))))
 """
 for exp_dir in exp_dirs:
@@ -172,12 +174,16 @@ for exp_dir in exp_dirs:
                     val_max = val_result
                     model_for_val_max = model_dir
                 num_models += 1
-            test_results = generate_test_predictions(model_for_val_max)
-            bs_test_results = generate_bootstrap_results(test_results)
-            save_results_to_file(bs_test_results, os.path.join(round_dir, "test_bs_results.txt"))
-            confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
-            print("result")
-            print("95% Confidence Interval:", confidence_interval)
+            cur_results_file = os.path.join(round_dir, results_file)
+            if not os.path.exists(cur_results_file):
+                test_results = generate_test_predictions(model_for_val_max)
+                bs_test_results = generate_bootstrap_results(test_results)
+                save_results_to_file(bs_test_results, cur_results_file)
+                confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
+                print("result")
+                print("95% Confidence Interval:", confidence_interval)
+            else:
+                print("results already exist")
 """
 # collect all the results
 results = get_ci_results(exp_dirs)
