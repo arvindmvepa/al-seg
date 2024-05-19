@@ -60,7 +60,6 @@ def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
             print("accepted ", base_exp_name)
         else:
             print("rejected ", base_exp_name)
-    print(results_dict)
     return results_dict
 
 
