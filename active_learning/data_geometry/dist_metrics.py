@@ -90,8 +90,6 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
     else:
         uncertainty_score = 0
 
-    print("uncertainty_score: ", uncertainty_score)
-
     # scale all the weights to be less than max_dist * wt_max_dist_mult
     if max_dist is not None:
         wt_max_dist = max_dist * wt_max_dist_mult
