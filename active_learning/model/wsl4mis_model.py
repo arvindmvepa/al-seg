@@ -183,9 +183,12 @@ class DeepBayesianWSL4MISMixin:
         train_file = self.get_round_train_file_paths(round_dir=round_dir,
                                                      cur_total_oracle_split=cur_total_oracle_split,
                                                      cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[0]]
+        if os.path.exists(train_file):
+            ann_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
+                                        sup_type=self.ann_type, train_file=train_file, data_root=self.data_root)
+        else:
+            ann_db_train = None
 
-        ann_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
-                                    sup_type=self.ann_type, train_file=train_file, data_root=self.data_root)
         train_preds = {}
 
         print("Start Monte Carlo dropout forward passes on the inferences!")
@@ -196,8 +199,9 @@ class DeepBayesianWSL4MISMixin:
                 volume_batch, label_batch, idx = volume_batch.to(self.gpus), label_batch.to(self.gpus), idx.cpu()[0]
 
                 # skip images that are already annotated
-                if full_db_train.sample_list[idx] in ann_db_train.sample_list:
-                    continue
+                if ann_db_train is not None:
+                    if full_db_train.sample_list[idx] in ann_db_train.sample_list:
+                        continue
 
                 slice_basename = os.path.basename(full_db_train.sample_list[idx])
 
