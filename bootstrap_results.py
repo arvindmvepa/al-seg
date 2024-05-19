@@ -137,7 +137,7 @@ def generate_bootstrap_results(predictions, num_bootstraps=1000, seed=0):
 root_dir = "/home/amvepa91"
 exp_length = 5
 exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*coreset_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_v15"))))
-
+"""
 for exp_dir in exp_dirs:
         if not os.path.exists(exp_dir):
             continue
@@ -174,7 +174,7 @@ for exp_dir in exp_dirs:
             confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
             print("result")
             print("95% Confidence Interval:", confidence_interval)
-
+"""
 # collect all the results
 results = get_ci_results(exp_dirs)
 print(results)
