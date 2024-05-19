@@ -47,6 +47,7 @@ def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
             round_dirs_ = glob(os.path.join(exp_dir_, "round_*"))
             round_dirs_ = sorted(round_dirs_, key=get_round_num)
             print("round_dirs_", round_dirs_)
+            round_dict = {}
             for round_dir_ in round_dirs_:
                 cur_results_file_name = os.path.join(round_dir_, results_file_name)
                 if os.path.exists(cur_results_file_name):
@@ -54,7 +55,9 @@ def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
                         im_scores_list = f.readlines()
                     im_scores_list = [float(im_score.strip()) for im_score in im_scores_list]
                     round_num = get_round_num(round_dir_)
-                    exp_dict[round_num] = im_scores_list
+                    round_dict[round_num] = im_scores_list
+            if round_dict is not None:
+                exp_dict[exp_dir_] = round_dict
         if exp_dict is not None:
             results_dict[base_exp_name] = exp_dict
             print("accepted ", base_exp_name)
