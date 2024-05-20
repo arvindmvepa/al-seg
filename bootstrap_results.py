@@ -193,7 +193,7 @@ for exp_dir in exp_dirs:
                 num_models += 1
             cur_results_file = os.path.join(round_dir, results_file)
             if (not os.path.exists(cur_results_file)) or overwrite:
-                best_model_path = list(glob.glob(os.path.join(model_dir, '*_best_model.pth')))
+                best_model_path = list(glob(os.path.join(model_dir, '*_best_model.pth')))
                 if len(best_model_path) > 0:
                     best_model_path = best_model_path[0]
                     seg_model = os.path.basename(best_model_path).split("_best_model.pth")[0]
