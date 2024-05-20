@@ -71,7 +71,8 @@ def get_contrastive_features(cl_model_path):
 
 if __name__ == "__main__":
     #cl_model_path = "/home/amvepa91/cl_feature_model_acdc_new_1.pt"
-    cl_model_path = "/home/amvepa91/al-seg3/DMPLS_exp0_coreset_xt1_v15/cl_feature_model.pt"
+    #cl_model_path = "/home/amvepa91/al-seg3/DMPLS_exp0_coreset_xt1_v15/cl_feature_model.pt"
+    cl_model_path = "/home/amvepa91/al-seg1/DMPLS_exp3_coreset_xt0_pos_loss1_wt1_use_slice_pos_v15/cl_feature_model.pt"
     save_path = os.path.basename(cl_model_path).replace(".pth", ".npy")
     features = get_contrastive_features(cl_model_path)
     features = features.astype(np.float16)
