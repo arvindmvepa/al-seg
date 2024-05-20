@@ -38,7 +38,8 @@ def get_dataset(dataset="ACDC", ann_type="scribble"):
     data_root = data_params[dataset][ann_type]["data_root"]
     all_train_im_files = get_all_train_files(data_params_)
     all_train_full_im_paths = [os.path.join(data_root, im_path) for im_path in all_train_im_files]
-    dataset = DatasetFactory.get_dataset(dataset, all_train_im_files, all_train_full_im_paths, data_params_)
+    dataset = DatasetFactory.create_dataset(dataset, all_train_im_files=all_train_im_files,
+                                            all_train_full_im_paths=all_train_full_im_paths)
     return dataset
 
 
