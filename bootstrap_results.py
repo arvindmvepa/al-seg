@@ -112,9 +112,8 @@ def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
     return ci_results_dict
 
 
-def load_best_model(model_dir, seg_model='unet_cct', in_chns=1, num_classes=4):
+def load_best_model(best_model_path, seg_model='unet_cct', in_chns=1, num_classes=4):
     model = net_factory(net_type=seg_model, in_chns=in_chns, class_num=num_classes)
-    best_model_path = os.path.join(model_dir, '{}_best_model.pth'.format(seg_model))
     model.load_state_dict(torch.load(best_model_path))
     return model
 
@@ -128,12 +127,11 @@ def save_results_to_file(results, save_file):
             f.flush()
 
 
-def generate_test_predictions(model_dir, seg_model='unet_cct', in_chns=1, num_classes=4, ann_type="scribble",
-                              dataset="ACDC", gpus="cuda:0"):
+def generate_test_predictions(model, num_classes=4, ann_type="scribble", dataset="ACDC", gpus="cuda:0"):
+    model = model.to(gpus)
     data_params_ = data_params[dataset][ann_type]
     data_root = data_params_["data_root"]
     test_file = data_params_["test_file"]
-    model = load_best_model(model_dir, seg_model=seg_model, in_chns=in_chns, num_classes=num_classes).to(gpus)
     model.eval()
     db_eval = BaseDataSets(split="val", val_file=test_file, data_root=data_root)
     evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
@@ -195,12 +193,17 @@ for exp_dir in exp_dirs:
                 num_models += 1
             cur_results_file = os.path.join(round_dir, results_file)
             if (not os.path.exists(cur_results_file)) or overwrite:
-                test_results = generate_test_predictions(model_for_val_max)
-                bs_test_results = generate_bootstrap_results(test_results)
-                save_results_to_file(bs_test_results, cur_results_file)
-                confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
-                print("result")
-                print("95% Confidence Interval:", confidence_interval)
+                best_model_path = os.path.join(model_dir, 'unet_cct_best_model.pth')
+                if os.path.exists(best_model_path):
+                    model = load_best_model(best_model_path)
+                    test_results = generate_test_predictions(model_for_val_max)
+                    bs_test_results = generate_bootstrap_results(test_results)
+                    save_results_to_file(bs_test_results, cur_results_file)
+                    confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
+                    print("result")
+                    print("95% Confidence Interval:", confidence_interval)
+                else:
+                    print("model doesn't exist")
             else:
                 print("results already exist")
 # collect all the results
