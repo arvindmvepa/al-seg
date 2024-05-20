@@ -193,9 +193,11 @@ for exp_dir in exp_dirs:
                 num_models += 1
             cur_results_file = os.path.join(round_dir, results_file)
             if (not os.path.exists(cur_results_file)) or overwrite:
-                best_model_path = os.path.join(model_dir, 'unet_cct_best_model.pth')
-                if os.path.exists(best_model_path):
-                    model = load_best_model(best_model_path)
+                best_model_path = list(glob.glob(os.path.join(model_dir, '*_best_model.pth')))
+                if len(best_model_path) > 0:
+                    best_model_path = best_model_path[0]
+                    seg_model = os.path.basename(best_model_path).split("_best_model.pth")[0]
+                    model = load_best_model(best_model_path, seg_model=seg_model)
                     test_results = generate_test_predictions(model_for_val_max)
                     bs_test_results = generate_bootstrap_results(test_results)
                     save_results_to_file(bs_test_results, cur_results_file)
