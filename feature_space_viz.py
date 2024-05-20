@@ -71,7 +71,7 @@ def get_contrastive_features(cl_model_path):
 if __name__ == "__main__":
     cl_model_path = "/home/amvepa91/cl_feature_model_acdc_new_1.pt"
     save_path = os.path.basename(cl_model_path).replace(".pth", ".npy")
-    features = get_contrastive_features()
+    features = get_contrastive_features(cl_model_path)
     features = features.astype(np.float16)
     print(features.shape)
     np.save(save_path, features)
