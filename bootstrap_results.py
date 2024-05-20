@@ -112,9 +112,10 @@ def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
     return ci_results_dict
 
 
-def load_best_model(best_model_path, seg_model='unet_cct', in_chns=1, num_classes=4):
+def load_best_model(best_model_path, seg_model='unet_cct', in_chns=1, num_classes=4, gpus="cuda:0"):
     model = net_factory(net_type=seg_model, in_chns=in_chns, class_num=num_classes)
     model.load_state_dict(torch.load(best_model_path))
+    model = model.to(gpus)
     return model
 
 
@@ -128,7 +129,6 @@ def save_results_to_file(results, save_file):
 
 
 def generate_test_predictions(model, num_classes=4, ann_type="scribble", dataset="ACDC", gpus="cuda:0"):
-    model = model.to(gpus)
     data_params_ = data_params[dataset][ann_type]
     data_root = data_params_["data_root"]
     test_file = data_params_["test_file"]
