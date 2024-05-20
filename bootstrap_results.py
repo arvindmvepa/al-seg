@@ -199,7 +199,7 @@ for exp_dir in exp_dirs:
                         best_model_path = best_model_path[0]
                         seg_model = os.path.basename(best_model_path).split("_best_model.pth")[0]
                         model = load_best_model(best_model_path, seg_model=seg_model)
-                        test_results = generate_test_predictions(model_for_val_max)
+                        test_results = generate_test_predictions(model)
                         bs_test_results = generate_bootstrap_results(test_results)
                         save_results_to_file(bs_test_results, cur_results_file)
                         confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
