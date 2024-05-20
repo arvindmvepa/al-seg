@@ -171,7 +171,7 @@ for exp_dir in exp_dirs:
             print(round_dir)
             model_dirs = sorted([dirpath for dirpath in list(glob(os.path.join(round_dir, "*"))) if os.path.isdir(dirpath)])
             val_max = None
-            model_for_val_max = None
+            model_dir_for_val_max = None
             num_models = 0
             for model_dir in sorted(model_dirs):
                 print(model_dir)
