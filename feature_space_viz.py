@@ -27,8 +27,8 @@ def get_encoder(encoder='resnet18', projection_dim=64, in_chns=1, pretrained=Tru
     return encoder
 
 
-def get_all_train_files():
-    orig_train_im_list_file = data_params['train_file']
+def get_all_train_files(data_params_):
+    orig_train_im_list_file = data_params_['train_file']
     with open(orig_train_im_list_file, "r") as f:
         return sorted(f.read().splitlines())
 
