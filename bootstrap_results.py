@@ -160,9 +160,8 @@ def generate_bootstrap_results(predictions, num_bootstraps=1000, seed=0):
 
 
 root_dir = "/home/amvepa91"
-exp_length = 5
 results_file = "test_bs_results.txt"
-exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*coreset_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_v15"))))
+exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*"))))
 overwrite = False
 for exp_dir in exp_dirs:
         if not os.path.exists(exp_dir):
@@ -176,7 +175,7 @@ for exp_dir in exp_dirs:
             val_max = None
             model_for_val_max = None
             num_models = 0
-            for model_dir in sorted(model_dirs)[:exp_length]:
+            for model_dir in sorted(model_dirs):
                 print(model_dir)
                 val_metric_dict = None
                 test_metric_dict = None
