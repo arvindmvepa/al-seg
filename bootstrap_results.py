@@ -128,7 +128,7 @@ def load_best_model(best_model_path, seg_model='unet_cct', in_chns=1, num_classe
     print("Loading best model from: ", best_model_path)
     print(f"seg_model: {seg_model}, in_chns: {in_chns}, num_classes: {num_classes}, device: {device}")
     model = net_factory(net_type=seg_model, in_chns=in_chns, class_num=num_classes)
-    model.load_state_dict(torch.load(best_model_path))
+    model.load_state_dict(torch.load(best_model_path, map_location=torch.device(device)))
     model = model.to(device)
     return model
 
