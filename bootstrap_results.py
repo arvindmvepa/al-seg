@@ -72,18 +72,16 @@ def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
     return results_dict
 
 
-def get_mean_results(results_dict, max_num_rounds=9):
+def get_mean_results(results_dict, num_rounds=9):
     print("Calculating mean results...")
     mean_results_dict = {}
     for base_exp_name, exp_dict in results_dict.items():
         print("base_exp_name: ", base_exp_name)
         # check if all experiments have the same number of rounds
         exp_names = list(exp_dict.keys())
-        exp_rounds = [list(exp_dict[exp_name].keys()) for exp_name in exp_names]
-        max_num_rounds = min(max([len(rounds) for rounds in exp_rounds]),max_num_rounds)
         for exp_name in exp_names:
             rounds = list(exp_dict[exp_name].keys())
-            if len(rounds) < max_num_rounds:
+            if len(rounds) < num_rounds:
                 del exp_dict[exp_name]
         if len(exp_dict) == 0:
             print("No rounds found for ", base_exp_name)
