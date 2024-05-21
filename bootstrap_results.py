@@ -203,6 +203,7 @@ exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coregcn_m
 """
 exp_dirs = [exp_dir for exp_dir in exp_dirs if ("CHAOS" not in exp_dir) and ("DAVIS" not in exp_dir) and ("MSCMR" not in exp_dir)]
 overwrite = False
+device = "cuda:0"
 for exp_dir in exp_dirs:
         if not os.path.exists(exp_dir):
             continue
@@ -240,13 +241,13 @@ for exp_dir in exp_dirs:
                     if len(best_model_path) > 0:
                         best_model_path = best_model_path[0]
                         seg_model = os.path.basename(best_model_path).split("_best_model.pth")[0]
-                        model = load_best_model(best_model_path, seg_model=seg_model)
+                        model = load_best_model(best_model_path, seg_model=seg_model, device=device)
                         if "sup" in exp_dir:
                             ann_type = "label"
                         else:
                             ann_type = "scribble"
                         print("ann_type", ann_type)
-                        test_results = generate_test_predictions(model, seg_model=seg_model, ann_type=ann_type)
+                        test_results = generate_test_predictions(model, seg_model=seg_model, ann_type=ann_type, device=device)
                         bs_test_results = generate_bootstrap_results(test_results)
                         save_results_to_file(bs_test_results, cur_results_file)
                         confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
