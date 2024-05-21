@@ -114,7 +114,7 @@ def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
             std = np.std(mean_results_dict[base_exp_name][round_])
             print("\tci: ", ci)
             print("\tstd: {}, 2*std: {} ".format(std, 2*std))
-            ci_exp_dict[round_] = ci
+            ci_exp_dict[round_] = 2*std
         ci_results_dict[base_exp_name] = ci_exp_dict
     return ci_results_dict
 
