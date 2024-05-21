@@ -139,6 +139,8 @@ def generate_test_predictions(model, num_classes=4, ann_type="scribble", dataset
     evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
     metric_list = []
     for i_batch, sampled_batch in tqdm(enumerate(evalloader)):
+        print("sampled_batch: ", sampled_batch["image"].shape, sampled_batch["label"].shape)
+        print(model)
         metric_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model, classes=num_classes,
                                           gpus=gpus)
         metric_i = np.array(metric_i)
