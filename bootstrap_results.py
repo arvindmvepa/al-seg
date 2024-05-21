@@ -114,7 +114,7 @@ def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
 
 def load_best_model(best_model_path, seg_model='unet_cct', in_chns=1, num_classes=4, gpus="cuda:0"):
     print("Loading best model from: ", best_model_path)
-    print(seg_model, in_chns, num_classes, gpus)
+    print(f"seg_model: {seg_model}, in_chns: {in_chns}, num_classes: {num_classes}, gpus: {gpus}")
     model = net_factory(net_type=seg_model, in_chns=in_chns, class_num=num_classes)
     model.load_state_dict(torch.load(best_model_path))
     model = model.to(gpus)
@@ -206,9 +206,11 @@ for exp_dir in exp_dirs:
                         seg_model = os.path.basename(best_model_path).split("_best_model.pth")[0]
                         model = load_best_model(best_model_path, seg_model=seg_model)
                         if "sup" in exp_dir:
-                            test_results = generate_test_predictions(model, ann_type="label")
+                            ann_type = "label"
                         else:
-                            test_results = generate_test_predictions(model, ann_type="scribble")
+                            ann_type = "scribble"
+                        print("ann_type", ann_type)
+                        test_results = generate_test_predictions(model, ann_type=ann_type)
                         bs_test_results = generate_bootstrap_results(test_results)
                         save_results_to_file(bs_test_results, cur_results_file)
                         confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
