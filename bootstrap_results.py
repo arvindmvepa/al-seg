@@ -143,7 +143,7 @@ def save_results_to_file(results, save_file):
 
 
 def generate_test_predictions(model, seg_model="unet_cct", num_classes=4, ann_type="scribble", dataset="ACDC",
-                              gpus="cuda:0"):
+                              device="cuda:0"):
     data_params_ = data_params[dataset][ann_type]
     data_root = data_params_["data_root"]
     test_file = data_params_["test_file"]
@@ -158,7 +158,7 @@ def generate_test_predictions(model, seg_model="unet_cct", num_classes=4, ann_ty
     else:
         raise ValueError(f"Invalid seg_model: {seg_model}")
     for i_batch, sampled_batch in tqdm(enumerate(evalloader)):
-        metric_i = eval_vol_func(sampled_batch["image"], sampled_batch["label"], model, classes=num_classes, gpus=gpus)
+        metric_i = eval_vol_func(sampled_batch["image"], sampled_batch["label"], model, classes=num_classes, gpus=device)
         metric_i = np.array(metric_i)
         dice_i = np.mean(metric_i[:, 0])
         metric_list += [dice_i]
@@ -202,9 +202,9 @@ exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_random_v10
 exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_random_v11"))))
 exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coregcn_model_fts_ss10_rstart_v10"))))
 """
-exp_dirs = [exp_dir for exp_dir in exp_dirs if ("CHAOS" not in exp_dir) and ("DAVIS" not in exp_dir) and ("MSCMR" not in exp_dir)]
 overwrite = False
 device = "cuda:0"
+exp_dirs = [exp_dir for exp_dir in exp_dirs if ("CHAOS" not in exp_dir) and ("DAVIS" not in exp_dir) and ("MSCMR" not in exp_dir)]
 for exp_dir in exp_dirs:
         if not os.path.exists(exp_dir):
             continue
