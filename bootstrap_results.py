@@ -1,7 +1,7 @@
 import os
 import json
 from wsl4mis.code.dataloaders.dataset import BaseDataSets
-from wsl4mis.code.val_2D import test_single_volume_cct
+from wsl4mis.code.val_2D import test_single_volume_cct, test_single_volume
 from torch.utils.data import DataLoader
 import numpy as np
 import sys
@@ -130,7 +130,8 @@ def save_results_to_file(results, save_file):
             f.flush()
 
 
-def generate_test_predictions(model, num_classes=4, ann_type="scribble", dataset="ACDC", gpus="cuda:0"):
+def generate_test_predictions(model, seg_model="unet_cct", num_classes=4, ann_type="scribble", dataset="ACDC",
+                              gpus="cuda:0"):
     data_params_ = data_params[dataset][ann_type]
     data_root = data_params_["data_root"]
     test_file = data_params_["test_file"]
@@ -138,11 +139,14 @@ def generate_test_predictions(model, num_classes=4, ann_type="scribble", dataset
     db_eval = BaseDataSets(split="val", val_file=test_file, data_root=data_root)
     evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
     metric_list = []
+    if seg_model == "unet_cct":
+        eval_vol_func = test_single_volume_cct
+    elif seg_model == "unet":
+        eval_vol_func = test_single_volume
+    else:
+        raise ValueError(f"Invalid seg_model: {seg_model}")
     for i_batch, sampled_batch in tqdm(enumerate(evalloader)):
-        print("sampled_batch: ", sampled_batch["image"].shape, sampled_batch["label"].shape)
-        print(model)
-        metric_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model, classes=num_classes,
-                                          gpus=gpus)
+        metric_i = eval_vol_func(sampled_batch["image"], sampled_batch["label"], model, classes=num_classes, gpus=gpus)
         metric_i = np.array(metric_i)
         dice_i = np.mean(metric_i[:, 0])
         metric_list += [dice_i]
@@ -212,7 +216,7 @@ for exp_dir in exp_dirs:
                         else:
                             ann_type = "scribble"
                         print("ann_type", ann_type)
-                        test_results = generate_test_predictions(model, ann_type=ann_type)
+                        test_results = generate_test_predictions(model, seg_model=seg_model, ann_type=ann_type)
                         bs_test_results = generate_bootstrap_results(test_results)
                         save_results_to_file(bs_test_results, cur_results_file)
                         confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
