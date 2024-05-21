@@ -194,7 +194,7 @@ exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_vaal_v11"
 exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_db_bald_*v10"))))
 exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_vaal_v10"))))
 exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_DMPLS__coreset_fuse20_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_uncertainty1_v10"))))
-exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_ensemble_var_v11"))))
+exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_ensemble_var_v11"))))
 """
 # fabien lab
 """
