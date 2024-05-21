@@ -163,6 +163,7 @@ results_file = "test_bs_results.txt"
 exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_stochastic_v13"))))
 exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_typiclust_v10"))))
 exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_vaal_v11"))))
+exp_dirs = [exp_dir for exp_dir in exp_dirs if "CHAOS" not in exp_dir and "DAVIS" not in "exp_dir" and "MSCMR" not in exp_dir]
 overwrite = False
 for exp_dir in exp_dirs:
         if not os.path.exists(exp_dir):
