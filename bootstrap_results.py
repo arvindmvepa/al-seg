@@ -111,7 +111,9 @@ def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
             results = mean_results_dict[base_exp_name][round_]
             print("\tNumber of bootstraps: ", len(results))
             ci = np.percentile(mean_results_dict[base_exp_name][round_], [2.5, 97.5])
+            std = np.std(mean_results_dict[base_exp_name][round_])
             print("\tci: ", ci)
+            print("\tstd: {}, 2*std: {} ".format(std, 2*std))
             ci_exp_dict[round_] = ci
         ci_results_dict[base_exp_name] = ci_exp_dict
     return ci_results_dict
