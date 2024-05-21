@@ -88,6 +88,7 @@ def get_mean_results(results_dict, max_num_rounds=9):
         if len(exp_dict) == 0:
             print("No rounds found for ", base_exp_name)
             continue
+        exp_names = list(exp_dict.keys())
         # calculate mean scores
         rounds = list(exp_dict[exp_names[0]].keys())
         mean_exp_dict = {}
