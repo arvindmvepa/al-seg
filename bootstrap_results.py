@@ -159,7 +159,10 @@ def generate_bootstrap_results(predictions, num_bootstraps=1000, seed=0):
 
 root_dir = "/home/amvepa91"
 results_file = "test_bs_results.txt"
-exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*"))))
+#exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*"))))
+exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_stochastic_v13"))))
+exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_typiclust_v10"))))
+exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_vaal_v11"))))
 overwrite = False
 for exp_dir in exp_dirs:
         if not os.path.exists(exp_dir):
