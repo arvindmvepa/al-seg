@@ -181,7 +181,7 @@ if __name__ == '__main__':
     exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_typiclust_v10"))))
     exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_ensemble_var_v10"))))
     exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coreset_v10"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coregcn_model_fts_ss10_rstart_v10 "))))
+    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coregcn_model_fts_ss10_rstart_v10"))))
     exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coreset_v11"))))
     exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coreset_fuse20_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_uncertainty1_v11"))))
     exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_vaal_v11"))))
