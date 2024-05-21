@@ -126,7 +126,7 @@ def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
 
 def load_best_model(best_model_path, seg_model='unet_cct', in_chns=1, num_classes=4, device="cuda:0"):
     print("Loading best model from: ", best_model_path)
-    print(f"seg_model: {seg_model}, in_chns: {in_chns}, num_classes: {num_classes}, gpus: {gpus}")
+    print(f"seg_model: {seg_model}, in_chns: {in_chns}, num_classes: {num_classes}, device: {device}")
     model = net_factory(net_type=seg_model, in_chns=in_chns, class_num=num_classes)
     model.load_state_dict(torch.load(best_model_path))
     model = model.to(device)
