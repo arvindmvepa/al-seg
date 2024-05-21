@@ -79,20 +79,15 @@ def get_mean_results(results_dict, num_rounds=9):
         print("base_exp_name: ", base_exp_name)
         # check if all experiments have the same number of rounds
         exp_names = list(exp_dict.keys())
-        for exp_name in exp_names:
-            rounds = list(exp_dict[exp_name].keys())
-            if len(rounds) < num_rounds:
-                del exp_dict[exp_name]
-        if len(exp_dict) == 0:
-            print("No rounds found for ", base_exp_name)
-            continue
-        exp_names = list(exp_dict.keys())
         # calculate mean scores
         rounds = list(exp_dict[exp_names[0]].keys())
         mean_exp_dict = {}
         for round_ in rounds:
             scores = []
             for exp_name in exp_names:
+                if round_ not in exp_dict[exp_name]:
+                    print("\t\tMissing round ", round_, " in ", exp_name)
+                    continue
                 scores += [exp_dict[exp_name][round_]]
             scores = np.array(scores)
             print("\tarray scores shape: ", scores.shape)
