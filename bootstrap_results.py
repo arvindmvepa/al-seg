@@ -176,6 +176,7 @@ def generate_bootstrap_results(predictions, num_bootstraps=1000, seed=0):
     means = np.mean(bootstrap_samples, axis=1)
     return means
 
+
 if __name__ == '__main__':
     root_dir = "/home/amvepa91"
     results_file = "test_bs_results.txt"
