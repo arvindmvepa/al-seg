@@ -36,7 +36,7 @@ In our work we used the [ACDC](https://www.creatis.insa-lyon.fr/Challenge/acdc/d
 and [DAVIS](https://davischallenge.org/) datasets. For all four datasets, we used essentially
 the same pre-processing methods found [here](https://github.com/HiLab-git/WSL4MIS). The 
 pre-processing code can also be found in the `wsl4mis` directory. Scribbles and pre-processed data 
-for the ACDC dataset can be found [here](https://github.com/HiLab-git/WSL4MIS). Images/scribbles for the 
+for the ACDC dataset can be found [here](https://github.com/HiLab-git/WSL4MIS). Scribbles for the 
 MSC-MR dataset can be found [here](https://github.com/BWGZK/CycleMix).
 
 Please store the pre-processed data in a directory with the dataset name in `wsl4mis_data` 
