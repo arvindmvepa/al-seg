@@ -188,10 +188,13 @@ if __name__ == '__main__':
                 print(exp_dir)
                 if "CHAOS" in exp_dir:
                     num_classes = 2
+                    in_chns = 1
                 elif "DAVIS" in exp_dir:
                     num_classes = 2
+                    in_chns = 3
                 elif "MSCMR" in exp_dir:
                     num_classes = 4
+                    in_chns = 1
                 else:
                     print(f"Invalid dataset: {exp_dir}")
                     continue
@@ -228,13 +231,16 @@ if __name__ == '__main__':
                             if len(best_model_path) > 0:
                                 best_model_path = best_model_path[0]
                                 seg_model = os.path.basename(best_model_path).split("_best_model.pth")[0]
-                                model = load_best_model(best_model_path, num_classes=num_classes, seg_model=seg_model, device=device)
+                                model = load_best_model(best_model_path, num_classes=num_classes, in_chns=in_chns,
+                                                        seg_model=seg_model, device=device)
                                 if "sup" in exp_dir:
                                     ann_type = "label"
                                 else:
                                     ann_type = "scribble"
                                 print("ann_type", ann_type)
-                                test_results = generate_test_predictions(model, num_classes=num_classes, seg_model=seg_model, ann_type=ann_type, device=device)
+                                test_results = generate_test_predictions(model, num_classes=num_classes,
+                                                                         seg_model=seg_model, ann_type=ann_type,
+                                                                         device=device)
                                 bs_test_results = generate_bootstrap_results(test_results)
                                 save_results_to_file(bs_test_results, cur_results_file)
                                 confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
