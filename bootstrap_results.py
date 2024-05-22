@@ -25,9 +25,9 @@ def get_base_exp_name(exp_name):
     return exp_name
 
 
-def collect_exp_groups(exp_dirs):
+def collect_exp_groups(exp_dirs_):
     exp_groups = dict()
-    for exp_name in exp_dirs:
+    for exp_name in exp_dirs_:
         print("exp_name: ", exp_name)
         base_exp_name = os.path.basename(get_base_exp_name(exp_name))
         print("base_exp_name: ", base_exp_name)
@@ -38,9 +38,9 @@ def collect_exp_groups(exp_dirs):
     return exp_groups
 
 
-def collect_exp_results(exp_dirs, results_file_name="test_bs_results.txt"):
+def collect_exp_results(exp_dirs_, results_file_name="test_bs_results.txt"):
     print("Collecting results from experiments...")
-    exp_groups = collect_exp_groups(exp_dirs)
+    exp_groups = collect_exp_groups(exp_dirs_)
     print("exp_groups: ", exp_groups)
     results_dict = {}
     for base_exp_name, exp_group in exp_groups.items():
@@ -100,8 +100,8 @@ def get_mean_results(results_dict, num_rounds=9):
     return mean_results_dict
 
 
-def get_ci_results(exp_dirs, results_file_name="test_bs_results.txt"):
-    results_dict = collect_exp_results(exp_dirs, results_file_name=results_file_name)
+def get_ci_results(exp_dirs_, results_file_name="test_bs_results.txt"):
+    results_dict = collect_exp_results(exp_dirs_, results_file_name=results_file_name)
     mean_results_dict = get_mean_results(results_dict)
     ci_results_dict = {}
     print("Calculating confidence intervals...")
