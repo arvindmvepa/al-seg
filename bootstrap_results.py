@@ -201,6 +201,10 @@ if __name__ == '__main__':
                 else:
                     print(f"Invalid dataset: {exp_dir}")
                     continue
+                if "sup" in exp_dir:
+                    ann_type = "label"
+                else:
+                    ann_type = "scribble"
                 round_results = []
                 round_dirs = sorted(glob(os.path.join(exp_dir, "round*")), key=get_round_num)
                 for round_dir in round_dirs:
@@ -236,10 +240,6 @@ if __name__ == '__main__':
                                 seg_model = os.path.basename(best_model_path).split("_best_model.pth")[0]
                                 model = load_best_model(best_model_path, num_classes=num_classes, in_chns=in_chns,
                                                         seg_model=seg_model, device=device)
-                                if "sup" in exp_dir:
-                                    ann_type = "label"
-                                else:
-                                    ann_type = "scribble"
                                 print("ann_type", ann_type)
                                 test_results = generate_test_predictions(model, dataset=dataset,
                                                                          num_classes=num_classes,
