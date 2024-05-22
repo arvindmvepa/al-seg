@@ -29,9 +29,7 @@ def collect_exp_groups(exp_dirs_):
     exp_groups = dict()
     print("exp_dirs_: ", exp_dirs_)
     for exp_name in exp_dirs_:
-        print("exp_name: ", exp_name)
         base_exp_name = os.path.basename(get_base_exp_name(exp_name))
-        print("base_exp_name: ", base_exp_name)
         if base_exp_name in exp_groups:
             exp_groups[base_exp_name] += [exp_name]
         else:
@@ -42,7 +40,6 @@ def collect_exp_groups(exp_dirs_):
 def collect_exp_results(exp_dirs_, results_file_name="test_bs_results.txt"):
     print("Collecting results from experiments...")
     exp_groups = collect_exp_groups(exp_dirs_)
-    print("exp_groups: ", exp_groups)
     results_dict = {}
     for base_exp_name, exp_group in exp_groups.items():
         exp_dict = {}
@@ -183,10 +180,8 @@ if __name__ == '__main__':
         # scai
         glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*sup*CHAOS*")
         exp_dirs = sorted(list(glob(glob_path)))
-        print("exp_dirs: ", exp_dirs)
         overwrite = False
         device = "cuda:0"
-        exp_dirs = [exp_dir for exp_dir in exp_dirs if ("CHAOS" not in exp_dir) and ("DAVIS" not in exp_dir) and ("MSCMR" not in exp_dir)]
         for exp_dir in exp_dirs:
                 if not os.path.exists(exp_dir):
                     continue
