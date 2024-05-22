@@ -178,6 +178,7 @@ if __name__ == '__main__':
     for root_dir in root_dirs:
         # scai
         exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*sup*CHAOS"))))
+        print(exp_dirs)
         overwrite = False
         device = "cuda:0"
         exp_dirs = [exp_dir for exp_dir in exp_dirs if ("CHAOS" not in exp_dir) and ("DAVIS" not in exp_dir) and ("MSCMR" not in exp_dir)]
