@@ -27,6 +27,7 @@ def get_base_exp_name(exp_name):
 
 def collect_exp_groups(exp_dirs_):
     exp_groups = dict()
+    print("exp_dirs_: ", exp_dirs_)
     for exp_name in exp_dirs_:
         print("exp_name: ", exp_name)
         base_exp_name = os.path.basename(get_base_exp_name(exp_name))
