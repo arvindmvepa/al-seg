@@ -74,6 +74,8 @@ class FeatureModel(object):
         if self.fuse_image_data:
             return self.fuse_image_data_with_model_features(model_features)
         else:
+            print("Returning model features without fusing image data...")
+            print("Model Features Shape: ", model_features.shape)
             return model_features
 
     def fuse_image_data_with_model_features(self, model_features):

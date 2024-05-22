@@ -1,15 +1,17 @@
-# CoreCLR: Active Learning in 3D Segmentation through Contrastive Learning
+# Integrating Deep Metric Learning with Coreset for Active Learning in 3D Segmentation
 
-This is the official implementation for the paper "CoreCLR: Active Learning in 3D 
-Segmentation through Contrastive Learning". CoreCLR trains a contrastive learning-based 
-encoder with a unique Group-based Contrastive Learning (GCL) method which utilizes 
-inherent data groupings specific to 3D medical segmentation to generate embeddings for 
-all the slices in the dataset. MultiFeature Coreset (MFC) combines the slices' embeddings, 
-raw pixel values, uncertainty values, along with previously labeled slices and scores the 
-unlabeled slices. It then selects the optimal set of unlabeled slices which are used to 
-train the segmentation model. A flow chart illustrating our pipeline can be seen below.
+This is the official implementation for the paper "Integrating Deep Metric Learning 
+with Coreset for Active Learning in 3D Segmentation". This paper introduces a novel 
+metric learning method for Coreset to perform slice-based active learning in 3D medical 
+segmentation. By merging contrastive learning with inherent data groupings in medical 
+imaging, we learn a metric that emphasizes the relevant differences in samples for training 
+3D medical segmentation models. We perform comprehensive evaluations using both weak and 
+full annotations across four datasets (medical and non-medical). Our findings demonstrate 
+that our approach surpasses existing active learning techniques on both weak and full 
+annotations and obtains superior performance with low-annotation budgets which is crucial 
+in medical imaging.
 
-<img src="./pipeline_v3_2.jpg">
+<img src="./pipeline2.jpg">
 
 ## Usage
 
@@ -34,7 +36,7 @@ In our work we used the [ACDC](https://www.creatis.insa-lyon.fr/Challenge/acdc/d
 and [DAVIS](https://davischallenge.org/) datasets. For all four datasets, we used essentially
 the same pre-processing methods found [here](https://github.com/HiLab-git/WSL4MIS). The 
 pre-processing code can also be found in the `wsl4mis` directory. Scribbles and pre-processed data 
-for the ACDC dataset can be found [here](https://github.com/HiLab-git/WSL4MIS). Scribbles for the 
+for the ACDC dataset can be found [here](https://github.com/HiLab-git/WSL4MIS). Images/scribbles for the 
 MSC-MR dataset can be found [here](https://github.com/BWGZK/CycleMix).
 
 Please store the pre-processed data in a directory with the dataset name in `wsl4mis_data` 

@@ -14,12 +14,8 @@ class BaseDataset(ABC):
         self.all_train_full_im_paths = all_train_full_im_paths
         self.patch_size = patch_size
 
-    def get_data(self, use_labels=False):
-        if use_labels:
-            cases_arr, meta_data, labels_arr = self._get_image_and_label_data()
-        else:
-            labels_arr = None
-            cases_arr, meta_data = self._get_image_data()
+    def get_data(self):
+        cases_arr, meta_data, labels_arr = self._get_image_and_label_data()
         return cases_arr, meta_data, labels_arr
 
     @staticmethod
