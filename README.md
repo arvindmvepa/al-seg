@@ -67,3 +67,8 @@ datasets. Additionally, we have provided yaml files for several baseline methods
 datasets. To apply our method to the other datasets, simply update the `dataset` parameter in the
 `model` section and `dataset_type` in the `data_geometry` section. Please look at the other yaml 
 files as a guide.
+
+## License
+
+This work is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
+To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/4.0/.
