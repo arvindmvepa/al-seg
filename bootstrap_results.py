@@ -180,7 +180,7 @@ if __name__ == '__main__':
         # scai
         glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*")
         exp_dirs = sorted(list(glob(glob_path)))
-        overwrite = False
+        overwrite = True
         device = "cuda:0"
         for exp_dir in exp_dirs:
                 if not os.path.exists(exp_dir):
@@ -189,12 +189,15 @@ if __name__ == '__main__':
                 if "CHAOS" in exp_dir:
                     num_classes = 2
                     in_chns = 1
+                    dataset = "CHAOS_CT"
                 elif "DAVIS" in exp_dir:
                     num_classes = 2
                     in_chns = 3
+                    dataset = "DAVIS"
                 elif "MSCMR" in exp_dir:
                     num_classes = 4
                     in_chns = 1
+                    dataset = "MSCMR"
                 else:
                     print(f"Invalid dataset: {exp_dir}")
                     continue
@@ -238,7 +241,8 @@ if __name__ == '__main__':
                                 else:
                                     ann_type = "scribble"
                                 print("ann_type", ann_type)
-                                test_results = generate_test_predictions(model, num_classes=num_classes,
+                                test_results = generate_test_predictions(model, dataset=dataset,
+                                                                         num_classes=num_classes,
                                                                          seg_model=seg_model, ann_type=ann_type,
                                                                          device=device)
                                 bs_test_results = generate_bootstrap_results(test_results)
