@@ -173,7 +173,7 @@ def generate_bootstrap_results(predictions, num_bootstraps=1000, seed=0):
 
 
 if __name__ == '__main__':
-    root_dirs = ["/home/amvepa91", "/home/asjchoi", "C:\Users\Arvind\Documents"]
+    root_dirs = ["/home/amvepa91", "/home/asjchoi", r"C:\Users\Arvind\Documents"]
     results_file = "test_bs_results.txt"
     for root_dir in root_dirs:
         # scai
