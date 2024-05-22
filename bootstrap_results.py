@@ -173,89 +173,69 @@ def generate_bootstrap_results(predictions, num_bootstraps=1000, seed=0):
 
 
 if __name__ == '__main__':
-    root_dir = "/home/amvepa91"
+    root_dirs = ["/home/amvepa91", "/home/asjchoi", "C:\Users\Arvind\Documents"]
     results_file = "test_bs_results.txt"
-    # scai
-    #exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*"))))
-    exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_stochastic_v13"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_typiclust_v10"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_ensemble_var_v10"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coreset_v10"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coregcn_model_fts_ss10_rstart_v10"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coreset_v11"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coreset_fuse20_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_uncertainty1_v11"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_vaal_v11"))))
-    # alab
-    """
-    exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_db_bald_*v10"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_vaal_v10"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_DMPLS__coreset_fuse20_pos_loss1_wt02_pos_loss2_wt01_pos_loss3_wt005_use_slice_pos_use_phase_use_patient_uncertainty1_v10"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_ensemble_var_v11"))))
-    """
-    # fabien lab
-    """
-    exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_random_v10"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_random_v11"))))
-    exp_dirs += sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*_coregcn_model_fts_ss10_rstart_v10"))))
-    """
-    overwrite = False
-    device = "cuda:0"
-    exp_dirs = [exp_dir for exp_dir in exp_dirs if ("CHAOS" not in exp_dir) and ("DAVIS" not in exp_dir) and ("MSCMR" not in exp_dir)]
-    for exp_dir in exp_dirs:
-            if not os.path.exists(exp_dir):
-                continue
-            print(exp_dir)
-            round_results = []
-            round_dirs = sorted(glob(os.path.join(exp_dir, "round*")), key=get_round_num)
-            for round_dir in round_dirs:
-                print(round_dir)
-                model_dirs = sorted([dirpath for dirpath in list(glob(os.path.join(round_dir, "*"))) if os.path.isdir(dirpath)])
-                val_max = None
-                model_dir_for_val_max = None
-                num_models = 0
-                for model_dir in sorted(model_dirs):
-                    print(model_dir)
-                    val_metric_dict = None
-                    test_metric_dict = None
-                    val_metric_file = os.path.join(model_dir, "val_metrics.json")
-                    if os.path.exists(val_metric_file):
-                        with open(val_metric_file) as val_metric_fp:
-                            val_metric_dict = json.load(val_metric_fp)
-                    else:
-                        continue
-                    val_result = val_metric_dict["performance"]
-                    if val_max is None:
-                        val_max = val_result
-                        model_for_val_max = model_dir
-                    elif isinstance(val_result, float) and val_result > val_max:
-                        val_max = val_result
-                        model_dir_for_val_max = model_dir
-                    num_models += 1
-                cur_results_file = os.path.join(round_dir, results_file)
-                if model_dir_for_val_max is not None:
-                    if (not os.path.exists(cur_results_file)) or overwrite:
-                        best_model_path = list(glob(os.path.join(model_dir_for_val_max, '*_best_model.pth')))
-                        if len(best_model_path) > 0:
-                            best_model_path = best_model_path[0]
-                            seg_model = os.path.basename(best_model_path).split("_best_model.pth")[0]
-                            model = load_best_model(best_model_path, seg_model=seg_model, device=device)
-                            if "sup" in exp_dir:
-                                ann_type = "label"
-                            else:
-                                ann_type = "scribble"
-                            print("ann_type", ann_type)
-                            test_results = generate_test_predictions(model, seg_model=seg_model, ann_type=ann_type, device=device)
-                            bs_test_results = generate_bootstrap_results(test_results)
-                            save_results_to_file(bs_test_results, cur_results_file)
-                            confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
-                            print("result")
-                            print("95% Confidence Interval:", confidence_interval)
+    for root_dir in root_dirs:
+        # scai
+        exp_dirs = sorted(list(glob(os.path.join(root_dir, "al-seg*", "DMPLS*sup*CHAOS"))))
+        overwrite = False
+        device = "cuda:0"
+        exp_dirs = [exp_dir for exp_dir in exp_dirs if ("CHAOS" not in exp_dir) and ("DAVIS" not in exp_dir) and ("MSCMR" not in exp_dir)]
+        for exp_dir in exp_dirs:
+                if not os.path.exists(exp_dir):
+                    continue
+                print(exp_dir)
+                round_results = []
+                round_dirs = sorted(glob(os.path.join(exp_dir, "round*")), key=get_round_num)
+                for round_dir in round_dirs:
+                    print(round_dir)
+                    model_dirs = sorted([dirpath for dirpath in list(glob(os.path.join(round_dir, "*"))) if os.path.isdir(dirpath)])
+                    val_max = None
+                    model_dir_for_val_max = None
+                    num_models = 0
+                    for model_dir in sorted(model_dirs):
+                        print(model_dir)
+                        val_metric_dict = None
+                        test_metric_dict = None
+                        val_metric_file = os.path.join(model_dir, "val_metrics.json")
+                        if os.path.exists(val_metric_file):
+                            with open(val_metric_file) as val_metric_fp:
+                                val_metric_dict = json.load(val_metric_fp)
                         else:
-                            print("no model found")
+                            continue
+                        val_result = val_metric_dict["performance"]
+                        if val_max is None:
+                            val_max = val_result
+                            model_for_val_max = model_dir
+                        elif isinstance(val_result, float) and val_result > val_max:
+                            val_max = val_result
+                            model_dir_for_val_max = model_dir
+                        num_models += 1
+                    cur_results_file = os.path.join(round_dir, results_file)
+                    if model_dir_for_val_max is not None:
+                        if (not os.path.exists(cur_results_file)) or overwrite:
+                            best_model_path = list(glob(os.path.join(model_dir_for_val_max, '*_best_model.pth')))
+                            if len(best_model_path) > 0:
+                                best_model_path = best_model_path[0]
+                                seg_model = os.path.basename(best_model_path).split("_best_model.pth")[0]
+                                model = load_best_model(best_model_path, seg_model=seg_model, device=device)
+                                if "sup" in exp_dir:
+                                    ann_type = "label"
+                                else:
+                                    ann_type = "scribble"
+                                print("ann_type", ann_type)
+                                test_results = generate_test_predictions(model, seg_model=seg_model, ann_type=ann_type, device=device)
+                                bs_test_results = generate_bootstrap_results(test_results)
+                                save_results_to_file(bs_test_results, cur_results_file)
+                                confidence_interval = np.percentile(bs_test_results, [2.5, 97.5])
+                                print("result")
+                                print("95% Confidence Interval:", confidence_interval)
+                            else:
+                                print("no model found")
+                        else:
+                            print("results already exist")
                     else:
-                        print("results already exist")
-                else:
-                    print("no model found")
-    # collect all the results
-    results = get_ci_results(exp_dirs)
-    print(results)
+                        print("no model found")
+        # collect all the results
+        results = get_ci_results(exp_dirs)
+        print(results)
