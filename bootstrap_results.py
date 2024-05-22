@@ -180,7 +180,6 @@ if __name__ == '__main__':
         # scai
         glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*")
         exp_dirs = sorted(list(glob(glob_path)))
-        overwrite = True
         device = "cuda:0"
         for exp_dir in exp_dirs:
                 if not os.path.exists(exp_dir):
@@ -190,14 +189,17 @@ if __name__ == '__main__':
                     num_classes = 2
                     in_chns = 1
                     dataset = "CHAOS_CT"
+                    overwrite = False
                 elif "DAVIS" in exp_dir:
                     num_classes = 2
                     in_chns = 3
                     dataset = "DAVIS"
+                    overwrite = True
                 elif "MSCMR" in exp_dir:
                     num_classes = 4
                     in_chns = 1
                     dataset = "MSCMR"
+                    overwrite = False
                 else:
                     print(f"Invalid dataset: {exp_dir}")
                     continue
