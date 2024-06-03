@@ -116,7 +116,7 @@ class CoreGCN(BaseCoreset):
                 scores, _, feat = models['gcn_module'](inputs, adj)
 
                 feat = feat.detach().cpu().numpy()
-                coreset_inst = self.create_coreset_inst(feat)
+                coreset_inst, _ = self.create_coreset_inst_and_features_for_round(feat)
                 sample_indices_, self.max_dist = coreset_inst.select_batch_(lbl.tolist(), num_samples)
                 sample_indices += sample_indices_
 

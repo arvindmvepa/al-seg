@@ -135,7 +135,7 @@ class BaseCoreset(BaseDataGeometry):
         print("Done getting features")
         return features
 
-    def create_coreset_inst(self, processed_data, prev_round_dir=None, train_logits_path=None, uncertainty_kwargs=None):
+    def create_coreset_inst_and_features_for_round(self, processed_data, prev_round_dir=None, train_logits_path=None, uncertainty_kwargs=None):
         print("Creating coreset instance...")
         print("Getting coreset metric and features...")
         coreset_metric, features = self.get_coreset_metric_and_features(processed_data, prev_round_dir=prev_round_dir,
@@ -153,9 +153,9 @@ class BaseCoreset(BaseDataGeometry):
 
     def get_coreset_inst_and_features_for_round(self, prev_round_dir, train_logits_path=None, uncertainty_kwargs=None):
         feat = self.get_features()
-        coreset_inst, feat = self.create_coreset_inst(feat, prev_round_dir=prev_round_dir,
-                                                      train_logits_path=train_logits_path,
-                                                      uncertainty_kwargs=uncertainty_kwargs)
+        coreset_inst, feat = self.create_coreset_inst_and_features_for_round(feat, prev_round_dir=prev_round_dir,
+                                                                             train_logits_path=train_logits_path,
+                                                                             uncertainty_kwargs=uncertainty_kwargs)
         return coreset_inst, feat
 
     def get_model_features(self, prev_round_dir, train_logits_path):
