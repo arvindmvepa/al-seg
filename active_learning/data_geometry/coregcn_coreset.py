@@ -37,8 +37,7 @@ class CoreGCN(BaseCoreset):
         if skip:
             print("Skipping Calculating CoreGCN!")
             return
-        coreset_inst, feat = self.get_coreset_inst_and_features_for_round(prev_round_dir, train_logits_path,
-                                                                          delete_preds=delete_preds)
+        coreset_inst, feat = self.get_coreset_inst_and_features_for_round(prev_round_dir, train_logits_path)
         sample_indices = []
         already_selected = already_selected.copy()
         if len(already_selected) < self.starting_sample:
