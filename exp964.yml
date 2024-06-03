@@ -1,5 +1,5 @@
 model:
-  model_type: "db_strong"
+  model_type: "strong"
   ann_type: "label"
   dataset: "CHAOS_CT"
   ensemble_size: 5

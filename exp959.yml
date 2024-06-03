@@ -1,5 +1,5 @@
 model:
-  model_type: "db_strong"
+  model_type: "strong"
   ann_type: "label"
   dataset: "CHAOS_CT"
   ensemble_size: 5
@@ -8,6 +8,7 @@ model:
 policy:
   policy_type: ranked
   seed: 0
+  resume: True
   ensemble_kwargs:
     skip: False
     inf_test: True
