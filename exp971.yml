@@ -1,0 +1,29 @@
+model:
+  model_type: "db_strong"
+  ann_type: "label"
+  dataset: "CHAOS_CT"
+  ensemble_size: 5
+  gpus: "cuda:0"
+  inf_train_type: "features"
+policy:
+  policy_type: ranked
+  seed: 2
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [0.05, 0], [0.05, 0], [0.05, 0], [0.2, 0]]
+data_geometry:
+  dataset_type: "CHAOS_CT"
+  data_geometry_type: kcenter_greedy
+  seed: 2
+  contrastive: True
+  feature_model: True
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 8
+    seed: 2
+    use_phase: True
+    pos_loss1: True
+    pos_loss1_wt: .35
+    reset_sampler_every_epoch: True
+exp_dir: "DMPLS_sup_CHAOS_exp2_coreset_pos_loss1_wt035_use_phase_v17"
