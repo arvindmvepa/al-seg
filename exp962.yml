@@ -1,0 +1,20 @@
+model:
+  model_type: "db_strong"
+  ann_type: "label"
+  dataset: "CHAOS_CT"
+  ensemble_size: 5
+  gpus: "cuda:0"
+  inf_train_type: "features"
+policy:
+  policy_type: ranked
+  seed: 3
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [0.05, 0], [0.05, 0], [0.05, 0], [0.2, 0]]
+data_geometry:
+  data_geometry_type: coregcn
+  seed: 3
+  use_model_features: True
+  starting_sample: 10
+exp_dir: "DMPLS_sup_CHAOS_exp3_coregcn_v17"
