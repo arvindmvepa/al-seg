@@ -1,0 +1,15 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  dataset: "DAVIS"
+  ensemble_size: 5
+  gpus: "cuda:0"
+  in_chns: 3
+policy:
+  policy_type: random
+  seed: 1
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.1, 0], [.1, 0], [.1, 0], [.1, 0]]
+exp_dir: "DMPLS_sup_DAVIS_exp1_random_v17"

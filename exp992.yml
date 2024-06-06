@@ -1,0 +1,20 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  dataset: "DAVIS"
+  ensemble_size: 5
+  gpus: "cuda:0"
+  in_chns: 3
+policy:
+  policy_type: ranked
+  seed: 3
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+    inf_train: True
+  rounds: [[.1, 0], [.1, 0], [.1, 0], [.1, 0]]
+model_uncertainty:
+  model_uncertainty_type: stochastic
+  score_func: entropy_w_label_probs
+  seed: 3
+exp_dir: "DMPLS_sup_DAVIS_exp3_stochastic_v17"
