@@ -20,6 +20,7 @@ data_geometry:
   contrastive: True
   feature_model: True
   feature_model_params:
+    in_chns: 3
     encoder: resnet18
     batch_size: 8
     seed: 1
