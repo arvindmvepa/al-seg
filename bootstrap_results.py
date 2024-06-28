@@ -190,12 +190,12 @@ if __name__ == '__main__':
                     num_classes = 2
                     in_chns = 1
                     dataset = "CHAOS_CT"
-                    overwrite = False
+                    overwrite = True
                 elif "DAVIS" in exp_dir:
                     num_classes = 2
                     in_chns = 3
                     dataset = "DAVIS"
-                    overwrite = False
+                    overwrite = True
                 elif "MSCMR" in exp_dir:
                     num_classes = 4
                     in_chns = 1
