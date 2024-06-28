@@ -178,8 +178,9 @@ if __name__ == '__main__':
     results_file = "test_bs_results.txt"
     for root_dir in root_dirs:
         # scai
-        glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*DAVIS*v17")
-        exp_dirs = sorted(list(glob(glob_path)))
+        glob_path0 = os.path.join(root_dir, "al-seg*", "DMPLS*CHAOS*v17")
+        glob_path1 = os.path.join(root_dir, "al-seg*", "DMPLS*DAVIS*v17")
+        exp_dirs = sorted(list(glob(glob_path0))) + sorted(list(glob(glob_path1)))
         device = "cuda:0"
         for exp_dir in exp_dirs:
                 if not os.path.exists(exp_dir):
@@ -226,16 +227,14 @@ if __name__ == '__main__':
                         else:
                             continue
                         val_result = float(val_metric_dict["performance"])
-                        print(f"val_result: {val_result}")
                         if val_max is None:
                             val_max = val_result
-                            model_for_val_max = model_dir
+                            model_dir_for_val_max = model_dir
                         elif isinstance(val_result, float) and val_result > val_max:
                             val_max = val_result
                             model_dir_for_val_max = model_dir
                         num_models += 1
                     cur_results_file = os.path.join(round_dir, results_file)
-                    print("model_dir_for_val_max", model_dir_for_val_max)
                     if model_dir_for_val_max is not None:
                         if (not os.path.exists(cur_results_file)) or overwrite:
                             best_model_path = list(glob(os.path.join(model_dir_for_val_max, '*_best_model.pth')))
