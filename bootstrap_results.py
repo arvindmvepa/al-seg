@@ -178,7 +178,7 @@ if __name__ == '__main__':
     results_file = "test_bs_results.txt"
     for root_dir in root_dirs:
         # scai
-        glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*")
+        glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*DAVIS*v17")
         exp_dirs = sorted(list(glob(glob_path)))
         device = "cuda:0"
         for exp_dir in exp_dirs:
@@ -194,7 +194,7 @@ if __name__ == '__main__':
                     num_classes = 2
                     in_chns = 3
                     dataset = "DAVIS"
-                    overwrite = True
+                    overwrite = False
                 elif "MSCMR" in exp_dir:
                     num_classes = 4
                     in_chns = 1
@@ -225,7 +225,7 @@ if __name__ == '__main__':
                                 val_metric_dict = json.load(val_metric_fp)
                         else:
                             continue
-                        val_result = val_metric_dict["performance"]
+                        val_result = float(val_metric_dict["performance"])
                         if val_max is None:
                             val_max = val_result
                             model_for_val_max = model_dir
