@@ -226,6 +226,7 @@ if __name__ == '__main__':
                         else:
                             continue
                         val_result = float(val_metric_dict["performance"])
+                        print(f"val_result: {val_result}")
                         if val_max is None:
                             val_max = val_result
                             model_for_val_max = model_dir
@@ -234,6 +235,7 @@ if __name__ == '__main__':
                             model_dir_for_val_max = model_dir
                         num_models += 1
                     cur_results_file = os.path.join(round_dir, results_file)
+                    print("model_dir_for_val_max", model_dir_for_val_max)
                     if model_dir_for_val_max is not None:
                         if (not os.path.exists(cur_results_file)) or overwrite:
                             best_model_path = list(glob(os.path.join(model_dir_for_val_max, '*_best_model.pth')))
@@ -253,11 +255,11 @@ if __name__ == '__main__':
                                 print("result")
                                 print("95% Confidence Interval:", confidence_interval)
                             else:
-                                print("no model found")
+                                print("no model found (inner)")
                         else:
                             print("results already exist")
                     else:
-                        print("no model found")
+                        print("no model found (outer)")
         # collect all the results
         results = get_ci_results(exp_dirs)
         print(results)
