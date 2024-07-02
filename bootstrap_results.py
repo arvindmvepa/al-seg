@@ -290,9 +290,9 @@ if __name__ == '__main__':
     bootstrap_by_slice = True
     seed = 0
     for root_dir in root_dirs:
-        glob_path0 = os.path.join(root_dir, "al-seg*", "DMPLS*CHAOS*v17")
-        glob_path1 = os.path.join(root_dir, "al-seg*", "DMPLS*DAVIS*v17")
-        exp_dirs = sorted(list(glob(glob_path0))) + sorted(list(glob(glob_path1)))
+        glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*CHAOS*v17")
+        #glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*DAVIS*v17")
+        exp_dirs = sorted(list(glob(glob_path)))
         for exp_dir in exp_dirs:
                 if not os.path.exists(exp_dir):
                     continue
