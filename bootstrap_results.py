@@ -224,8 +224,8 @@ def get_model_dir_for_val_max(round_dir):
 
 
 def get_bootstrap_results_for_model_dir(model_dir, save_file, num_classes, in_chns, dataset, ann_type,
-                                        num_bootstraps=1000, seed=0, overwrite=False, device="cuda:0",
-                                        bootstrap_by_slice=False):
+                                        num_bootstraps=1000, bootstrap_by_slice=False, seed=0, overwrite=False,
+                                        device="cuda:0"):
     if (not os.path.exists(save_file)) or overwrite:
         best_model_path = list(glob(os.path.join(model_dir, '*_best_model.pth')))
         if len(best_model_path) > 0:
@@ -261,12 +261,12 @@ def get_param_settings(exp_dir):
         num_classes = 2
         in_chns = 1
         dataset = "CHAOS_CT"
-        overwrite = True
+        overwrite = False
     elif "DAVIS" in exp_dir:
         num_classes = 2
         in_chns = 3
         dataset = "DAVIS"
-        overwrite = True
+        overwrite = False
     elif "MSCMR" in exp_dir:
         num_classes = 4
         in_chns = 1
@@ -284,11 +284,10 @@ def get_param_settings(exp_dir):
 
 if __name__ == '__main__':
     root_dirs = ["/home/amvepa91", "/home/asjchoi", r"C:\Users\Arvind\Documents"]
-    # change results_file to something different for different type of bootstrapping
-    # also update params method
-    results_file = "test_bs_results.txt"
+    results_file = "slice_bs_results.txt"
     device = "cuda:0"
     num_bootstraps = 1000
+    bootstrap_by_slice = True
     seed = 0
     for root_dir in root_dirs:
         glob_path0 = os.path.join(root_dir, "al-seg*", "DMPLS*CHAOS*v17")
@@ -311,8 +310,9 @@ if __name__ == '__main__':
                         get_bootstrap_results_for_model_dir(model_dir=model_dir_for_val_max,
                                                             save_file=cur_results_file, num_classes=num_classes,
                                                             in_chns=in_chns, dataset=dataset, ann_type=ann_type,
-                                                            num_bootstraps=num_bootstraps, seed=0, overwrite=overwrite,
-                                                            device=device)
+                                                            num_bootstraps=num_bootstraps,
+                                                            bootstrap_by_slice=bootstrap_by_slice,
+                                                            seed=0, overwrite=overwrite, device=device)
                     else:
                         print("no model found for val max!")
         # collect all the results
