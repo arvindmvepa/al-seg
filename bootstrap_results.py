@@ -316,5 +316,5 @@ if __name__ == '__main__':
                     else:
                         print("no model found for val max!")
         # collect all the results
-        results = get_ci_results(exp_dirs)
+        results = get_ci_results(exp_dirs, results_file_name=results_file)
         print(results)
