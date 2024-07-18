@@ -14,4 +14,4 @@ policy:
 data_geometry:
   data_geometry_type: kcenter_greedy
   seed: 7
-exp_dir: "DMPLS_exp7_coreset_v10
+exp_dir: "DMPLS_exp7_coreset_v10"
