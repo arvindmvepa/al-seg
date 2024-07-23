@@ -31,4 +31,4 @@ data_geometry:
     pos_loss2: True
     pos_loss2_wt: .05
     reset_sampler_every_epoch: True
-exp_dir: "DMPLS_exp0_coreset_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_v17"
+exp_dir: "DMPLS_sup_exp0_coreset_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_v17"
