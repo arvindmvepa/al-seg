@@ -21,8 +21,6 @@ data_geometry:
     encoder: resnet18
     batch_size: 9
     seed: 1
-    fuse_image_data: True
-    fuse_image_data_size_prop: .10
     use_phase: True
     use_patient: True
     pos_loss1: True
