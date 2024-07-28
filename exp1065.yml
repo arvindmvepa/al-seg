@@ -1,0 +1,37 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  dataset: "MSCMR"
+  ensemble_size: 5
+  gpus: "cuda:0"
+  inf_train_type: "features"
+policy:
+  policy_type: ranked
+  seed: 0
+  resume: True
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [0.05, 0], [0.05, 0], [0.05, 0], [0.2, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  dataset_type: "MSCMR"
+  seed: 0
+  contrastive: True
+  feature_model: True
+  pos_wt: 1000
+  default_pos_val: 0
+  use_labels: True
+  label_wt: 1.0
+  normalize_pos_by_label_ct: True
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 8
+    seed: 0
+    fuse_image_data: True
+    fuse_image_data_size_prop: .10
+    use_phase: True
+    pos_loss1: True
+    pos_loss1_wt: .35
+    reset_sampler_every_epoch: True
+exp_dir: "DMPLS_MSCMR_exp0_coreset_pos_wt1000_norm_pos_loss1_wt035_use_phase_label1_v17"
