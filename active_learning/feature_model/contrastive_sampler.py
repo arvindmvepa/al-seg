@@ -113,9 +113,12 @@ class GroupBatchSampler(Sampler):
         nested_by_path_group_index_groups = []
         current_flat_index = 0
         for patient_list in self.hierarchical_data:
+            print("Patient list: ", patient_list)
             path_group_data_groups = []
             for patient_index, phase_list in enumerate(patient_list):
+                print("Phase list: ", phase_list)
                 for phase_index, slice_list in enumerate(phase_list):
+                    print("Slice list: ", slice_list)
                     for i, slice in enumerate(slice_list):
                         current_data_group = list()
                         current_data_group.append(current_flat_index)
