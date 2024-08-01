@@ -90,6 +90,20 @@ class ACDC_Dataset(BaseDataset):
             extra_features.append(slice_num / num_slices_dict[patient_frame_no])
             extra_features.append(slice_num)
 
+            # add pathology group
+            if patient_num <= 20:
+                extra_features.append(0)
+            elif patient_num <= 40:
+                extra_features.append(1)
+            elif patient_num <= 60:
+                extra_features.append(2)
+            elif patient_num <= 80:
+                extra_features.append(3)
+            elif patient_num <= 100:
+                extra_features.append(4)
+            else:
+                raise ValueError("Patient number not found in pathology group")
+
             extra_features_lst.append(np.array(extra_features))
 
         return np.array(extra_features_lst)
@@ -110,7 +124,9 @@ class ACDC_Dataset(BaseDataset):
         non_image_indices['slice_rel_pos_ending_index'] = non_image_indices['slice_rel_pos_starting_index'] + 1
         non_image_indices['slice_pos_starting_index'] = non_image_indices['slice_rel_pos_ending_index']
         non_image_indices['slice_pos_ending_index'] = non_image_indices['slice_pos_starting_index'] + 1
-        non_image_indices['uncertainty_starting_index'] = non_image_indices['slice_pos_ending_index']
+        non_image_indices['path_group_starting_index'] = non_image_indices['slice_pos_ending_index']
+        non_image_indices['path_group_ending_index'] = non_image_indices['path_group_starting_index'] + 1
+        non_image_indices['uncertainty_starting_index'] = non_image_indices['path_group_ending_index']
         non_image_indices['uncertainty_ending_index'] = non_image_indices['uncertainty_starting_index'] + 1
         return non_image_indices
 

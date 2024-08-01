@@ -365,34 +365,25 @@ class BaseCoreset(BaseDataGeometry):
         print(f"MAD (slice-adjacency): {slice_mad}, STAD (slice-adjacency): {slice_stad}")
         """
         non_image_indices = self.dataset.get_non_image_indices()
-        group_starting_index = non_image_indices.get("group_starting_index")
-        group_ending_index = non_image_indices.get("group_ending_index")
+        path_group_starting_index = non_image_indices.get("path_group_starting_index")
 
-        group_ids = np.unique(self.image_meta_data_arr[:, group_starting_index:group_ending_index])
+        path_group_ids = np.unique(self.image_meta_data_arr[:, path_group_starting_index])
         patient_ids = np.unique(self.image_meta_data_arr[:, 0])
         volume_ids = np.unique(self.image_meta_data_arr[:, 1])
 
-        # calculate pairwise differences (overall)
-        total_num_slices = flat_image_data.shape[0]
-        total_pairs = int((total_num_slices * (total_num_slices - 1)) / 2)
-        total_pad = self.calculate_abs_pairwise_diff(flat_image_data)
-        print(f"MPAD: {total_pad/total_pairs}")
-
-        # calculate pairwise differences (patient)
-        total_group_pairs = 0
-        total_group_pad = 0.0
-        for group_id in group_ids:
-            condition = np.all(self.image_meta_data_arr[:, group_starting_index:group_ending_index] == group_id, axis=1)
-            group_indices = np.where(condition)
-            group_flat_image_data = flat_image_data[group_indices]
-            num_group_slices = group_flat_image_data.shape[0]
-            num_group_pairs = int((num_group_slices * (num_group_slices - 1)) / 2)
-            total_group_pairs += num_group_pairs
-            cur_group_pad = self.calculate_abs_pairwise_diff(group_flat_image_data)
-            total_group_pad += cur_group_pad
-        print("Number of groups: ", len(group_ids))
-        print(f"Group MPAD: {total_group_pad/num_group_pairs}")
-
+        # calculate pairwise differences (group)
+        total_path_group_pairs = 0
+        total_path_group_pad = 0.0
+        for path_group_id in path_group_ids:
+            path_group_indices = np.where(self.image_meta_data_arr[:, path_group_starting_index] == path_group_id)[0]
+            path_group_flat_image_data = flat_image_data[path_group_indices]
+            num_path_group_slices = path_group_flat_image_data.shape[0]
+            num_path_group_pairs = int((num_path_group_slices * (num_path_group_slices - 1)) / 2)
+            total_path_group_pairs += num_path_group_pairs
+            cur_path_group_pad = self.calculate_abs_pairwise_diff(path_group_flat_image_data)
+            total_path_group_pad += cur_path_group_pad
+        print("Number of path groups: ", len(path_group_ids))
+        print(f"Path Group MPAD: {total_path_group_pad/total_path_group_pairs}")
 
         # calculate pairwise differences (patient)
         total_patient_pairs = 0
@@ -436,6 +427,12 @@ class BaseCoreset(BaseDataGeometry):
                 cur_slice_pad = self.calculate_abs_slice_diff(volume_flat_image_data)
                 total_slice_pad += cur_slice_pad
         print(f"Slice Adj MPAD: {total_slice_pad / total_slice_adj}")
+
+        # calculate pairwise differences (overall)
+        total_num_slices = flat_image_data.shape[0]
+        total_pairs = int((total_num_slices * (total_num_slices - 1)) / 2)
+        total_pad = self.calculate_abs_pairwise_diff(flat_image_data)
+        print(f"MPAD: {total_pad/total_pairs}")
 
     def calculate_abs_slice_diff(self, flat_image_data):
         num_slices = flat_image_data.shape[0]
