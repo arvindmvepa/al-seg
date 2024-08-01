@@ -292,6 +292,8 @@ class ContrastiveFeatureModel(FeatureModel):
         """Organize the data into a hierarchical list structure based on patient, phase, and slice position"""
         hierarchical_image_data_dict = {}
         for (datum, cfg_arr) in zip(data, cfgs_arr):
+            path_group_id = cfg_arr[self._cfg_indices['path_group_starting_index']:self._cfg_indices['path_group_ending_index']][0]
+            path_group_dict = hierarchical_image_data_dict.get(path_group_id, {})
             patient_id = cfg_arr[self._cfg_indices['patient_starting_index']:self._cfg_indices['patient_ending_index']][0]
             patient_dict = hierarchical_image_data_dict.get(patient_id, {})
             group_id = cfg_arr[self._cfg_indices['phase_starting_index']:self._cfg_indices['phase_ending_index']][0]
@@ -299,26 +301,33 @@ class ContrastiveFeatureModel(FeatureModel):
             slice_pos = cfg_arr[self._cfg_indices['slice_pos_starting_index']:self._cfg_indices['slice_pos_ending_index']][0]
             group_dict[slice_pos] = datum
             patient_dict[group_id] = group_dict
-            hierarchical_image_data_dict[patient_id] = patient_dict
+            path_group_dict[patient_id] = patient_dict
+            hierarchical_image_data_dict[path_group_id] = path_group_dict
         hierarchical_image_data_list = []
         hierarchical_flat_image_data_list = []
         hierarchical_flat_cfg_info_list = []
-        for patient_id in sorted(hierarchical_image_data_dict.keys()):
-            patient_dict = hierarchical_image_data_dict[patient_id]
-            patient_lst = []
-            for group_id in sorted(patient_dict.keys()):
-                group_dict = patient_dict[group_id]
-                group_lst = []
-                for slice_pos in sorted(group_dict.keys()):
-                    slice = group_dict[slice_pos]
-                    group_lst.append(slice)
-                    hierarchical_flat_image_data_list.append(slice)
-                    hierarchical_flat_cfg_info_list.append({"patient_id": patient_id, "group_id": group_id, "slice_pos": slice_pos})
-                patient_lst.append(group_lst)
-            hierarchical_image_data_list.append(patient_lst)
-        self._hierarchical_image_data = hierarchical_image_data_list
-        self._hierarchical_flat_image_data = hierarchical_flat_image_data_list
-        self._hierarchical_flat_cfg_info_list = hierarchical_flat_cfg_info_list
+        for path_group_id in sorted(hierarchical_image_data_dict.keys()):
+            path_group_dict = hierarchical_image_data_dict[path_group_id]
+            path_group_list = []
+            for patient_id in sorted(path_group_dict.keys()):
+                patient_dict = path_group_dict[patient_id]
+                patient_lst = []
+                for group_id in sorted(patient_dict.keys()):
+                    group_dict = patient_dict[group_id]
+                    group_lst = []
+                    for slice_pos in sorted(group_dict.keys()):
+                        slice = group_dict[slice_pos]
+                        group_lst.append(slice)
+                        hierarchical_flat_image_data_list.append(slice)
+                        hierarchical_flat_cfg_info_list.append({"path_group_id": path_group_id,
+                                                                "patient_id": patient_id, "group_id": group_id,
+                                                                "slice_pos": slice_pos})
+                    patient_lst.append(group_lst)
+                path_group_list.append(patient_lst)
+            hierarchical_image_data_list.append(path_group_list)
+            self._hierarchical_image_data = hierarchical_image_data_list
+            self._hierarchical_flat_image_data = hierarchical_flat_image_data_list
+            self._hierarchical_flat_cfg_info_list = hierarchical_flat_cfg_info_list
 
 class NoFeatureModel(FeatureModel):
 
