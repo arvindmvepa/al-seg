@@ -112,9 +112,7 @@ class GroupBatchSampler(Sampler):
         flat_index_groups = []
         nested_by_path_group_index_groups = []
         current_flat_index = 0
-        print("len(self.hierarchical_data): ", len(self.hierarchical_data))
         for patient_list in self.hierarchical_data:
-            print("len(patient_list): ", len(patient_list))
             path_group_data_groups = []
             for patient_index, phase_list in enumerate(patient_list):
                 for phase_index, slice_list in enumerate(phase_list):
@@ -134,11 +132,7 @@ class GroupBatchSampler(Sampler):
                         if self.use_phase:
                             current_phase_flat_index = current_flat_index - i
                             random_slice_in_phase = None
-                            #print("current_phase_flat_index: ", current_phase_flat_index)
-                            #print("len(slice_list): ", len(slice_list))
-                            #print("current data group: ", current_data_group)
                             while (random_slice_in_phase in current_data_group) or (random_slice_in_phase is None):
-                                #print("random slice in phase: ", random_slice_in_phase)
                                 random_slice_in_phase = current_phase_flat_index + self.random_state.choice(
                                     np.arange(len(slice_list)))
                             current_data_group.append(random_slice_in_phase)

@@ -71,6 +71,7 @@ class NT_Xent_Group_Neg(NT_Xent):
 
     def __init__(self, use_path_group=False, use_patient=False, use_phase=False, use_slice_pos=False, debug=False, **kwargs):
         assert use_path_group or use_patient or use_phase or use_slice_pos, "At least one of use_path_group, use_patient, use_phase, or use_slice_pos must be True"
+        self.use_path_group = use_path_group
         self.use_patient = use_patient
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
