@@ -117,9 +117,7 @@ class GroupBatchSampler(Sampler):
             print("len(patient_list): ", len(patient_list))
             path_group_data_groups = []
             for patient_index, phase_list in enumerate(patient_list):
-                print("len(phase_list): ", len(phase_list))
                 for phase_index, slice_list in enumerate(phase_list):
-                    print("len(slice_list): ", len(slice_list))
                     for i, slice in enumerate(slice_list):
                         current_data_group = list()
                         current_data_group.append(current_flat_index)
