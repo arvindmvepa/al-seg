@@ -365,8 +365,8 @@ class BaseCoreset(BaseDataGeometry):
         print(f"MAD (slice-adjacency): {slice_mad}, STAD (slice-adjacency): {slice_stad}")
         """
         non_image_indices = self.dataset.get_non_image_indices()
-        group_starting_index = non_image_indices.index("group_starting_index")
-        group_ending_index = non_image_indices.index("group_ending_index")
+        group_starting_index = non_image_indices.get("group_starting_index")
+        group_ending_index = non_image_indices.get("group_ending_index")
 
         group_ids = np.unique(self.image_meta_data_arr[:, group_starting_index:group_ending_index])
         patient_ids = np.unique(self.image_meta_data_arr[:, 0])
