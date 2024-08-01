@@ -132,7 +132,11 @@ class GroupBatchSampler(Sampler):
                         if self.use_phase:
                             current_phase_flat_index = current_flat_index - i
                             random_slice_in_phase = None
+                            print("current_phase_flat_index: ", current_phase_flat_index)
+                            print("len(slice_list): ", len(slice_list))
+                            print("current data group: ", current_data_group)
                             while (random_slice_in_phase in current_data_group) or (random_slice_in_phase is None):
+                                print("random slice in phase: ", random_slice_in_phase)
                                 random_slice_in_phase = current_phase_flat_index + self.random_state.choice(
                                     np.arange(len(slice_list)))
                             current_data_group.append(random_slice_in_phase)
