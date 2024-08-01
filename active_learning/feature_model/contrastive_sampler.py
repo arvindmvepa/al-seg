@@ -130,7 +130,7 @@ class GroupBatchSampler(Sampler):
                                 current_data_group.append(current_flat_index + random_slice_offset)
                         # randomly pick a slice in the same patient and phase
                         if self.use_phase:
-                            current_phase_flat_index = current_flat_index - i
+                            current_phase_flat_index = self.get_phase_index(current_flat_index, i)
                             random_slice_in_phase = None
                             while (random_slice_in_phase in current_data_group) or (random_slice_in_phase is None):
                                 random_slice_in_phase = current_phase_flat_index + self.random_state.choice(
@@ -138,13 +138,8 @@ class GroupBatchSampler(Sampler):
                             current_data_group.append(random_slice_in_phase)
                         # randomly pick a slice in the same patient
                         if self.use_patient:
-                            current_patient_flat_index = current_phase_flat_index
-                            for iter_phase_index in range(phase_index + 1):
-                                if iter_phase_index == phase_index:
-                                    break
-                                else:
-                                    current_patient_flat_index = current_patient_flat_index - len(
-                                        phase_list[iter_phase_index])
+                            current_patient_flat_index = self.get_patient_index(current_flat_index, i, phase_index,
+                                                                                phase_list)
                             full_patient_slice_lst = sum(phase_list, [])
                             random_slice_in_patient = None
                             while (random_slice_in_patient in current_data_group) or (random_slice_in_patient is None):
@@ -152,13 +147,9 @@ class GroupBatchSampler(Sampler):
                                     np.arange(len(full_patient_slice_lst)))
                             current_data_group.append(random_slice_in_patient)
                         if self.use_path_group:
-                            current_path_group_flat_index = current_patient_flat_index
-                            for iter_patient_index in range(patient_index + 1):
-                                if iter_patient_index == patient_index:
-                                    break
-                                else:
-                                    patient_slices = sum(patient_list[iter_patient_index], [])
-                                    current_path_group_flat_index = current_path_group_flat_index - len(patient_slices)
+                            current_path_group_flat_index = self.get_path_group_index(current_flat_index, i,
+                                                                                      phase_index, phase_list,
+                                                                                      patient_index, patient_list)
                             full_path_group_slice_lst = sum([sum(phase_list_, []) for phase_list_ in patient_list], [])
                             random_slice_in_path_group = None
                             while (random_slice_in_path_group in current_data_group) or (
@@ -171,3 +162,24 @@ class GroupBatchSampler(Sampler):
                         current_flat_index += 1
             nested_by_path_group_index_groups.append(path_group_data_groups)
         return nested_by_path_group_index_groups, flat_index_groups
+
+    def get_phase_index(self, flat_index, i ):
+        return flat_index - i
+
+    def get_patient_index(self, flat_index, i, phase_index, phase_list):
+        flat_index = self.get_phase_index(flat_index, i)
+        for iter_phase_index in range(phase_index + 1):
+            if iter_phase_index == phase_index:
+                break
+            else:
+                flat_index = flat_index - len(phase_list[iter_phase_index])
+        return flat_index
+
+    def get_path_group_index(self, flat_index, i, phase_index, phase_list, patient_index, patient_list):
+        flat_index = self.get_patient_index(flat_index, i, phase_index, phase_list)
+        for iter_patient_index in range(patient_index + 1):
+            if iter_patient_index == patient_index:
+                break
+            else:
+                flat_index = flat_index - len(sum(patient_list[iter_patient_index], []))
+        return flat_index
