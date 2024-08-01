@@ -6,7 +6,7 @@ from active_learning.data_geometry.net import resnet18, resnet50
 import torchvision.transforms as T
 from active_learning.data_geometry.dataset import DatasetWrapper
 from active_learning.feature_model.contrastive_dataset import ContrastiveAugmentedDataSet, get_contrastive_augmentation
-from active_learning.feature_model.contrastive_sampler import PatientPhaseSliceBatchSampler
+from active_learning.feature_model.contrastive_sampler import GroupBatchSampler
 from active_learning.feature_model.contrastive_net import ContrastiveLearner
 from active_learning.feature_model.contrastive_loss import losses
 
@@ -110,9 +110,10 @@ class ContrastiveFeatureModel(FeatureModel):
     def __init__(self, lr=3e-4, batch_size=64, weight_decay=1.0e-6, temperature=0.5, projection_dim=64,
                  num_epochs=100, patch_size=(256,256), loss="nt_xent", loss_wt=1.0, neg_loss=None, neg_loss_wt=0.1,
                  pos_loss1=None, pos_loss1_wt=0.1, pos_loss1_mask=(), pos_loss2=None, pos_loss2_wt=0.1,
-                 pos_loss2_mask=(), pos_loss3=None, pos_loss3_wt=0.1, pos_loss3_mask=(),
-                 patience=5, tol=.01, cl_model_save_name="cl_feature_model.pt", use_patient=False,
-                 use_phase=False, use_slice_pos=False, reset_sampler_every_epoch=False, seed=0, debug=False, **kwargs):
+                 pos_loss2_mask=(), pos_loss3=None, pos_loss3_wt=0.1, pos_loss3_mask=(), pos_loss4=None,
+                 pos_loss4_wt=0.1, pos_loss4_mask=(), patience=5, tol=.01, cl_model_save_name="cl_feature_model.pt",
+                 use_path_group=False, use_patient=False, use_phase=False, use_slice_pos=False,
+                 reset_sampler_every_epoch=False, seed=0, debug=False, **kwargs):
         super().__init__(**kwargs)
         self.lr = lr
         self.batch_size = batch_size
@@ -134,13 +135,17 @@ class ContrastiveFeatureModel(FeatureModel):
         self.pos_loss3 = pos_loss3
         self.pos_loss3_wt = pos_loss3_wt
         self.pos_loss3_mask = pos_loss3_mask
-        if self.neg_loss or self.pos_loss1 or self.pos_loss2 or self.pos_loss3:
+        self.pos_loss4 = pos_loss4
+        self.pos_loss4_wt = pos_loss4_wt
+        self.pos_loss4_mask = pos_loss4_mask
+        if self.neg_loss or self.pos_loss1 or self.pos_loss2 or self.pos_loss3 or self.pos_loss4:
             self.extra_loss = True
         else:
             self.extra_loss = False
         self.patience = patience
         self.tol = tol
         self.cl_model_save_path = os.path.join(self.exp_dir, cl_model_save_name)
+        self.use_path_group = use_path_group
         self.use_patient = use_patient
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
@@ -203,14 +208,14 @@ class ContrastiveFeatureModel(FeatureModel):
 
         if self.extra_loss:
             print(f"Create custom sampler")
-            sampler = PatientPhaseSliceBatchSampler(hierarchical_data=self._hierarchical_image_data,
-                                                    flat_data=self._hierarchical_flat_image_data,
-                                                    flat_cfg_info_data=self._hierarchical_flat_cfg_info_list,
-                                                    batch_size=self.batch_size, seed=self.seed,
-                                                    reset_every_epoch=self.reset_sampler_every_epoch,
-                                                    use_patient=self.use_patient, use_phase=self.use_phase,
-                                                    use_slice_pos=self.use_slice_pos, debug=self.debug,
-                                                    shuffle=True)
+            sampler = GroupBatchSampler(hierarchical_data=self._hierarchical_image_data,
+                                        flat_data=self._hierarchical_flat_image_data,
+                                        flat_cfg_info_data=self._hierarchical_flat_cfg_info_list,
+                                        batch_size=self.batch_size, seed=self.seed,
+                                        reset_every_epoch=self.reset_sampler_every_epoch,
+                                        use_path_group=self.use_path_group,
+                                        use_patient=self.use_patient, use_phase=self.use_phase,
+                                        use_slice_pos=self.use_slice_pos, debug=self.debug, shuffle=True)
             data = self._hierarchical_flat_image_data
         else:
             sampler = None
@@ -228,29 +233,40 @@ class ContrastiveFeatureModel(FeatureModel):
         print("Create standard loss with loss wt: ", self.loss_wt)
         criterion_list.append((criterion, self.loss_wt))
         if self.neg_loss is not None:
-            neg_criterion = losses["nt_xent_neg"](use_patient=self.use_patient, use_phase=self.use_phase,
-                                                      use_slice_pos=self.use_slice_pos, batch_size=self.batch_size,
-                                                      temperature=self.temperature, debug=self.debug)
+            neg_criterion = losses["nt_xent_neg"](use_path_group=self.use_path_group, use_patient=self.use_patient,
+                                                  use_phase=self.use_phase, use_slice_pos=self.use_slice_pos,
+                                                  batch_size=self.batch_size, temperature=self.temperature,
+                                                  debug=self.debug)
             criterion_list.append((neg_criterion, self.neg_loss_wt))
             print("Create negative loss with loss wt: ", self.neg_loss_wt)
         if self.pos_loss1 is not None:
-            pos_criterion1 = losses["nt_xent_pos"](use_patient=self.use_patient, use_phase=self.use_phase,
-                                                   use_slice_pos=self.use_slice_pos, batch_size=self.batch_size,
-                                                   temperature=self.temperature, mask_pos=self.pos_loss1_mask, debug=self.debug)
+            pos_criterion1 = losses["nt_xent_pos"](use_path_group=self.use_path_group, use_patient=self.use_patient,
+                                                   use_phase=self.use_phase, use_slice_pos=self.use_slice_pos,
+                                                   batch_size=self.batch_size, temperature=self.temperature,
+                                                   mask_pos=self.pos_loss1_mask, debug=self.debug)
             criterion_list.append((pos_criterion1, self.pos_loss1_wt))
             print(f"Create positive loss1 with loss wt: {self.pos_loss1_wt} and mask: {self.pos_loss1_mask}")
         if self.pos_loss2 is not None:
-            pos_criterion2 = losses["nt_xent_pos"](use_patient=self.use_patient, use_phase=self.use_phase,
-                                                   use_slice_pos=self.use_slice_pos, batch_size=self.batch_size,
-                                                   temperature=self.temperature, mask_pos=self.pos_loss2_mask, debug=self.debug)
+            pos_criterion2 = losses["nt_xent_pos"](use_path_group=self.use_path_group, use_patient=self.use_patient,
+                                                   use_phase=self.use_phase, use_slice_pos=self.use_slice_pos,
+                                                   batch_size=self.batch_size, temperature=self.temperature,
+                                                   mask_pos=self.pos_loss2_mask, debug=self.debug)
             criterion_list.append((pos_criterion2, self.pos_loss2_wt))
             print(f"Create positive loss2 with loss wt: {self.pos_loss2_wt} and mask: {self.pos_loss2_mask}")
         if self.pos_loss3 is not None:
-            pos_criterion3 = losses["nt_xent_pos"](use_patient=self.use_patient, use_phase=self.use_phase,
-                                                   use_slice_pos=self.use_slice_pos, batch_size=self.batch_size,
-                                                   temperature=self.temperature, mask_pos=self.pos_loss3_mask, debug=self.debug)
+            pos_criterion3 = losses["nt_xent_pos"](use_path_group=self.use_path_group, use_patient=self.use_patient,
+                                                   use_phase=self.use_phase, use_slice_pos=self.use_slice_pos,
+                                                   batch_size=self.batch_size, temperature=self.temperature,
+                                                   mask_pos=self.pos_loss3_mask, debug=self.debug)
             criterion_list.append((pos_criterion3, self.pos_loss3_wt))
             print(f"Create positive loss3 with loss wt: {self.pos_loss3_wt} and mask: {self.pos_loss3_mask}")
+        if self.pos_loss4 is not None:
+            pos_criterion4 = losses["nt_xent_pos"](use_path_group=self.use_path_group, use_patient=self.use_patient,
+                                                   use_phase=self.use_phase, use_slice_pos=self.use_slice_pos,
+                                                   batch_size=self.batch_size, temperature=self.temperature,
+                                                   mask_pos=self.pos_loss4_mask, debug=self.debug)
+            criterion_list.append((pos_criterion4, self.pos_loss4_wt))
+            print(f"Create positive loss3 with loss wt: {self.pos_loss4_wt} and mask: {self.pos_loss4_mask}")
 
 
         optimizer = torch.optim.Adam(model.parameters(), lr=self.lr,
@@ -295,6 +311,8 @@ class ContrastiveFeatureModel(FeatureModel):
         """Organize the data into a hierarchical list structure based on patient, phase, and slice position"""
         hierarchical_image_data_dict = {}
         for (datum, cfg_arr) in zip(data, cfgs_arr):
+            path_group_id = cfg_arr[self._cfg_indices['path_group_starting_index']:self._cfg_indices['path_group_ending_index']][0]
+            path_group_dict = hierarchical_image_data_dict.get(path_group_id, {})
             patient_id = cfg_arr[self._cfg_indices['patient_starting_index']:self._cfg_indices['patient_ending_index']][0]
             patient_dict = hierarchical_image_data_dict.get(patient_id, {})
             group_id = cfg_arr[self._cfg_indices['phase_starting_index']:self._cfg_indices['phase_ending_index']][0]
@@ -302,26 +320,33 @@ class ContrastiveFeatureModel(FeatureModel):
             slice_pos = cfg_arr[self._cfg_indices['slice_pos_starting_index']:self._cfg_indices['slice_pos_ending_index']][0]
             group_dict[slice_pos] = datum
             patient_dict[group_id] = group_dict
-            hierarchical_image_data_dict[patient_id] = patient_dict
+            path_group_dict[patient_id] = patient_dict
+            hierarchical_image_data_dict[path_group_id] = path_group_dict
         hierarchical_image_data_list = []
         hierarchical_flat_image_data_list = []
         hierarchical_flat_cfg_info_list = []
-        for patient_id in sorted(hierarchical_image_data_dict.keys()):
-            patient_dict = hierarchical_image_data_dict[patient_id]
-            patient_lst = []
-            for group_id in sorted(patient_dict.keys()):
-                group_dict = patient_dict[group_id]
-                group_lst = []
-                for slice_pos in sorted(group_dict.keys()):
-                    slice = group_dict[slice_pos]
-                    group_lst.append(slice)
-                    hierarchical_flat_image_data_list.append(slice)
-                    hierarchical_flat_cfg_info_list.append({"patient_id": patient_id, "group_id": group_id, "slice_pos": slice_pos})
-                patient_lst.append(group_lst)
-            hierarchical_image_data_list.append(patient_lst)
-        self._hierarchical_image_data = hierarchical_image_data_list
-        self._hierarchical_flat_image_data = hierarchical_flat_image_data_list
-        self._hierarchical_flat_cfg_info_list = hierarchical_flat_cfg_info_list
+        for path_group_id in sorted(hierarchical_image_data_dict.keys()):
+            path_group_dict = hierarchical_image_data_dict[path_group_id]
+            path_group_list = []
+            for patient_id in sorted(path_group_dict.keys()):
+                patient_dict = path_group_dict[patient_id]
+                patient_lst = []
+                for group_id in sorted(patient_dict.keys()):
+                    group_dict = patient_dict[group_id]
+                    group_lst = []
+                    for slice_pos in sorted(group_dict.keys()):
+                        slice = group_dict[slice_pos]
+                        group_lst.append(slice)
+                        hierarchical_flat_image_data_list.append(slice)
+                        hierarchical_flat_cfg_info_list.append({"path_group_id": path_group_id,
+                                                                "patient_id": patient_id, "group_id": group_id,
+                                                                "slice_pos": slice_pos})
+                    patient_lst.append(group_lst)
+                path_group_list.append(patient_lst)
+            hierarchical_image_data_list.append(path_group_list)
+            self._hierarchical_image_data = hierarchical_image_data_list
+            self._hierarchical_flat_image_data = hierarchical_flat_image_data_list
+            self._hierarchical_flat_cfg_info_list = hierarchical_flat_cfg_info_list
 
 class NoFeatureModel(FeatureModel):
 

@@ -69,16 +69,16 @@ class NT_Xent(nn.Module):
 
 class NT_Xent_Group_Neg(NT_Xent):
 
-    def __init__(self, use_patient=False, use_phase=False, use_slice_pos=False, debug=False, **kwargs):
-        assert use_patient or use_phase or use_slice_pos, "At least one of use_patient, use_phase, use_slice_pos must be True"
+    def __init__(self, use_path_group=False, use_patient=False, use_phase=False, use_slice_pos=False, debug=False, **kwargs):
+        assert use_path_group or use_patient or use_phase or use_slice_pos, "At least one of use_path_group, use_patient, use_phase, or use_slice_pos must be True"
         self.use_patient = use_patient
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
         self.debug = debug
-        self.group_size = 1 + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
-        print(f"Debug custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
+        self.group_size = 1 + int(self.use_path_group) + int(self.use_patient) + int(self.use_phase) + int(self.use_slice_pos)
+        print(f"Debug custom loss with use_path_group {self.use_path_group}, use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
         super().__init__(**kwargs)
-        print(f"Done setting up custom loss with use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
+        print(f"Done setting up custom loss with use_path_group {self.use_path_group}, use_patient {self.use_patient}, use_phase {self.use_phase}, use_slice_pos {self.use_slice_pos}")
 
     def mask_correlated_samples(self, batch_size):
         N = 2 * batch_size
