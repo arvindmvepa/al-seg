@@ -78,8 +78,10 @@ class GroupBatchSampler(Sampler):
 
     def create_random_batch(self, new_batch_path_group_index_groups):
         new_batch = []
+        print("creating a new batch...")
         for path_group_index_group in new_batch_path_group_index_groups:
             random_slice_index_group = self.get_random_slice_index_group(path_group_index_group)
+            print("len(random_slice_index_group), ", len(random_slice_index_group))
             path_group_index_group.remove(random_slice_index_group)
             new_batch.extend(random_slice_index_group)
         return new_batch
