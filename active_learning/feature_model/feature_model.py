@@ -314,7 +314,7 @@ class ContrastiveFeatureModel(FeatureModel):
             path_group_id = cfg_arr[self._cfg_indices['path_group_starting_index']:self._cfg_indices['path_group_ending_index']][0]
             path_group_dict = hierarchical_image_data_dict.get(path_group_id, {})
             patient_id = cfg_arr[self._cfg_indices['patient_starting_index']:self._cfg_indices['patient_ending_index']][0]
-            patient_dict = hierarchical_image_data_dict.get(patient_id, {})
+            patient_dict = path_group_dict.get(patient_id, {})
             group_id = cfg_arr[self._cfg_indices['phase_starting_index']:self._cfg_indices['phase_ending_index']][0]
             group_dict = patient_dict.get(group_id, {})
             slice_pos = cfg_arr[self._cfg_indices['slice_pos_starting_index']:self._cfg_indices['slice_pos_ending_index']][0]
