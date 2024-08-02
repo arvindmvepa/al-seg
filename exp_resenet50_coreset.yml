@@ -3,6 +3,7 @@ model:
   ann_type: "label"
   ensemble_size: 1
   gpus: "cuda:0"
+  base_original_checkpoint: "lvm-med-resnet"
 policy:
   policy_type: ranked
   seed: 0
