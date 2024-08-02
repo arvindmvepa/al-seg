@@ -226,6 +226,9 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
     def _init_test_file_info(self):
         self.orig_test_im_list_file = self.data_params["test_file"]
 
+    def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
+        pass
+
     @property
     def model_string(self):
         return "lvm_med"
