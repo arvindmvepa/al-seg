@@ -23,18 +23,20 @@ import segmentation_models_pytorch as smp
 class LVMMedModel(SoftmaxMixin, BaseModel):
     """WSL4MIS Model class"""
 
-    def __init__(self, dataset="ACDC", ann_type="scribble", ensemble_size=1, in_chns=1,
-                 seg_model='unet_cct', batch_size=6, base_lr=0.01, max_iterations=60000,
-                 deterministic=1, patch_size=(256, 256), inf_train_type="preds", feature_decoder_index=0, seed=0,
-                 gpus="cuda:0", tag=""):
+    def __init__(self, dataset="ACDC", ann_type="scribble", ensemble_size=1, in_chns=3,
+                 base_original_checkpoint="scratch", batch_size=6, base_lr=0.0001, train_beta1=0.9, train_beta2=0.999,
+                 train_weight_decay=0, train_scheduler=0, patch_size=(256, 256), inf_train_type="preds",
+                 feature_decoder_index=0, seed=0, gpus="cuda:0", tag=""):
         super().__init__(ann_type=ann_type, dataset=dataset, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
         self.in_chns = in_chns
-        self.seg_model = seg_model
+        self.base_original_checkpoint = base_original_checkpoint
         self.batch_size = batch_size
-        self.max_iterations = max_iterations
-        self.deterministic = deterministic
         self.base_lr = base_lr
+        self.train_beta1 = train_beta1
+        self.train_beta2 = train_beta2
+        self.train_weight_decay = train_weight_decay
+        self.train_scheduler = train_scheduler
         self.patch_size = patch_size
         self.inf_train_type = inf_train_type
         self.feature_decoder_index = feature_decoder_index
@@ -53,15 +55,15 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
 
         device = torch.device(self.gpus)
         if self.base_original_checkpoint == "scratch":
-            net = smp.Unet(encoder_name="resnet50", encoder_weights=None, in_channels=3, classes=self.num_classes)
+            net = smp.Unet(encoder_name="resnet50", encoder_weights=None, in_channels=self.in_chns, classes=self.num_classes)
         else:
             print("Using pre-trained models from", self.base_original_checkpoint)
             net = smp.Unet(encoder_name="resnet50", encoder_weights=self.base_original_checkpoint,
-                           in_channels=3, classes=self.num_classes)
+                           in_channels=self.in_chns, classes=self.num_classes)
         net.to(device=device)
-        optimizer = optim.Adam(net.parameters(), lr=self.learning_rate, betas=(self.train_beta1, self.train_beta2),
+        optimizer = optim.Adam(net.parameters(), lr=self.base_lr, betas=(self.train_beta1, self.train_beta2),
                                eps=1e-08, weight_decay=self.train_weight_decay)
-        if self.train.scheduler:
+        if self.train_scheduler:
             print("Use scheduler")
             scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-05)
 
@@ -88,7 +90,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
             Epochs:          {self.num_epochs}
             Train batch size:      {self.train_batch_size}
             Val batch size: {self.val_batch_size}
-            Learning rate:   {self.learning_rate}
+            Learning rate:   {self.base_lr}
             Training size:   {n_train}
             Validation size: {n_val}
             Checkpoints:     {self.save_checkpoint}
@@ -131,7 +133,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
                     """
                     pbar.set_postfix(**{'loss (batch)': loss.item()})
 
-                    if self.train.scheduler:
+                    if self.train_scheduler:
                         scheduler.step()
                     # Evaluation round
                     if global_step % (n_train // (1 * self.train_batch_size)) == 0:
