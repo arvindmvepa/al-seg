@@ -263,10 +263,6 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
         else:
             return self.extract_model_prediction(raw_model_outputs, batch_size=batch_size)
 
-    @abstractmethod
-    def _extract_model_prediction_channel(self, raw_model_outputs):
-        raise NotImplementedError()
-
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         new_train_im_list_file = os.path.join(round_dir,
                                               "train_al" + str(cur_total_oracle_split) + "_" + self.tag + \
@@ -293,11 +289,11 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
 
     @property
     def model_string(self):
-        return "dpmls"
+        return "lvm_med"
 
     def __repr__(self):
         mapping = self.__dict__
-        mapping["model_cls"] = "DMPLSModel"
+        mapping["model_cls"] = "LVMMed"
         return json.dumps(mapping)
 
     @property
@@ -307,56 +303,4 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
     @property
     def im_key(self):
         return self.file_keys[0]
-
-
-class DeepBayesianWSL4MISMixin:
-
-    def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
-        model = self.load_best_model(snapshot_dir).to(self.gpus)
-        model.train()
-        full_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
-                                     sup_type=self.ann_type, train_file=self.orig_train_im_list_file,
-                                     data_root=self.data_root)
-        full_trainloader = DataLoader(full_db_train, batch_size=1, shuffle=True, num_workers=8, pin_memory=True)
-        train_file = self.get_round_train_file_paths(round_dir=round_dir,
-                                                     cur_total_oracle_split=cur_total_oracle_split,
-                                                     cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[0]]
-        if os.path.exists(train_file):
-            ann_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
-                                        sup_type=self.ann_type, train_file=train_file, data_root=self.data_root)
-        else:
-            ann_db_train = None
-
-        train_preds = {}
-
-        print("Start Monte Carlo dropout forward passes on the inferences!")
-        print("Each inference will be repeated {} times.".format(self.T))
-        with torch.no_grad():  # All computations inside this context will not track gradients
-            for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
-                volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
-                volume_batch, label_batch, idx = volume_batch.to(self.gpus), label_batch.to(self.gpus), idx.cpu()[0]
-
-                # skip images that are already annotated
-                if ann_db_train is not None:
-                    if full_db_train.sample_list[idx] in ann_db_train.sample_list:
-                        continue
-
-                slice_basename = os.path.basename(full_db_train.sample_list[idx])
-
-                # Use repeat_interleave to create a batch with the same volume repeated T times
-                volume_batch_repeated = volume_batch.repeat_interleave(self.T, dim=0)
-
-                # Use the model to get the repeated outputs
-                outputs = model(volume_batch_repeated)
-                outputs = self.extract_model_prediction(outputs, batch_size=self.T)
-                db_scores = self.get_db_score(outputs)
-                train_preds[slice_basename] = np.float32(db_scores.cpu().detach().numpy())
-
-        train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
-        np.savez_compressed(train_preds_path, **train_preds)
-
-    def get_db_score(self, preds):
-        db_score_func = db_scoring_functions[self.db_score_func]
-        return db_score_func(preds)
-
 
