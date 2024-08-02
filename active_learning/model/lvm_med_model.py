@@ -77,8 +77,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
         db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
                                 sup_type=self.ann_type, in_chns=self.in_chns, train_file=train_file,
                                 data_root=self.data_root)
-        db_val = BaseDataSets(split="val", in_chns=self.in_chns, val_file=self.orig_val_im_list_file,
-                              data_root=self.data_root)
+        db_val = BaseDataSets(split="val", val_file=self.orig_val_im_list_file, data_root=self.data_root)
 
         trainloader = DataLoader(db_train, batch_size=self.batch_size, shuffle=True, num_workers=1, pin_memory=True)
         valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
@@ -146,8 +145,8 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
                         metric_list = 0.0
                         for i_batch, sampled_batch in enumerate(valloader):
                             metric_i = test_single_volume(
-                                sampled_batch["image"], sampled_batch["label"],
-                                model, classes=self.num_classes, gpus=self.gpus)
+                                sampled_batch["image"], sampled_batch["label"], model,
+                                in_chns=self.in_chns, classes=self.num_classes, gpus=self.gpus)
                             metric_list += np.array(metric_i)
                         metric_list = metric_list / len(db_val)
 
@@ -160,6 +159,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
                             torch.save(model.state_dict(), best_model_path)
 
                         logging.info('Validation Dice score: {}'.format(performance))
+                        model.train()
 
         logging.info("Evalutating on test set")
         logging.info("Loading best model on validation")
