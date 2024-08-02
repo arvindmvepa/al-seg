@@ -1,0 +1,15 @@
+model:
+  model_type: "lvm_med"
+  ann_type: "label"
+  ensemble_size: 1
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: False
+  rounds: [[.01, 0], [.001, 0], [.001, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+exp_dir: "LVM_MED_coreset_test_run"
