@@ -11,6 +11,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 from wsl4mis.code.dataloaders.dataset import BaseDataSets, RandomGenerator
+from wsl4mis.code.val_2D import test_single_volume
 from lvm_med.utils.endtoend import dice_loss
 import logging
 import sys
@@ -57,13 +58,13 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
 
         device = torch.device(self.gpus)
         if self.base_original_checkpoint == "scratch":
-            net = smp.Unet(encoder_name="resnet50", encoder_weights=None, in_channels=self.in_chns, classes=self.num_classes)
+            model = smp.Unet(encoder_name="resnet50", encoder_weights=None, in_channels=self.in_chns, classes=self.num_classes)
         else:
             print("Using pre-trained models from", self.base_original_checkpoint)
-            net = smp.Unet(encoder_name="resnet50", encoder_weights=self.base_original_checkpoint,
+            model = smp.Unet(encoder_name="resnet50", encoder_weights=self.base_original_checkpoint,
                            in_channels=self.in_chns, classes=self.num_classes)
-        net.to(device=device)
-        optimizer = optim.Adam(net.parameters(), lr=self.base_lr, betas=(self.train_beta1, self.train_beta2),
+        model.to(device=device)
+        optimizer = optim.Adam(model.parameters(), lr=self.base_lr, betas=(self.train_beta1, self.train_beta2),
                                eps=1e-08, weight_decay=self.train_weight_decay)
         if self.train_scheduler:
             print("Use scheduler")
@@ -103,7 +104,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
         best_model_path = os.path.join(snapshot_dir, 'resenet50_best_model.pth')
         # 5. Begin training
         for epoch in range(self.num_epochs):
-            net.train()
+            model.train()
             epoch_loss = 0
             with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{self.num_epochs}', unit='img') as pbar:
                 for sampled_batch in trainloader:
@@ -112,7 +113,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
                     label_batch = label_batch.long()
 
                     with torch.cuda.amp.autocast(enabled=self.amp):
-                        masks_pred = net(volume_batch)
+                        masks_pred = model(volume_batch)
                         loss = criterion(masks_pred, label_batch) + dice_loss(F.softmax(masks_pred, dim=1).float(),
                                            F.one_hot(label_batch, self.num_classes).permute(0, 3, 1, 2).float(),
                                            multiclass=True)
@@ -120,7 +121,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
                     optimizer.zero_grad(set_to_none=True)
                     grad_scaler.scale(loss).backward()
                     clip_value = 1
-                    torch.nn.utils.clip_grad_norm_(net.parameters(), clip_value)
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), clip_value)
                     grad_scaler.step(optimizer)
                     grad_scaler.update()
 
@@ -138,21 +139,27 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
 
                     if self.train_scheduler:
                         scheduler.step()
+
                     # Evaluation round
                     if global_step % (n_train // (1 * self.batch_size)) == 0:
-                        val_dice_score, val_iou_score = evaluate(net, valloader, device, 1)
-                        val_score = val_dice_score
+                        model.eval()
+                        metric_list = 0.0
+                        for i_batch, sampled_batch in enumerate(valloader):
+                            metric_i = test_single_volume(
+                                sampled_batch["image"], sampled_batch["label"],
+                                model, classes=self.num_classes, gpus=self.gpus)
+                            metric_list += np.array(metric_i)
+                        metric_list = metric_list / len(db_val)
 
-                        if (val_score > best_value):
-                            best_value = val_score
+                        performance = np.mean(metric_list, axis=0)[0]
+                        mean_hd95 = np.mean(metric_list, axis=0)[1]
+
+                        if performance > best_value:
+                            best_value = performance
                             logging.info("New best dice score: {} at epochs {}".format(best_value, epoch + 1))
-                            torch.save(net.state_dict(), best_model_path)
+                            torch.save(model.state_dict(), best_model_path)
 
-                        logging.info('Validation Dice score: {}, IoU score {}'.format(val_dice_score, val_iou_score))
-
-            if epoch + 1 == self.num_epochs:
-                val_dice_score, val_iou_score = evaluate(net, valloader, device, 1)
-                logging.info('Validation Dice score: {}, IoU score {}'.format(val_dice_score, val_iou_score))
+                        logging.info('Validation Dice score: {}'.format(performance))
 
         logging.info("Evalutating on test set")
         logging.info("Loading best model on validation")
