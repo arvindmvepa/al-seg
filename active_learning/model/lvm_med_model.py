@@ -25,7 +25,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
 
     def __init__(self, dataset="ACDC", ann_type="scribble", ensemble_size=1, in_chns=3,
                  base_original_checkpoint="scratch", batch_size=6, base_lr=0.0001, train_beta1=0.9, train_beta2=0.999,
-                 train_weight_decay=0, train_scheduler=0, patch_size=(256, 256), inf_train_type="preds",
+                 train_weight_decay=0, train_scheduler=0, patch_size=(256, 256), amp=False, inf_train_type="preds",
                  feature_decoder_index=0, seed=0, gpus="cuda:0", tag=""):
         super().__init__(ann_type=ann_type, dataset=dataset, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
