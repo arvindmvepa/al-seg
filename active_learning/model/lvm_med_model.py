@@ -94,7 +94,6 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
             Learning rate:   {self.base_lr}
             Training size:   {n_train}
             Validation size: {n_val}
-            Checkpoints:     {self.save_checkpoint}
             Device:          {device.type}
             Patch Size:  {self.patch_size}
             Mixed Precision: {self.amp}
@@ -152,12 +151,6 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
                 val_dice_score, val_iou_score = evaluate(net, valloader, device, 1)
                 logging.info('Validation Dice score: {}, IoU score {}'.format(val_dice_score, val_iou_score))
 
-            if self.save_checkpoint:
-                torch.save(net.state_dict(), os.path.join(snapshot_dir,'checkpoint_epoch{}.pth'.format(epoch + 1)))
-                logging.info(f'Checkpoint {epoch + 1} saved!')
-
-                if epoch > 0 and epoch != (self.num_epochs % 2 - 1):
-                    os.remove(os.path.join(snapshot_dir,'checkpoint_epoch{}.pth'.format(epoch)))
         logging.info("Evalutating on test set")
         logging.info("Loading best model on validation")
         return "Training Finished!"
