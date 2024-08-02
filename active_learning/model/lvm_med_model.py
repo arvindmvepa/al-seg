@@ -90,8 +90,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
 
         logging.info(f'''Starting training:
             Epochs:          {self.num_epochs}
-            Train batch size:      {self.train_batch_size}
-            Val batch size: {self.val_batch_size}
+            Train batch size:      {self.batch_size}
             Learning rate:   {self.base_lr}
             Training size:   {n_train}
             Validation size: {n_val}
@@ -138,7 +137,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
                     if self.train_scheduler:
                         scheduler.step()
                     # Evaluation round
-                    if global_step % (n_train // (1 * self.train_batch_size)) == 0:
+                    if global_step % (n_train // (1 * self.batch_size)) == 0:
                         val_dice_score, val_iou_score = evaluate(net, valloader, device, 1)
                         val_score = val_dice_score
 
