@@ -1,0 +1,16 @@
+model:
+  model_type: "lvm_med"
+  ann_type: "label"
+  ensemble_size: 5
+  gpus: "cuda:0"
+  base_original_checkpoint: "lvm-med-resnet"
+  val_epoch: 5
+policy:
+  policy_type: random
+  seed: 0
+  resume: True
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+exp_dir: "LVMMED_sup_exp4_random_v11"
