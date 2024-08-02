@@ -13,4 +13,4 @@ policy:
     skip: False
     inf_test: True
   rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
-exp_dir: "LVMMED_sup_exp4_random_v11"
+exp_dir: "LVMMED_sup_exp4_random_v18"
