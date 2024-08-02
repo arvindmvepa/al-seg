@@ -112,7 +112,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
 
                     with torch.cuda.amp.autocast(enabled=self.amp):
                         masks_pred = net(volume_batch)
-                        loss = criterion(masks_pred, label_batch) + dice_loss(F.softmax(masks_pred, dim=1).float(),
+                        loss = criterion(masks_pred, label_batch.long()) + dice_loss(F.softmax(masks_pred, dim=1).float(),
                                            F.one_hot(label_batch, self.num_classes).permute(0, 3, 1, 2).float(),
                                            multiclass=True)
 
