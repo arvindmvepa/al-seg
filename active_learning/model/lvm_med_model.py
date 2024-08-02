@@ -17,7 +17,7 @@ import sys
 from lvm_med.evaluate import evaluate, evaluate_3d_iou
 import torch
 import h5py
-import lvm_med.segmentation_models_pytorch as smp
+import segmentation_models_pytorch as smp
 
 
 class LVMMedModel(SoftmaxMixin, BaseModel):
