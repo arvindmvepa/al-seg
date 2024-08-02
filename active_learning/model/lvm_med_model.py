@@ -24,13 +24,14 @@ import segmentation_models_pytorch as smp
 class LVMMedModel(SoftmaxMixin, BaseModel):
     """WSL4MIS Model class"""
 
-    def __init__(self, dataset="ACDC", ann_type="scribble", ensemble_size=1, in_chns=3, num_epochs=50,
+    def __init__(self, dataset="ACDC", ann_type="scribble", ensemble_size=1, in_chns=3, val_epoch=1, num_epochs=50,
                  base_original_checkpoint="scratch", batch_size=8, base_lr=0.0001, train_beta1=0.9, train_beta2=0.999,
                  train_weight_decay=0, train_scheduler=0, patch_size=(256, 256), amp=False, inf_train_type="preds",
                  feature_decoder_index=0, seed=0, gpus="cuda:0", tag=""):
         super().__init__(ann_type=ann_type, dataset=dataset, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
         self.in_chns = in_chns
+        self.val_epoch = val_epoch
         self.num_epochs = num_epochs
         self.base_original_checkpoint = base_original_checkpoint
         self.batch_size = batch_size
@@ -139,57 +140,31 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
                     if self.train_scheduler:
                         scheduler.step()
 
-                    # Evaluation round
-                    if global_step % (n_train // (1 * self.batch_size)) == 0:
-                        model.eval()
-                        metric_list = 0.0
-                        for i_batch, sampled_batch in enumerate(valloader):
-                            metric_i = test_single_volume(
-                                sampled_batch["image"], sampled_batch["label"], model,
-                                in_chns=self.in_chns, classes=self.num_classes, gpus=self.gpus)
-                            metric_list += np.array(metric_i)
-                        metric_list = metric_list / len(db_val)
+                # Evaluation at end of epoch
+                if (epoch + 1) % self.val_epoch == 0:
+                    model.eval()
+                    metric_list = 0.0
+                    for i_batch, sampled_batch in enumerate(valloader):
+                        metric_i = test_single_volume(
+                            sampled_batch["image"], sampled_batch["label"], model,
+                            in_chns=self.in_chns, classes=self.num_classes, gpus=self.gpus)
+                        metric_list += np.array(metric_i)
+                    metric_list = metric_list / len(db_val)
 
-                        performance = np.mean(metric_list, axis=0)[0]
-                        mean_hd95 = np.mean(metric_list, axis=0)[1]
+                    performance = np.mean(metric_list, axis=0)[0]
+                    mean_hd95 = np.mean(metric_list, axis=0)[1]
 
-                        if performance > best_value:
-                            best_value = performance
-                            logging.info("New best dice score: {} at epochs {}".format(best_value, epoch + 1))
-                            torch.save(model.state_dict(), best_model_path)
+                    if performance > best_value:
+                        best_value = performance
+                        logging.info("New best dice score: {} at epochs {}".format(best_value, epoch + 1))
+                        torch.save(model.state_dict(), best_model_path)
 
-                        logging.info('Validation Dice score: {}'.format(performance))
-                        model.train()
+                    logging.info('Validation Dice score: {}'.format(performance))
+                    model.train()
 
         logging.info("Evalutating on test set")
         logging.info("Loading best model on validation")
         return "Training Finished!"
-
-
-    def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
-        train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
-        if os.path.exists(train_preds_path):
-            print(f"Train preds already exist in {train_preds_path}")
-            return
-        model = self.load_best_model(snapshot_dir).to(self.gpus)
-        if self.inf_train_type == "features":
-            model = model.encoder
-        elif self.inf_train_type != "preds":
-            raise ValueError(f"self.inf_train_type {self.inf_train_type } is not recognized. ust be either 'features' or 'preds'")
-        model.eval()
-        full_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
-                                     sup_type=self.ann_type, train_file=self.orig_train_im_list_file,
-                                     data_root=self.data_root)
-        full_trainloader = DataLoader(full_db_train, batch_size=1, shuffle=False, num_workers=8, pin_memory=True)
-        train_preds = {}
-        for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
-            volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
-            volume_batch, label_batch, idx = volume_batch.to(self.gpus), label_batch.to(self.gpus), idx.cpu()[0]
-            slice_basename = os.path.basename(full_db_train.sample_list[idx])
-            outputs = model(volume_batch)
-            outputs_ = self.extract_train_features(outputs)
-            train_preds[slice_basename] = np.float16(outputs_.cpu().detach().numpy())
-        np.savez_compressed(train_preds_path, **train_preds)
 
     def inf_eval_model(self, eval_file, model_no, snapshot_dir, round_dir, metrics_file, cur_total_oracle_split=0,
                        cur_total_pseudo_split=0):
@@ -198,14 +173,13 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
         db_eval = BaseDataSets(split="val", val_file=eval_file, data_root=self.data_root)
         evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
         metric_list = 0.0
-        results_map = {}
         for i_batch, sampled_batch in enumerate(evalloader):
-            metric_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model,
-                                              classes=self.num_classes, gpus=self.gpus)
-            metric_i = np.array(metric_i)
-            results_map[sampled_batch["case"][0]] = np.mean(metric_i[:, 0])
-            metric_list += metric_i
+            metric_i = test_single_volume(
+                sampled_batch["image"], sampled_batch["label"],
+                model, in_chns=self.in_chns, classes=self.num_classes, gpus=self.gpus)
+            metric_list += np.array(metric_i)
         metric_list = metric_list / len(db_eval)
+
         performance = np.mean(metric_list, axis=0)[0]
         mean_hd95 = np.mean(metric_list, axis=0)[1]
         metrics = {"performance": performance, "mean_hd95": mean_hd95}
@@ -213,11 +187,6 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
         with open(metrics_file, "w") as outfile:
             json_object = json.dumps(metrics, indent=4)
             outfile.write(json_object)
-        results_map_file = os.path.join(snapshot_dir, os.path.basename(metrics_file)+"_map.json")
-        with open(results_map_file, "w") as outfile:
-            json_object = json.dumps(results_map, indent=4)
-            outfile.write(json_object)
-
     def inf_val_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         self.inf_eval_model(eval_file=self.orig_val_im_list_file, model_no=model_no, snapshot_dir=snapshot_dir,
                             metrics_file="val_metrics.json", round_dir=round_dir,
@@ -230,44 +199,11 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
                             cur_total_oracle_split=cur_total_oracle_split,
                             cur_total_pseudo_split=cur_total_pseudo_split)
 
-    def generate_model_results(self, snapshot_dir, prediction_ims=None):
-        model = self.load_best_model(snapshot_dir).to(self.gpus)
-        model.eval()
-        db_eval = BaseDataSets(split="val", val_file=self.orig_test_im_list_file, data_root=self.data_root)
-        evalloader = DataLoader(db_eval, batch_size=1, shuffle=False, num_workers=1)
-        for i_batch, sampled_batch in enumerate(evalloader):
-            case = sampled_batch["case"][0]
-            case_wo_ext = os.path.basename(case).split(".")[0]
-            if not any(prediction_im in sampled_batch["case"][0] for prediction_im in prediction_ims):
-                continue
-            prediction_i = test_single_volume_cct(sampled_batch["image"], sampled_batch["label"], model,
-                                                  classes=self.num_classes, gpus=self.gpus, generate=True)
-            prediction_i = np.stack(prediction_i, axis=0)
-            pred_h5 = os.path.join(snapshot_dir, case_wo_ext + "_pred.h5")
-            with h5py.File(pred_h5, "w") as h5f:
-                h5f.create_dataset("data", data=prediction_i, dtype=np.float32)
-
     def load_best_model(self, snapshot_dir):
-        model = net_factory(net_type=self.seg_model, in_chns=self.in_chns, class_num=self.num_classes)
-        best_model_path = os.path.join(snapshot_dir, '{}_best_model.pth'.format(self.seg_model))
+        model = smp.Unet(encoder_name="resnet50", encoder_weights=None, in_channels=self.in_chns, classes=self.num_classes)
+        best_model_path = os.path.join(snapshot_dir, 'resenet50_best_model.pth')
         model.load_state_dict(torch.load(best_model_path))
         return model
-
-    def _extract_model_prediction_channel(self, outputs):
-        return outputs[0]
-
-    def extract_model_prediction(self, raw_model_outputs, batch_size=1):
-        outputs = self._extract_model_prediction_channel(raw_model_outputs)
-        outputs = torch.softmax(outputs, dim=1)
-        if batch_size == 1:
-            outputs = outputs[0]
-        return outputs
-
-    def extract_train_features(self, raw_model_outputs, batch_size=1):
-        if self.inf_train_type == "features":
-            return raw_model_outputs[self.feature_decoder_index]
-        else:
-            return self.extract_model_prediction(raw_model_outputs, batch_size=batch_size)
 
     def get_round_train_file_paths(self, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
         new_train_im_list_file = os.path.join(round_dir,
@@ -289,9 +225,6 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
 
     def _init_test_file_info(self):
         self.orig_test_im_list_file = self.data_params["test_file"]
-
-    def max_iter(self, cur_total_oracle_split, cur_total_pseudo_split):
-        return int(self.max_iterations * (cur_total_oracle_split + cur_total_pseudo_split))
 
     @property
     def model_string(self):
