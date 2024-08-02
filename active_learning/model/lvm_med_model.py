@@ -37,6 +37,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
         self.train_beta2 = train_beta2
         self.train_weight_decay = train_weight_decay
         self.train_scheduler = train_scheduler
+        self.amp = amp
         self.patch_size = patch_size
         self.inf_train_type = inf_train_type
         self.feature_decoder_index = feature_decoder_index
