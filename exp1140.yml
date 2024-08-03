@@ -5,6 +5,7 @@ model:
   gpus: "cuda:0"
   base_original_checkpoint: "lvm-med-resnet"
   val_epoch: 5
+  num_epochs: 5
 policy:
   policy_type: ranked
   seed: 0
