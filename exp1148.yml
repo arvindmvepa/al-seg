@@ -1,13 +1,14 @@
 model:
   model_type: "lvm_med"
   ann_type: "label"
+  dataset: "CHAOS_CT"
   ensemble_size: 5
   gpus: "cuda:0"
   base_original_checkpoint: "lvm-med-resnet"
   val_epoch: 5
 policy:
   policy_type: ranked
-  seed: 0
+  seed: 3
   resume: True
   ensemble_kwargs:
     skip: False
@@ -16,5 +17,5 @@ policy:
 model_uncertainty:
   model_uncertainty_type: stochastic
   score_func: entropy_w_label_probs
-  seed: 0
-exp_dir: "LVMMED_sup_exp0_stochastic_v18"
+  seed: 3
+exp_dir: "LVMMED_sup_CHAOS_exp3_stochastic_v18"
