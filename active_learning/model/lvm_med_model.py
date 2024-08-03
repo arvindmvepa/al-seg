@@ -227,7 +227,28 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
         self.orig_test_im_list_file = self.data_params["test_file"]
 
     def inf_train_model(self, model_no, snapshot_dir, round_dir, cur_total_oracle_split=0, cur_total_pseudo_split=0):
-        pass
+        train_preds_path = os.path.join(snapshot_dir, "train_preds.npz")
+        if os.path.exists(train_preds_path):
+            print(f"Train preds already exist in {train_preds_path}")
+            return
+        model = self.load_best_model(snapshot_dir).to(self.gpus)
+        if self.inf_train_type != "preds":
+            raise ValueError(f"self.inf_train_type {self.inf_train_type } is not recognized. ust be 'preds'")
+        model.eval()
+        full_db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
+                                     sup_type=self.ann_type, in_chns=self.in_chns,
+                                     train_file=self.orig_train_im_list_file,
+                                     data_root=self.data_root)
+        full_trainloader = DataLoader(full_db_train, batch_size=1, shuffle=False, num_workers=8, pin_memory=True)
+        train_preds = {}
+        for i_batch, sampled_batch in tqdm(enumerate(full_trainloader)):
+            volume_batch, label_batch, idx = sampled_batch['image'], sampled_batch['label'], sampled_batch['idx']
+            volume_batch, label_batch, idx = volume_batch.to(self.gpus), label_batch.to(self.gpus), idx.cpu()[0]
+            slice_basename = os.path.basename(full_db_train.sample_list[idx])
+            outputs = model(volume_batch)
+            outputs_ = outputs[0]
+            train_preds[slice_basename] = np.float16(outputs_.cpu().detach().numpy())
+        np.savez_compressed(train_preds_path, **train_preds)
 
     @property
     def model_string(self):
