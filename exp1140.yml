@@ -12,7 +12,7 @@ policy:
   ensemble_kwargs:
     skip: False
     inf_test: True
-  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+  rounds: [[.001, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
 model_uncertainty:
   model_uncertainty_type: stochastic
   score_func: entropy_w_label_probs
