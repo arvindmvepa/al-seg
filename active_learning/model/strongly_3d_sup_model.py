@@ -20,7 +20,7 @@ class Strongly3DSupModel(StronglySupModel):
     """Strong supervision model for active learning."""
 
     def __init__(self, dataset="ACDC_3D", ann_type="label", ensemble_size=1, seg_model='unet_3D', batch_size=6,
-                 base_lr=0.01, max_iterations=60000, deterministic=1, patch_size=(16, 256, 256), seed=0, gpus="cuda:0",
+                 base_lr=0.01, max_iterations=6000, deterministic=1, patch_size=(16, 256, 256), seed=0, gpus="cuda:0",
                  tag="", **kwargs):
         super().__init__(ann_type=ann_type, dataset=dataset, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag, **kwargs)
