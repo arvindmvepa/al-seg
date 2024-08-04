@@ -53,7 +53,8 @@ class Strongly3DSupModel(StronglySupModel):
                                                      cur_total_oracle_split=cur_total_oracle_split,
                                                      cur_total_pseudo_split=cur_total_pseudo_split)[self.file_keys[0]]
 
-        db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size)]),
+        db_train = BaseDataSets(split="train", transform=transforms.Compose([RandomGenerator(self.patch_size,
+                                                                                             data_type="3d")]),
                                 sup_type=self.ann_type, train_file=train_file, data_root=self.data_root)
         db_val = BaseDataSets(split="val", val_file=self.orig_val_im_list_file, data_root=self.data_root)
 
