@@ -4,6 +4,7 @@ model:
   ensemble_size: 1
   batch_size: 6
   gpus: "cuda:0"
+  max_iterations: 1000
 policy:
   policy_type: random
   seed: 0

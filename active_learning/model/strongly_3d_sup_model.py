@@ -5,7 +5,7 @@ import os
 import logging
 import numpy as np
 from tqdm import tqdm
-from wsl4mis.code.val_2D import test_single_volume
+from wsl4mis.code.val_3D import test_single_volume
 from wsl4mis.code.dataloaders.dataset import BaseDataSets, RandomGenerator
 from wsl4mis.code.networks.net_factory_3d import net_factory_3d
 from wsl4mis.code.utils import losses
