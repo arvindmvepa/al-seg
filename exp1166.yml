@@ -1,0 +1,15 @@
+model:
+  model_type: "strong_3d"
+  ann_type: "label"
+  ensemble_size: 5
+  batch_size: 1
+  gpus: "cuda:0"
+  max_iterations: 12000
+policy:
+  policy_type: random
+  seed: 1
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0], [.05, 0], [.05, 0], [.05, 0], [.20, 0]]
+exp_dir: "DMPLS_3D_diff_exp1_random1_v18"
