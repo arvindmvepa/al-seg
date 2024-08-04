@@ -1,5 +1,5 @@
 model:
-  model_type: "strong"
+  model_type: "strong_3d"
   ann_type: "label"
   ensemble_size: 1
   batch_size: 6
