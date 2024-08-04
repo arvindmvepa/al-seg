@@ -167,6 +167,12 @@ class Strongly3DSupModel(StronglySupModel):
             json_object = json.dumps(metrics, indent=4)
             outfile.write(json_object)
 
+    def load_best_model(self, snapshot_dir):
+        model = net_factory_3d(net_type=self.seg_model, in_chns=self.in_chns, class_num=self.num_classes)
+        best_model_path = os.path.join(snapshot_dir, '{}_best_model.pth'.format(self.seg_model))
+        model.load_state_dict(torch.load(best_model_path))
+        return model
+
     def _extract_model_prediction_channel(self, outputs):
         return outputs
 
