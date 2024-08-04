@@ -71,6 +71,25 @@ model_params = {
                           "train_logits_path": "train_preds.npz"
                       },
                   },
+    "strong_3d": {
+        "label":
+            {
+                "train_file": os.path.join("wsl4mis",
+                                           "data",
+                                           "ACDC",
+                                           "train_3d.txt"),
+                "val_file": os.path.join("wsl4mis",
+                                         "data",
+                                         "ACDC",
+                                         "val.txt"),
+                "test_file": os.path.join("wsl4mis",
+                                          "data",
+                                          "ACDC",
+                                          "test.txt"),
+                "train_results_dir": "",
+                "train_logits_path": "train_preds.npz"
+            },
+    },
     "db_dpmls":            {
                   "scribble":
                       {

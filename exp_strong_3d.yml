@@ -1,0 +1,14 @@
+model:
+  model_type: "strong"
+  ann_type: "label"
+  ensemble_size: 1
+  batch_size: 6
+  gpus: "cuda:0"
+policy:
+  policy_type: random
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0]]
+exp_dir: "DMPLS_strong_3d_run"
