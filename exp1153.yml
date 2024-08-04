@@ -11,4 +11,4 @@ policy:
     skip: False
     inf_test: False
   rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
-exp_dir: "DMPLS_3D_exp3_random_v10"
+exp_dir: "DMPLS_3D_exp3_random_v18"
