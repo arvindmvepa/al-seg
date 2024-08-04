@@ -9,6 +9,6 @@ policy:
   seed: 1
   ensemble_kwargs:
     skip: False
-    inf_test: False
+    inf_test: True
   rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
 exp_dir: "DMPLS_3D_exp1_random_v18"
