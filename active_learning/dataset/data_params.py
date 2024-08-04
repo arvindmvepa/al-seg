@@ -42,6 +42,27 @@ data_params = {
                           "train_logits_path": "train_preds.npz"
                       } 
             },
+    "ACDC_3D": {
+        "label":
+            {"data_root": os.path.join("wsl4mis_data",
+                                       "ACDC"),
+             "train_file": os.path.join("wsl4mis",
+                                        "data",
+                                        "ACDC",
+                                        "train_3d.txt"),
+             "val_file": os.path.join("wsl4mis",
+                                      "data",
+                                      "ACDC",
+                                      "val.txt"),
+             "test_file": os.path.join("wsl4mis",
+                                       "data",
+                                       "ACDC",
+                                       "test.txt"),
+             "num_classes": 4,
+             "train_results_dir": "",
+             "train_logits_path": "train_preds.npz"
+             }
+    },
     "CHAOS_CT": {
         "scribble":
             {"data_root": os.path.join("wsl4mis_data",
