@@ -101,6 +101,7 @@ class ACDC_Dataset(BaseDataset):
             extra_features.append(slice_num / num_slices_dict[patient_frame_no])
             extra_features.append(slice_num)
 
+            """"
             # add pathology group
             if patient_num <= 20:
                 extra_features.append(0)
@@ -114,6 +115,31 @@ class ACDC_Dataset(BaseDataset):
                 extra_features.append(4)
             else:
                 raise ValueError("Patient number not found in pathology group")
+            """
+            # add height group
+            height = im_meta_datum['Height']
+            if height < 160.0:
+                extra_features.append(0)
+            elif height < 163.0:
+                extra_features.append(1)
+            elif height < 166.0:
+                extra_features.append(2)
+            elif height < 170.0:
+                extra_features.append(3)
+            elif height < 172.0:
+                extra_features.append(4)
+            elif height < 175.0:
+                extra_features.append(5)
+            elif height < 176.0:
+                extra_features.append(6)
+            elif height < 180.0:
+                extra_features.append(7)
+            elif height < 184.0:
+                extra_features.append(8)
+            elif height <= 192.0:
+                extra_features.append(9)
+            else:
+                raise ValueError("Patient height invalid")
 
             extra_features_lst.append(np.array(extra_features))
 
