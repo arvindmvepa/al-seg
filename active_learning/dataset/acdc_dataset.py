@@ -58,7 +58,7 @@ class ACDC_Dataset(BaseDataset):
             hist, bin_edges = np.histogram(values, bins=num_bins)
             for i in range(len(hist)):
                 bin_range = f'{bin_edges[i]:.1f}-{bin_edges[i + 1]:.1f}'
-                print(f'{bin_range}: {"#" * hist[i]}')
+                print(f'{bin_range}: #: {len(hist[i])}')
 
         # encode all cfg features
         extra_features_lst = []
