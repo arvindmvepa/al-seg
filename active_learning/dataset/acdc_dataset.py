@@ -44,17 +44,21 @@ class ACDC_Dataset(BaseDataset):
         height_sstd = 0
         weight_mean = 0
         weight_sstd = 0
-        for im_meta_datum in image_meta_data:
-            height_mean += im_meta_datum['Height']
-            weight_mean += im_meta_datum['Weight']
-        height_mean /= len(image_meta_data)
-        weight_mean /= len(image_meta_data)
+        height_lst = [im_meta_datum['Height'] for im_meta_datum in image_meta_data]
+        weight_lst = [im_meta_datum['Weight'] for im_meta_datum in image_meta_data]
+        height_mean = np.mean(height_lst)
+        weight_mean = np.mean(weight_lst)
+        height_sstd = np.std(height_lst)
+        weight_sstd = np.std(weight_lst)
 
-        for im_meta_datum in image_meta_data:
-            height_sstd += (im_meta_datum['Height'] - height_mean) ** 2
-            weight_sstd += (im_meta_datum['Weight'] - weight_mean) ** 2
-        height_sstd = (height_sstd / (len(image_meta_data) - 1)) ** (.5)
-        weight_sstd = (weight_sstd / (len(image_meta_data) - 1)) ** (.5)
+        # Generate histogram of height and weight
+        num_bins = 5
+        for values, name in zip([height_lst, weight_lst], ['Height', 'Weight']):
+            print("Histogram for {}".format(name))
+            hist, bin_edges = np.histogram(values, bins=num_bins)
+            for i in range(len(hist)):
+                bin_range = f'{bin_edges[i]:.1f}-{bin_edges[i + 1]:.1f}'
+                print(f'{bin_range}: {"#" * hist[i]}')
 
         # encode all cfg features
         extra_features_lst = []
