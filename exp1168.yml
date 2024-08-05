@@ -1,0 +1,21 @@
+model:
+  model_type: "lvm_med"
+  ann_type: "label"
+  dataset: "DAVIS"
+  ensemble_size: 5
+  gpus: "cuda:0"
+  in_chns: 3
+  base_original_checkpoint: "imagenet_v2"
+  val_epoch: 5
+policy:
+  policy_type: ranked
+  seed: 3
+  resume: True
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 3
+exp_dir: "LVMMED_imagenet_sup_DAVIS_exp3_coreset_v19"
