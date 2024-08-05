@@ -17,5 +17,6 @@ policy:
   rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
+  dataset_type: "DAVIS"
   seed: 1
 exp_dir: "LVMMED_imagenet_sup_DAVIS_exp1_coreset_v19"
