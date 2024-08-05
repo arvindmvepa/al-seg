@@ -242,7 +242,7 @@ class ACDC_Dataset(BaseDataset):
             elif weight <= 123.0:
                 extra_features.append(19)
             else:
-                raise ValueError("Patient height invalid")
+                raise ValueError("Patient weight invalid")
 
 
             extra_features_lst.append(np.array(extra_features))
