@@ -174,20 +174,30 @@ class ACDC_Dataset(BaseDataset):
                 extra_features.append(1)
             elif height < 163.0:
                 extra_features.append(2)
-            elif height < 165.0:
-                extra_features.append(3)
             elif height < 166.0:
-                extra_features.append(4)
+                extra_features.append(3)
             elif height < 169.0:
-                extra_features.append(5)
+                extra_features.append(4)
             elif height < 170.0:
-                extra_features.append(6)
-            elif height < 171.0:
-                extra_features.append(7)
+                extra_features.append(5)
             elif height < 172.0:
+                extra_features.append(6)
+            elif height < 174.0:
+                extra_features.append(7)
+            elif height < 175.0:
                 extra_features.append(8)
-            elif height <= 192.0:
+            elif height <= 176.0:
                 extra_features.append(9)
+            elif height < 178.0:
+                extra_features.append(10)
+            elif height < 180.0:
+                extra_features.append(11)
+            elif height < 184.0:
+                extra_features.append(12)
+            elif height < 186.0:
+                extra_features.append(13)
+            elif height <= 192.0:
+                extra_features.append(14)
             else:
                 raise ValueError("Patient height invalid")
 
