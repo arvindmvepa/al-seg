@@ -117,6 +117,7 @@ class ACDC_Dataset(BaseDataset):
                 raise ValueError("Patient number not found in pathology group")
             """
             # add height group
+            """
             height = im_meta_datum['Height']
             if height < 160.0:
                 extra_features.append(0)
@@ -140,6 +141,32 @@ class ACDC_Dataset(BaseDataset):
                 extra_features.append(9)
             else:
                 raise ValueError("Patient height invalid")
+            """
+            # add weight group
+            weight = im_meta_datum['Weight']
+            if weight < 55.0:
+                extra_features.append(0)
+            elif weight < 60.0:
+                extra_features.append(1)
+            elif weight < 68.0:
+                extra_features.append(2)
+            elif weight < 74.0:
+                extra_features.append(3)
+            elif weight < 77.0:
+                extra_features.append(4)
+            elif weight < 80.0:
+                extra_features.append(5)
+            elif weight < 85.0:
+                extra_features.append(6)
+            elif weight < 93.0:
+                extra_features.append(7)
+            elif weight < 98.4:
+                extra_features.append(8)
+            elif weight <= 123.0:
+                extra_features.append(9)
+            else:
+                raise ValueError("Patient height invalid")
+
 
             extra_features_lst.append(np.array(extra_features))
 
