@@ -55,10 +55,17 @@ class ACDC_Dataset(BaseDataset):
         num_bins = 10
         for values, name in zip([height_lst, weight_lst], ['Height', 'Weight']):
             print("Histogram for {}".format(name))
-            hist, bin_edges = np.histogram(values, bins=num_bins)
+            # Calculate the bin edges using percentiles
+            percentiles = np.linspace(0, 100, num_bins + 1)
+            bin_edges = np.percentile(values, percentiles)
+
+            # Count occurrences in each bin
+            hist, _ = np.histogram(values, bins=bin_edges)
+
+            # Generate text version of the histogram
             for i in range(len(hist)):
                 bin_range = f'{bin_edges[i]:.1f}-{bin_edges[i + 1]:.1f}'
-                print(f'{bin_range}: #: {hist[i]}')
+                print(f'{bin_range}: {"#" * hist[i]}')
 
         # encode all cfg features
         extra_features_lst = []
