@@ -1,10 +1,9 @@
 model:
   model_type: "lvm_med"
   ann_type: "label"
-  dataset: "DAVIS"
+  dataset: "CHAOS_CT"
   ensemble_size: 5
   gpus: "cuda:0"
-  in_chns: 3
   base_original_checkpoint: "imagenet_v2"
   val_epoch: 5
 policy:
@@ -17,6 +16,6 @@ policy:
   rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
 data_geometry:
   data_geometry_type: kcenter_greedy
-  dataset_type: "DAVIS"
+  dataset_type: "CHAOS_CT"
   seed: 0
 exp_dir: "LVMMED_imagenet_sup_DAVIS_exp0_coreset_v19"
