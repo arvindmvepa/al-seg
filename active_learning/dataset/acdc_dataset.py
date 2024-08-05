@@ -65,7 +65,7 @@ class ACDC_Dataset(BaseDataset):
             # Generate text version of the histogram
             for i in range(len(hist)):
                 bin_range = f'{bin_edges[i]:.1f}-{bin_edges[i + 1]:.1f}'
-                print(f'{bin_range}: {"#" * hist[i]}')
+                print(f'{bin_range}: #: {hist[i]}')
 
         # encode all cfg features
         extra_features_lst = []
