@@ -1,9 +1,19 @@
 from active_learning.dataset.chaos_dataset import BaseDataset
 from collections import defaultdict
+import h5py
 import numpy as np
 
 
 class DAVIS_Dataset(BaseDataset):
+
+    def _load_image_and_label(self, case):
+        h5f = h5py.File(case, 'r')
+        image = h5f['image'][:]
+        patched_image = self._patch_im(image, self.patch_size)
+        patched_image = patched_image[np.newaxis,]
+        label = h5f["label"][:]
+        patched_label = self._patch_im(label, self.patch_size)
+        return patched_image, patched_label[np.newaxis,]
 
     def _load_meta_data(self, im_data_file):
         meta_data = {}
