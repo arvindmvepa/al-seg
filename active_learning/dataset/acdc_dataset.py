@@ -52,7 +52,7 @@ class ACDC_Dataset(BaseDataset):
         weight_sstd = np.std(weight_lst)
 
         # Generate histogram of height and weight
-        num_bins = 5
+        num_bins = 10
         for values, name in zip([height_lst, weight_lst], ['Height', 'Weight']):
             print("Histogram for {}".format(name))
             hist, bin_edges = np.histogram(values, bins=num_bins)
