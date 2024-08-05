@@ -9,10 +9,10 @@ model:
   val_epoch: 5
 policy:
   policy_type: random
-  seed: 0
+  seed: 3
   resume: True
   ensemble_kwargs:
     skip: False
     inf_test: True
   rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
-exp_dir: "LVMMED_imagenet_sup_DAVIS_exp0_random_v18"
+exp_dir: "LVMMED_imagenet_sup_DAVIS_exp3_random_v18"
