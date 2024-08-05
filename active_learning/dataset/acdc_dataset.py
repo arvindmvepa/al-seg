@@ -166,7 +166,6 @@ class ACDC_Dataset(BaseDataset):
                 extra_features.append(9)
             else:
                 raise ValueError("Patient height invalid")
-            """
             height = im_meta_datum['Height']
             if height < 158.0:
                 extra_features.append(0)
@@ -186,7 +185,7 @@ class ACDC_Dataset(BaseDataset):
                 extra_features.append(7)
             elif height < 175.0:
                 extra_features.append(8)
-            elif height <= 176.0:
+            elif height < 176.0:
                 extra_features.append(9)
             elif height < 178.0:
                 extra_features.append(10)
@@ -198,6 +197,50 @@ class ACDC_Dataset(BaseDataset):
                 extra_features.append(13)
             elif height <= 192.0:
                 extra_features.append(14)
+            else:
+                raise ValueError("Patient height invalid")
+            """
+            weight = im_meta_datum['Weight']
+            if weight < 53.0:
+                extra_features.append(0)
+            elif weight < 55.0:
+                extra_features.append(1)
+            elif weight < 57.0:
+                extra_features.append(2)
+            elif weight < 60.0:
+                extra_features.append(3)
+            elif weight < 64.0:
+                extra_features.append(4)
+            elif weight < 68.0:
+                extra_features.append(5)
+            elif weight < 70.0:
+                extra_features.append(6)
+            elif weight < 74.0:
+                extra_features.append(7)
+            elif weight < 75.0:
+                extra_features.append(8)
+            elif weight < 77.0:
+                extra_features.append(9)
+            elif weight < 79.0:
+                extra_features.append(10)
+            elif weight < 80.0:
+                extra_features.append(11)
+            elif weight < 82.0:
+                extra_features.append(12)
+            elif weight < 85.0:
+                extra_features.append(13)
+            elif weight < 89.0:
+                extra_features.append(14)
+            elif weight < 93.0:
+                extra_features.append(15)
+            elif weight < 95.0:
+                extra_features.append(16)
+            elif weight < 98.4:
+                extra_features.append(17)
+            elif weight < 106.0:
+                extra_features.append(18)
+            elif weight <= 123.0:
+                extra_features.append(19)
             else:
                 raise ValueError("Patient height invalid")
 
