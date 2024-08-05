@@ -5,7 +5,7 @@ model:
   ensemble_size: 5
   gpus: "cuda:0"
   in_chns: 3
-  base_original_checkpoint: "youtube_train.pth.tar"
+  base_original_checkpoint: "youtube"
   val_epoch: 5
 policy:
   policy_type: random
