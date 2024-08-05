@@ -52,7 +52,7 @@ class ACDC_Dataset(BaseDataset):
         weight_sstd = np.std(weight_lst)
 
         # Generate histogram of height and weight
-        num_bins = 20
+        num_bins = 15
         for values, name in zip([height_lst, weight_lst], ['Height', 'Weight']):
             print("Histogram for {}".format(name))
             # Calculate the bin edges using percentiles
@@ -141,7 +141,7 @@ class ACDC_Dataset(BaseDataset):
                 extra_features.append(9)
             else:
                 raise ValueError("Patient height invalid")
-            """
+
             # add weight group
             weight = im_meta_datum['Weight']
             if weight < 55.0:
@@ -163,6 +163,30 @@ class ACDC_Dataset(BaseDataset):
             elif weight < 98.4:
                 extra_features.append(8)
             elif weight <= 123.0:
+                extra_features.append(9)
+            else:
+                raise ValueError("Patient height invalid")
+            """
+            height = im_meta_datum['Height']
+            if height < 158.0:
+                extra_features.append(0)
+            elif height < 160.0:
+                extra_features.append(1)
+            elif height < 163.0:
+                extra_features.append(2)
+            elif height < 165.0:
+                extra_features.append(3)
+            elif height < 166.0:
+                extra_features.append(4)
+            elif height < 169.0:
+                extra_features.append(5)
+            elif height < 170.0:
+                extra_features.append(6)
+            elif height < 171.0:
+                extra_features.append(7)
+            elif height < 172.0:
+                extra_features.append(8)
+            elif height <= 192.0:
                 extra_features.append(9)
             else:
                 raise ValueError("Patient height invalid")
