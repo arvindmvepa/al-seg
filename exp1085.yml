@@ -17,7 +17,7 @@ data_geometry:
   seed: 0
   contrastive: True
   feature_model: True
-  pos_wt: 1000
+  pos_wt: 1500
   default_pos_val: 0
   use_labels: True
   label_wt: 1.0
@@ -38,4 +38,4 @@ data_geometry:
     pos_loss2_wt: .05
     reset_sampler_every_epoch: True
     reg_data_dir: "/local2/amvepa91/FSDiffReg/ACDC/training_mod"
-exp_dir: "DMPLS_exp0_coreset_pos_wt1000_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_reg_label1_v15"
+exp_dir: "DMPLS_exp0_coreset_pos_wt1500_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_reg_label1_v15"
