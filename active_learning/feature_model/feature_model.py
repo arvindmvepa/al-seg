@@ -74,6 +74,7 @@ class FeatureModel(object):
         model_features = self.get_model_features()
         if self.fuse_image_data:
             #return self.fuse_image_data_with_model_features(model_features)
+            print("Fusing regularized image data with model features")
             return self.fuse_reg_image_data_with_model_features(model_features)
         else:
             print("Returning model features without fusing image data...")
