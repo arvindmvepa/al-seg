@@ -353,8 +353,8 @@ class ContrastiveFeatureModel(FeatureModel):
         reg_images = []
         reg_labels = []
         for (datum, cfg_arr) in zip(data, cfgs_arr):
-            patient_num = cfg_arr[cfg_indices['patient_starting_index']:cfg_indices['patient_ending_index']][0]
-            reg_index = cfg_arr[cfg_indices['reg_starting_index']:cfg_indices['reg_ending_index']][0]
+            patient_num = int(cfg_arr[cfg_indices['patient_starting_index']:cfg_indices['patient_ending_index']][0])
+            reg_index = int(cfg_arr[cfg_indices['reg_starting_index']:cfg_indices['reg_ending_index']][0])
             patient_file = "patient" + str(patient_num).zfill(3) + ".h5"
             h5f = h5py.File(patient_file, 'r')
             image = h5f['reg_image'].squeeze().transpose(1, 2, 0)[:, reg_index].flatten()
