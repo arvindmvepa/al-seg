@@ -358,9 +358,10 @@ class ContrastiveFeatureModel(FeatureModel):
             patient_file = "patient" + str(patient_num).zfill(3) + ".h5"
             patient_file = os.path.join(self.reg_data_dir, patient_file)
             h5f = h5py.File(patient_file, 'r')
-            print(type(h5f['reg_image']))
-            image = h5f['reg_image'].squeeze().transpose(1, 2, 0)[:, reg_index].flatten()
-            label = h5f["reg_scribble"][:, reg_index].flatten()
+            image = h5f.get('reg_image').value
+            label = h5f.get('reg_scribble').value
+            image = image.squeeze().transpose(1, 2, 0)[:, reg_index].flatten()
+            label = label[:, reg_index].flatten()
             reg_images.append(image)
             reg_labels.append(label)
         self.reg_images = np.array(reg_images)
