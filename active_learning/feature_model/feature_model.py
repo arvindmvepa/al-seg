@@ -73,7 +73,8 @@ class FeatureModel(object):
     def get_features(self):
         model_features = self.get_model_features()
         if self.fuse_image_data:
-            return self.fuse_image_data_with_model_features(model_features)
+            #return self.fuse_image_data_with_model_features(model_features)
+            return self.fuse_reg_image_data_with_model_features(model_features)
         else:
             print("Returning model features without fusing image data...")
             print("Model Features Shape: ", model_features.shape)
