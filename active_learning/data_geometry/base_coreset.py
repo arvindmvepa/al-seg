@@ -109,12 +109,13 @@ class BaseCoreset(BaseDataGeometry):
     def setup_image_features(self):
         print("Setting up image features...")
         print("Getting data")
-        image_data, self.image_meta_data, self.image_labels_arr  =  self.dataset.get_data()
+        image_data, self.image_meta_data, self.image_labels_arr = self.dataset.get_data()
         print("Processing meta_data...")
         self.image_meta_data_arr = self.dataset.process_meta_data(self.image_meta_data)
         self.non_image_indices = self.dataset.get_non_image_indices()
         print("Initializing image features for feature model...")
         self.feature_model.init_image_features(image_data, self.image_meta_data_arr, self.non_image_indices)
+        self.image_labels_arr = self.feature_model.get_reg_labels()
         print("Done setting up image features")
 
     def setup_alg(self):

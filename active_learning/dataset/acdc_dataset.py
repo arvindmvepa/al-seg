@@ -87,8 +87,13 @@ class ACDC_Dataset(BaseDataset):
 
             # add relative slice position and general slice position
             slice_num = self._extract_slice_no(file_name)
-            extra_features.append(slice_num / num_slices_dict[patient_frame_no])
+            rel_pos = slice_num / num_slices_dict[patient_frame_no]
+            extra_features.append(rel_pos)
             extra_features.append(slice_num)
+
+            # add position for registered image
+            reg_index = int(np.round(rel_pos * 32))
+            extra_features.append(reg_index)
 
             extra_features_lst.append(np.array(extra_features))
 
@@ -110,6 +115,8 @@ class ACDC_Dataset(BaseDataset):
         non_image_indices['slice_rel_pos_ending_index'] = non_image_indices['slice_rel_pos_starting_index'] + 1
         non_image_indices['slice_pos_starting_index'] = non_image_indices['slice_rel_pos_ending_index']
         non_image_indices['slice_pos_ending_index'] = non_image_indices['slice_pos_starting_index'] + 1
+        non_image_indices['reg_starting_index'] = non_image_indices['slice_pos_ending_index']
+        non_image_indices['reg_ending_index'] = non_image_indices['reg_starting_index'] + 1
         non_image_indices['uncertainty_starting_index'] = non_image_indices['slice_pos_ending_index']
         non_image_indices['uncertainty_ending_index'] = non_image_indices['uncertainty_starting_index'] + 1
         return non_image_indices

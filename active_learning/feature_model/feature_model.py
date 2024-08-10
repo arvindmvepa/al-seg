@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import torch
+import h5py
 from torch.utils.data import DataLoader, Sampler
 from active_learning.data_geometry.net import resnet18, resnet50
 import torchvision.transforms as T
@@ -95,6 +96,23 @@ class FeatureModel(object):
         print(f"Fused features shape: {fused_data.shape}")
         return fused_data
 
+    def fuse_reg_image_data_with_model_features(self, model_features):
+        print("Fusing reg image data with model features...")
+        print("Original Model Features Shape: ", model_features.shape)
+        image_data_size = self.reg_images.shape[1]
+        model_features_size = model_features.shape[1]
+        num_model_features_repeats = int(self.fuse_image_data_size_prop * image_data_size/model_features_size)
+        model_features = np.repeat(model_features, num_model_features_repeats, axis=1)
+        self.image_data_starting_index = 0
+        self.image_data_ending_index = self.reg_images.shape[1]
+        self.model_feature_starting_index = self.image_data_ending_index
+        self.model_feature_ending_index = self.model_feature_starting_index + model_features.shape[1]
+
+        fused_data = np.hstack((self.reg_images, model_features))
+        print(f"Model features shape after repeats: {model_features.shape}")
+        print(f"Fused features shape: {fused_data.shape}")
+        return fused_data
+
     def get_model_features(self):
         return self.image_features
 
@@ -112,7 +130,8 @@ class ContrastiveFeatureModel(FeatureModel):
                  pos_loss1=None, pos_loss1_wt=0.1, pos_loss1_mask=(), pos_loss2=None, pos_loss2_wt=0.1,
                  pos_loss2_mask=(), pos_loss3=None, pos_loss3_wt=0.1, pos_loss3_mask=(),
                  patience=5, tol=.01, cl_model_save_name="cl_feature_model.pt", use_patient=False,
-                 use_phase=False, use_slice_pos=False, reset_sampler_every_epoch=False, seed=0, debug=False, **kwargs):
+                 use_phase=False, use_slice_pos=False, reset_sampler_every_epoch=False, seed=0, debug=False,
+                 reg_data_dir=None, **kwargs):
         super().__init__(**kwargs)
         self.lr = lr
         self.batch_size = batch_size
@@ -145,6 +164,7 @@ class ContrastiveFeatureModel(FeatureModel):
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
         self.reset_sampler_every_epoch = reset_sampler_every_epoch
+        self.reg_data_dir = reg_data_dir
         self.seed = seed
         self.debug = debug
         self._cfg_indices = None
@@ -155,6 +175,7 @@ class ContrastiveFeatureModel(FeatureModel):
     def init_image_features(self, data, cfgs_arr, cfg_indices):
         self._cfg_indices = cfg_indices
         self._hierarchical_organizing(data, cfgs_arr)
+        self._extract_reg_slices(data, cfgs_arr, cfg_indices)
         super().init_image_features(data, cfgs_arr, cfg_indices)
 
     def init_model_features(self):
@@ -189,6 +210,9 @@ class ContrastiveFeatureModel(FeatureModel):
             feat = features.detach().cpu().numpy()
             torch.cuda.empty_cache()
         return feat
+
+    def get_reg_labels(self):
+        return self.reg_labels
 
     def train(self, model):
         if os.path.exists(self.cl_model_save_path):
@@ -322,6 +346,24 @@ class ContrastiveFeatureModel(FeatureModel):
         self._hierarchical_image_data = hierarchical_image_data_list
         self._hierarchical_flat_image_data = hierarchical_flat_image_data_list
         self._hierarchical_flat_cfg_info_list = hierarchical_flat_cfg_info_list
+
+
+    def _extract_reg_slices(self, data, cfgs_arr, cfg_indices):
+        """Extract slices from the data that are registered"""
+        reg_images = []
+        reg_labels = []
+        for (datum, cfg_arr) in zip(data, cfgs_arr):
+            patient_num = cfg_arr[cfg_indices['patient_starting_index']:cfg_indices['patient_ending_index']][0]
+            reg_index = cfg_arr[cfg_indices['reg_starting_index']:cfg_indices['reg_ending_index']][0]
+            patient_file = "patient" + str(patient_num).zfill(3) + ".h5"
+            h5f = h5py.File(patient_file, 'r')
+            image = h5f['reg_image'].squeeze().transpose(1, 2, 0)[:, reg_index].flatten()
+            label = h5f["reg_scribble"][:, reg_index].flatten()
+            reg_images.append(image)
+            reg_labels.append(label)
+        self.reg_images = np.array(reg_images)
+        self.reg_labels = np.array(reg_labels)
+
 
 class NoFeatureModel(FeatureModel):
 
