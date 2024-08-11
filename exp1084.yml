@@ -2,7 +2,7 @@ model:
   model_type: "dmpls"
   ann_type: "scribble"
   dataset: "ACDC"
-  ensemble_size: 1
+  ensemble_size: 5
   gpus: "cuda:0"
 policy:
   policy_type: ranked
@@ -37,5 +37,5 @@ data_geometry:
     pos_loss2: True
     pos_loss2_wt: .05
     reset_sampler_every_epoch: True
-    reg_data_dir: "/local2/amvepa91/FSDiffReg/ACDC/training_mod"
+    reg_data_dir: "/local2/amvepa91/FSDiffReg/ACDC/training_group_reg"
 exp_dir: "DMPLS_exp4_coreset_pos_wt500_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_reg_label1_v15"

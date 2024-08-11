@@ -38,7 +38,6 @@ def metric_w_config(image_vec1, image_vec2, image_metric, max_dist, wt_max_dist_
         if normalize_pos_by_label_ct:
             position_metric_val /= len(np.flatnonzero(labels))
         position_metric_val *= pos_wt
-        print("Position metric val: ", position_metric_val)
     else:
         position_metric_val = 0
     mdl_metric_val = np.sum(image_metric(im1_mdl_features, im2_mdl_features, np.ones(im1_mdl_features.shape)))
