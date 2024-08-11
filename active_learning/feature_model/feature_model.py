@@ -111,7 +111,7 @@ class ContrastiveFeatureModel(FeatureModel):
                  num_epochs=100, patch_size=(256,256), loss="nt_xent", loss_wt=1.0, neg_loss=None, neg_loss_wt=0.1,
                  pos_loss1=None, pos_loss1_wt=0.1, pos_loss1_mask=(), pos_loss2=None, pos_loss2_wt=0.1,
                  pos_loss2_mask=(), pos_loss3=None, pos_loss3_wt=0.1, pos_loss3_mask=(),
-                 patience=5, tol=.01, cl_model_save_name="cl_feature_model.pt", use_patient=False,
+                 patience=5, tol=.01, cl_model_save_name="cl_feature_model.pt", cl_prev_path=None, use_patient=False,
                  use_phase=False, use_slice_pos=False, reset_sampler_every_epoch=False, seed=0, debug=False, **kwargs):
         super().__init__(**kwargs)
         self.lr = lr
@@ -141,6 +141,7 @@ class ContrastiveFeatureModel(FeatureModel):
         self.patience = patience
         self.tol = tol
         self.cl_model_save_path = os.path.join(self.exp_dir, cl_model_save_name)
+        self.cl_prev_path = cl_prev_path
         self.use_patient = use_patient
         self.use_phase = use_phase
         self.use_slice_pos = use_slice_pos
@@ -191,6 +192,10 @@ class ContrastiveFeatureModel(FeatureModel):
         return feat
 
     def train(self, model):
+        if self.cl_prev_path is not None and isinstance(self.cl_prev_path, str) and os.path.exists(self.cl_prev_path):
+            model.load_state_dict(torch.load(self.cl_prev_path))
+            print("Loaded prev contrastive feature model from disk")
+            return
         if os.path.exists(self.cl_model_save_path):
             model.load_state_dict(torch.load(self.cl_model_save_path))
             print("Loaded contrastive feature model from disk")
