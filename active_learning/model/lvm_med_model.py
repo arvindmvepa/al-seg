@@ -105,7 +105,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
             Patch Size:  {self.patch_size}
             Mixed Precision: {self.amp}
         ''')
-        best_model_path = os.path.join(snapshot_dir, 'resenet50_best_model.pth')
+        best_model_path = os.path.join(snapshot_dir, f'{self.encoder_name}_best_model.pth')
         # 5. Begin training
         for epoch in range(self.num_epochs):
             model.train()
@@ -205,7 +205,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
 
     def load_best_model(self, snapshot_dir):
         model = smp.Unet(encoder_name="resnet50", encoder_weights=None, in_channels=self.in_chns, classes=self.num_classes)
-        best_model_path = os.path.join(snapshot_dir, 'resenet50_best_model.pth')
+        best_model_path = os.path.join(snapshot_dir, f'{self.encoder_name}_best_model.pth')
         model.load_state_dict(torch.load(best_model_path))
         return model
 
