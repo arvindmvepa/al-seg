@@ -364,11 +364,11 @@ class ContrastiveFeatureModel(FeatureModel):
             h5f = h5py.File(patient_file, 'r')
 
             if phase_index == 1:
-                image = np.array(h5f['reg_image_ed'][:])
-                label = np.array(h5f['reg_scribble_ed'][:])
+                image = np.array(h5f['ED']['reg_image_ed'][:])
+                label = np.array(h5f['ED']['reg_scribble_ed'][:])
             elif phase_index == 0:
-                image = np.array(h5f['reg_image_es'][:])
-                label = np.array(h5f['reg_scribble_es'][:])
+                image = np.array(h5f['ES']['reg_image_es'][:])
+                label = np.array(h5f['ES']['reg_scribble_es'][:])
             else:
                 raise ValueError("Invalid phase index!")
 
