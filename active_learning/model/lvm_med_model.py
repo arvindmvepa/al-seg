@@ -67,7 +67,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
         else:
             print("Using pre-trained models from", self.base_original_checkpoint)
             model = smp.Unet(encoder_name=self.encoder_name, encoder_weights=self.base_original_checkpoint,
-                           in_channels=self.in_chns, classes=self.num_classes)
+                             in_channels=self.in_chns, classes=self.num_classes)
         model.to(device=device)
         optimizer = optim.Adam(model.parameters(), lr=self.base_lr, betas=(self.train_beta1, self.train_beta2),
                                eps=1e-08, weight_decay=self.train_weight_decay)
@@ -204,7 +204,8 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
                             cur_total_pseudo_split=cur_total_pseudo_split)
 
     def load_best_model(self, snapshot_dir):
-        model = smp.Unet(encoder_name="resnet50", encoder_weights=None, in_channels=self.in_chns, classes=self.num_classes)
+        model = smp.Unet(encoder_name=self.encoder_name, encoder_weights=None, in_channels=self.in_chns,
+                         classes=self.num_classes)
         best_model_path = os.path.join(snapshot_dir, f'{self.encoder_name}_best_model.pth')
         model.load_state_dict(torch.load(best_model_path))
         return model
