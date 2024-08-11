@@ -15,7 +15,7 @@ policy:
     skip: False
     inf_test: True
   rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
-data_geometry:
+model_uncertainty:
   model_uncertainty_type: stochastic
   score_func: entropy_w_label_probs
   seed: 2
