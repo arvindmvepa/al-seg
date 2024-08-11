@@ -357,13 +357,23 @@ class ContrastiveFeatureModel(FeatureModel):
         for (datum, cfg_arr) in zip(data, cfgs_arr):
             patient_num = int(cfg_arr[cfg_indices['patient_starting_index']:cfg_indices['patient_ending_index']][0])
             reg_index = int(cfg_arr[cfg_indices['reg_starting_index']:cfg_indices['reg_ending_index']][0])
+            phase_index = int(cfg_arr[cfg_indices['phase_starting_index']:cfg_indices['phase_ending_index']][0])
+
             patient_file = "patient" + str(patient_num).zfill(3) + ".h5"
             patient_file = os.path.join(self.reg_data_dir, patient_file)
             h5f = h5py.File(patient_file, 'r')
-            image = np.array(h5f['reg_image'][:])
-            label = np.array(h5f['reg_scribble'][:])
-            image = image.squeeze().transpose(1, 2, 0)[:, reg_index].flatten()
-            label = label[:, reg_index].flatten()
+
+            if phase_index == 1:
+                image = np.array(h5f['reg_image_ed'][:])
+                label = np.array(h5f['reg_scribble_ed'][:])
+            elif phase_index == 0:
+                image = np.array(h5f['reg_image_es'][:])
+                label = np.array(h5f['reg_scribble_es'][:])
+            else:
+                raise ValueError("Invalid phase index!")
+
+            image = image[:, :, reg_index].flatten()
+            label = label[:, :, reg_index].flatten()
             reg_images.append(image)
             reg_labels.append(label)
         self.reg_images = np.array(reg_images)
