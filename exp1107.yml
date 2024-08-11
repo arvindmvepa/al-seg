@@ -1,0 +1,41 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  dataset: "ACDC"
+  ensemble_size: 5
+  gpus: "cuda:0"
+policy:
+  policy_type: ranked
+  resume: True
+  seed: 2
+  ensemble_kwargs:
+    skip: False
+    inf_test: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+data_geometry:
+  data_geometry_type: kcenter_greedy
+  seed: 2
+  contrastive: True
+  feature_model: True
+  pos_wt: 80
+  default_pos_val: 0
+  use_labels: True
+  label_wt: 1.0
+  normalize_pos_by_label_ct: True
+  feature_model_params:
+    encoder: resnet18
+    batch_size: 9
+    seed: 2
+    fuse_image_data: True
+    fuse_image_data_size_prop: .10
+    use_phase: True
+    use_patient: True
+    pos_loss1: True
+    pos_loss1_wt: .35
+    pos_loss1_mask:
+      - 2
+    pos_loss2: True
+    pos_loss2_wt: .05
+    reset_sampler_every_epoch: True
+    reg_data_dir: "/local2/amvepa91/FSDiffReg/ACDC/training_group_reg"
+exp_dir: "DMPLS_exp2_coreset_pos_wt80_norm_pos_loss1_wt035_pos_loss2_wt005_use_phase_use_patient_reg_label1_v15"

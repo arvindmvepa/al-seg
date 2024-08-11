@@ -2,7 +2,7 @@ from active_learning.policy.policy_builder import PolicyBuilder
 
 
 if __name__ == "__main__":
-    indices = list(range(1075, 1080))
+    indices = list(range(1095, 1100))
     exp_files = [f"exp{index}.yml" for index in indices]
     for exp_file in exp_files:
         policy = PolicyBuilder.build_policy(exp_file)
