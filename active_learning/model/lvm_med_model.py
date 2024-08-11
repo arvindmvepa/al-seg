@@ -30,7 +30,7 @@ class LVMMedModel(SoftmaxMixin, BaseModel):
                  amp=False, inf_train_type="preds", feature_decoder_index=0, seed=0, gpus="cuda:0", tag=""):
         super().__init__(ann_type=ann_type, dataset=dataset, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag)
-        if encoder_name != "resnet50" or encoder_name != "resnet18":
+        if encoder_name != "resnet50" and encoder_name != "resnet18":
             raise ValueError(f"encoder_name {encoder_name} is not recognized. Must be 'resnet50' or 'resnet18'")
         self.encoder_name = encoder_name
         self.in_chns = in_chns
