@@ -298,7 +298,7 @@ if __name__ == '__main__':
     seed = 0
     for root_dir in root_dirs:
         glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*v1[0-9]")
-        ignore_strings = ["CHAOS", "DAVIS", "MSCMR", "LVMMED"]
+        ignore_strings = []
         #glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*CHAOS*v17")
         #glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*DAVIS*v17")
         exp_dirs = sorted(list(glob(glob_path)))
