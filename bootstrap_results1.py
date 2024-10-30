@@ -121,11 +121,11 @@ def get_ci_results(exp_dirs_, results_file_name="test_bs_results.txt"):
     return ci_results_dict
 
 
-def load_best_model(best_model_path, encoder_name="resnet50", seg_model='unet_cct', in_chns=1, num_classes=4,
+def load_best_model(best_model_path, seg_model='unet_cct', in_chns=1, num_classes=4,
                     device="cuda:0"):
     print("Loading best model from: ", best_model_path)
     print(f"seg_model: {seg_model}, in_chns: {in_chns}, num_classes: {num_classes}, device: {device}")
-    model = smp.Unet(encoder_name=encoder_name, encoder_weights=None, in_channels=in_chns, classes=num_classes)
+    model = smp.Unet(encoder_name=seg_model, encoder_weights=None, in_channels=in_chns, classes=num_classes)
     model.load_state_dict(torch.load(best_model_path, map_location=torch.device(device)))
     model = model.to(device)
     return model
@@ -152,6 +152,8 @@ def generate_test_predictions(model, seg_model="unet_cct", num_classes=4, ann_ty
     if seg_model == "unet_cct":
         eval_vol_func = test_single_volume_cct
     elif seg_model == "unet":
+        eval_vol_func = test_single_volume
+    elif seg_model == "resnet50":
         eval_vol_func = test_single_volume
     else:
         raise ValueError(f"Invalid seg_model: {seg_model}")
@@ -232,7 +234,8 @@ def get_bootstrap_results_for_model_dir(model_dir, save_file, num_classes, in_ch
         best_model_path = list(glob(os.path.join(model_dir, '*_best_model.pth')))
         if len(best_model_path) > 0:
             best_model_path = best_model_path[0]
-            seg_model = os.path.basename(best_model_path).split("_best_model.pth")[0]
+            #seg_model = os.path.basename(best_model_path).split("_best_model.pth")[0]
+            seg_model = "resnet50"
             model = load_best_model(best_model_path, num_classes=num_classes, in_chns=in_chns,
                                     seg_model=seg_model, device=device)
             print("ann_type", ann_type)
