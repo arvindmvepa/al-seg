@@ -297,7 +297,7 @@ if __name__ == '__main__':
     bootstrap_by_slice = True
     seed = 0
     for root_dir in root_dirs:
-        glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*LVMMED*v1[0-9]")
+        glob_path = os.path.join(root_dir, "al-seg*", "LVMMED*v1[0-9]")
         ignore_strings = []
         #glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*CHAOS*v17")
         #glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*DAVIS*v17")
