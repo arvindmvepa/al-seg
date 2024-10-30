@@ -121,10 +121,11 @@ def get_ci_results(exp_dirs_, results_file_name="test_bs_results.txt"):
     return ci_results_dict
 
 
-def load_best_model(best_model_path, seg_model='unet_cct', in_chns=1, num_classes=4, device="cuda:0"):
+def load_best_model(best_model_path, encoder_name="resnet50", seg_model='unet_cct', in_chns=1, num_classes=4,
+                    device="cuda:0"):
     print("Loading best model from: ", best_model_path)
     print(f"seg_model: {seg_model}, in_chns: {in_chns}, num_classes: {num_classes}, device: {device}")
-    model = net_factory(net_type=seg_model, in_chns=in_chns, class_num=num_classes)
+    model = smp.Unet(encoder_name=encoder_name, encoder_weights=None, in_channels=in_chns, classes=num_classes)
     model.load_state_dict(torch.load(best_model_path, map_location=torch.device(device)))
     model = model.to(device)
     return model
@@ -296,8 +297,8 @@ if __name__ == '__main__':
     bootstrap_by_slice = True
     seed = 0
     for root_dir in root_dirs:
-        glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*LVMMED*v1[0-9]")
-        ignore_strings = []
+        glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*v1[0-9]")
+        ignore_strings = ["CHAOS", "DAVIS", "MSCMR", "LVMMED"]
         #glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*CHAOS*v17")
         #glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*DAVIS*v17")
         exp_dirs = sorted(list(glob(glob_path)))
