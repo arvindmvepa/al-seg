@@ -11,6 +11,7 @@ from active_learning.dataset.data_params import data_params
 import torch
 from wsl4mis.code.networks.net_factory import net_factory
 from glob import glob
+import segmentation_models_pytorch as smp
 
 
 def get_round_num(round_dir):
@@ -290,9 +291,12 @@ if __name__ == '__main__':
     bootstrap_by_slice = True
     seed = 0
     for root_dir in root_dirs:
-        glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*CHAOS*v17")
+        glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*")
+        ignore_strings = ["CHAOS", "DAVIS", "MSCMR", "LVMM"]
+        #glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*CHAOS*v17")
         #glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*DAVIS*v17")
         exp_dirs = sorted(list(glob(glob_path)))
+        exp_dirs = [exp_dir for exp_dir in exp_dirs if not any(ignore_string in exp_dir for ignore_string in ignore_strings)]
         for exp_dir in exp_dirs:
                 if not os.path.exists(exp_dir):
                     continue
