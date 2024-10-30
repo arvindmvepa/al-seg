@@ -284,7 +284,7 @@ def get_param_settings(exp_dir):
 
 
 if __name__ == '__main__':
-    root_dirs = ["/home/amvepa91", "/home/asjchoi", r"C:\Users\Arvind\Documents"]
+    root_dirs = ["/local2/amvepa91"]
     results_file = "slice_bs_results.txt"
     device = "cuda:0"
     num_bootstraps = 1000
