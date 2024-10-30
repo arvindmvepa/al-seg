@@ -190,6 +190,8 @@ def generate_boostrap_test_predictions_by_slice(model, seg_model="unet_cct", num
         eval_vol_func = test_single_volume_cct
     elif seg_model == "unet":
         eval_vol_func = test_single_volume
+    elif seg_model == "resnet50":
+        eval_vol_func = test_single_volume
     else:
         raise ValueError(f"Invalid seg_model: {seg_model}")
     for i_batch, sampled_batch in tqdm(enumerate(evalloader)):
