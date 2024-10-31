@@ -196,7 +196,7 @@ def generate_boostrap_test_predictions_by_slice(model, seg_model="unet_cct", num
         raise ValueError(f"Invalid seg_model: {seg_model}")
     for i_batch, sampled_batch in tqdm(enumerate(evalloader)):
         bs_metric_i = eval_vol_func(sampled_batch["image"], sampled_batch["label"], model, classes=num_classes,
-                                    num_bootstraps=num_bootstraps, seed=seed, gpus=device)
+                                    num_bootstraps=num_bootstraps, seed=seed, gpus=device, in_chns=3)
         bs_metric_i = np.array(bs_metric_i)
         # get dice mean (index 0 for axis 1) over all classes (axis 0)
         bs_dice_i = np.mean(bs_metric_i[:, 0, :], axis=0)
