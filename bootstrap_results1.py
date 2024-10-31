@@ -283,7 +283,7 @@ def get_param_settings(exp_dir):
         num_classes = 4
         in_chns = 3
         dataset = "ACDC"
-        overwrite = False
+        overwrite = True
     else:
         print(f"Invalid dataset: {exp_dir}")
         return None, None, None, None, None
