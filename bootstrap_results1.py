@@ -158,7 +158,7 @@ def generate_test_predictions(model, seg_model="unet_cct", num_classes=4, ann_ty
     else:
         raise ValueError(f"Invalid seg_model: {seg_model}")
     for i_batch, sampled_batch in tqdm(enumerate(evalloader)):
-        metric_i = eval_vol_func(sampled_batch["image"], sampled_batch["label"], model, classes=num_classes, gpus=device)
+        metric_i = eval_vol_func(sampled_batch["image"], sampled_batch["label"], model, classes=num_classes, gpus=device, in_chns=3)
         metric_i = np.array(metric_i)
         dice_i = np.mean(metric_i[:, 0])
         metric_list += [dice_i]
