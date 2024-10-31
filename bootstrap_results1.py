@@ -279,9 +279,9 @@ def get_param_settings(exp_dir):
         in_chns = 1
         dataset = "MSCMR"
         overwrite = False
-    elif "DMPLS_exp" in exp_dir:
+    elif "LVMMED_exp" in exp_dir:
         num_classes = 4
-        in_chns = 1
+        in_chns = 3
         dataset = "ACDC"
         overwrite = False
     else:
@@ -302,8 +302,8 @@ if __name__ == '__main__':
     bootstrap_by_slice = True
     seed = 0
     for root_dir in root_dirs:
-        glob_path = os.path.join(root_dir, "al-seg*", "LVMMED*CHAOS*v1[0-9]")
-        ignore_strings = []
+        glob_path = os.path.join(root_dir, "al-seg*", "LVMMED*v1[0-9]")
+        ignore_strings = ["CHAOS", "DAVIS", "MSCMR"]
         #glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*CHAOS*v17")
         #glob_path = os.path.join(root_dir, "al-seg*", "DMPLS*DAVIS*v17")
         exp_dirs = sorted(list(glob(glob_path)))
