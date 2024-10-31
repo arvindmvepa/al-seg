@@ -299,7 +299,7 @@ if __name__ == '__main__':
     results_file = "slice_bs_results.txt"
     device = "cuda:0"
     num_bootstraps = 1000
-    bootstrap_by_slice = True
+    bootstrap_by_slice = False
     seed = 0
     for root_dir in root_dirs:
         glob_path = os.path.join(root_dir, "al-seg*", "LVMMED*v1[0-9]")
