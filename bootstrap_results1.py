@@ -279,7 +279,7 @@ def get_param_settings(exp_dir):
         in_chns = 1
         dataset = "MSCMR"
         overwrite = False
-    elif "LVMMED_exp" in exp_dir:
+    elif "LVMMED_sup_exp" in exp_dir:
         num_classes = 4
         in_chns = 3
         dataset = "ACDC"
