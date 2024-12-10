@@ -10,8 +10,6 @@ We perform comprehensive evaluations using both weak and full annotations across
 active learning baseline methods. Feel free to leverage our code base for your active learning application or 
 for continued research in this area: just make sure to cite our work as referenced below.
 
-<img src="./pipeline.png">
-
 ## Usage
 
 Our code has been tested with Python 3.8 on Ubuntu 16.04 with a Tesla V100 GPU with CUDA 11.2.
@@ -71,11 +69,13 @@ files as a guide.
 
 If you use this project in your research, please cite the following:
 
+```
 @inproceedings{vepaintegrating,
   title={Integrating Deep Metric Learning with Coreset for Active Learning in 3D Segmentation},
   author={Vepa, Arvind Murari and YANG, ZUKANG and Choi, Andrew and Joo, Jungseock and Scalzo, Fabien and Sun, Yizhou},
   booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems}
 }
+```
 
 ## License
 
