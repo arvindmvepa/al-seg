@@ -72,7 +72,7 @@ If you use this project in your research, please cite the following:
 ```
 @inproceedings{vepaintegrating,
   title={Integrating Deep Metric Learning with Coreset for Active Learning in 3D Segmentation},
-  author={Vepa, Arvind Murari and YANG, ZUKANG and Choi, Andrew and Joo, Jungseock and Scalzo, Fabien and Sun, Yizhou},
+  author={Vepa, Arvind Murari and Yang, Zukang and Choi, Andrew and Joo, Jungseock and Scalzo, Fabien and Sun, Yizhou},
   booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems},
   year={2024}
 }
