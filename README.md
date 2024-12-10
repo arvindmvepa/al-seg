@@ -1,17 +1,16 @@
 # Integrating Deep Metric Learning with Coreset for Active Learning in 3D Segmentation
 
 This is the official implementation for the paper "Integrating Deep Metric Learning 
-with Coreset for Active Learning in 3D Segmentation". This paper introduces a novel 
+with Coreset for Active Learning in 3D Segmentation" (NeurIPS 2024). This paper introduces a novel 
 metric learning method for Coreset to perform slice-based active learning in 3D medical 
-segmentation. By merging contrastive learning with inherent data groupings in medical 
-imaging, we learn a metric that emphasizes the relevant differences in samples for training 
-3D medical segmentation models. We perform comprehensive evaluations using both weak and 
-full annotations across four datasets (medical and non-medical). Our findings demonstrate 
-that our approach surpasses existing active learning techniques on both weak and full 
-annotations and obtains superior performance with low-annotation budgets which is crucial 
-in medical imaging.
+segmentation.
 
-<img src="./pipeline2.jpg">
+We perform comprehensive evaluations using both weak and full annotations across four datasets 
+(medical and non-medical). Our code base includes the implementation of our methodology as well as several  
+active learning baseline methods. Feel free to leverage our code base for your active learning application or 
+for continued research in this area: just make sure to cite our work as referenced below.
+
+<img src="./pipeline.png">
 
 ## Usage
 
@@ -67,6 +66,16 @@ datasets. Additionally, we have provided yaml files for several baseline methods
 datasets. To apply our method to the other datasets, simply update the `dataset` parameter in the
 `model` section and `dataset_type` in the `data_geometry` section. Please look at the other yaml 
 files as a guide.
+
+## Citation
+
+If you use this project in your research, please cite the following:
+
+@inproceedings{vepaintegrating,
+  title={Integrating Deep Metric Learning with Coreset for Active Learning in 3D Segmentation},
+  author={Vepa, Arvind Murari and YANG, ZUKANG and Choi, Andrew and Joo, Jungseock and Scalzo, Fabien and Sun, Yizhou},
+  booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems}
+}
 
 ## License
 
