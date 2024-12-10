@@ -19,9 +19,9 @@ import torch
 class StronglySupModel(WSL4MISModel):
     """Strong supervision model for active learning."""
 
-    def __init__(self, dataset="ACDC", ann_type="label", ensemble_size=1,
-                 seg_model='unet', batch_size=6, base_lr=0.01, max_iterations=60000, deterministic=1,
-                 patch_size=(256, 256), seed=0, gpus="cuda:0", tag="", **kwargs):
+    def __init__(self, dataset="ACDC", ann_type="label", ensemble_size=1, seg_model='unet', batch_size=6,
+                 base_lr=0.01, max_iterations=60000, deterministic=1, patch_size=(256, 256), seed=0, gpus="cuda:0",
+                 tag="", **kwargs):
         super().__init__(ann_type=ann_type, dataset=dataset, ensemble_size=ensemble_size, seed=seed, gpus=gpus,
                          tag=tag, **kwargs)
         self.seg_model = seg_model
@@ -46,7 +46,7 @@ class StronglySupModel(WSL4MISModel):
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
         logging.info(str(self.__dict__))
 
-        model = net_factory(net_type=self.seg_model, in_chns=1, class_num=self.num_classes)
+        model = net_factory(net_type=self.seg_model, in_chns=self.in_chns, class_num=self.num_classes)
         model = model.to(self.gpus)
 
         train_file = self.get_round_train_file_paths(round_dir=round_dir,

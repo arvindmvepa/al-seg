@@ -6,3 +6,7 @@
 	path = wsl4mis
 	url = https://github.com/arvindmvepa/WSL4MIS.git
 	branch = al-seg
+[submodule "lvm_med"]
+	path = lvm_med
+	url = https://github.com/arvindmvepa/LVM-Med.git
+	branch = al-seg

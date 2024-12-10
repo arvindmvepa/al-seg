@@ -1,0 +1,18 @@
+model:
+  model_type: "dmpls"
+  ann_type: "scribble"
+  dataset: "MSCMR"
+  ensemble_size: 1
+  max_iterations: 30000
+  gpus: "cuda:0"
+policy:
+  policy_type: random
+  seed: 0
+  ensemble_kwargs:
+    skip: False
+    inf_test: False
+  uncertainty_kwargs:
+    skip: False
+    delete_preds: True
+  rounds: [[.01, 0], [.01, 0], [.01, 0], [.01, 0], [.01, 0]]
+exp_dir: "dmpls_mscmr_test_run"
